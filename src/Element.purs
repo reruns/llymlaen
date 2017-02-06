@@ -1,11 +1,14 @@
-module Element where
+module App.Element where
 
+import Prelude
 import Data.Array ((!!))
 import Data.Int (toNumber, round)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
-import Graphics.Canvas.Free
+
 import Math(pi)
-import Prelude
+
+import Graphics.Canvas.Free
+
 
 data Shape = Circle | Rectangle
 
@@ -26,15 +29,14 @@ type Instance = {
                   opacity :: Int,
                   color :: { r :: Int, g :: Int, b :: Int }
                 }
-time x = x.time --this is dumb.
+time x = x.time --this is dumb, but handy
 
 advanceFrame :: Element -> Element    
 advanceFrame el =
   let t = el.current.time+1
-      l = el.keys !! el.pindex
       r = el.keys !! (el.pindex + 1) 
       r' = fromMaybe (el.current) r in
-  case ((==) t) <$> time <$> r of
+  case ((>=) t) <$> time <$> r of
     Nothing -> el {current = el.current {time = t}}
     Just false -> el {current = reconcile el.current r'}
     Just true -> el {pindex = el.pindex+1 ,current = r'}
@@ -55,9 +57,12 @@ reconcile c r =
   }
 
 --setTime = undefined
+render {current: {enabled: false}} = pure unit
+
 render {shape: Circle, current: c} =
   at c.pos.x c.pos.y do
     beginPath
+    setAlpha ((toNumber c.opacity) / 100.0)
     arc {x: 0.0,y: 0.0,r: toNumber c.size.w, start: 0.0, end: 2.0*pi}
     closePath
     stroke
@@ -68,6 +73,6 @@ render {shape: Rectangle, current: c} =
   
 at x y gfx = do
   save
-  translate x y
+  translate (toNumber x) (toNumber y)
   gfx
   restore
