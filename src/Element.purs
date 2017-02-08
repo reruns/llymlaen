@@ -2,77 +2,66 @@ module App.Element where
 
 import Prelude
 import Data.Array ((!!))
-import Data.Int (toNumber, round)
+import Data.String (joinWith)
+import Data.Int (toNumber, round, toStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 
 import Math(pi)
 
 import Graphics.Canvas.Free
 
-
-data Shape = Circle | Rectangle
-
-type Element = {
-                layer :: Int,
-                shape :: Shape,
-                keys  :: Array Instance,
-                current :: Instance,
-                pindex :: Int
-               }
-
-type Instance = {
-                  enabled :: Boolean,
-                  time :: Int,
-                  angle :: Int,
-                  size :: {w::Int, h::Int},
-                  pos :: {x ::Int, y::Int},
-                  opacity :: Int,
-                  color :: { r :: Int, g :: Int, b :: Int }
-                }
-time x = x.time --this is dumb, but handy
-
-advanceFrame :: Element -> Element    
-advanceFrame el =
-  let t = el.current.time+1
-      r = el.keys !! (el.pindex + 1) 
-      r' = fromMaybe (el.current) r in
-  case ((>=) t) <$> time <$> r of
-    Nothing -> el {current = el.current {time = t}}
-    Just false -> el {current = reconcile el.current r'}
-    Just true -> el {pindex = el.pindex+1 ,current = r'}
-
-reconcile :: Instance -> Instance -> Instance
-reconcile c r = 
-  let p = 1.0 / (toNumber (r.time-c.time))
-      f :: Int -> Int -> Int
-      f a b = round $ (toNumber a) + p* (toNumber (b-a)) in
-  {
-    enabled: c.enabled,
-    time: c.time+1,
-    angle: f c.angle r.angle,
-    size: {w: f c.size.w r.size.w, h: f c.size.h r.size.h},
-    pos: {x: f c.pos.x r.pos.x, y: f c.pos.y r.pos.y},
-    opacity: f c.opacity r.opacity,
-    color: {r: f c.color.r r.color.r, g: f c.color.g r.color.g, b: f c.color.g r.color.b}
-  }
-
---setTime = undefined
-render {current: {enabled: false}} = pure unit
-
-render {shape: Circle, current: c} =
-  at c.pos.x c.pos.y do
-    beginPath
-    setAlpha ((toNumber c.opacity) / 100.0)
-    arc {x: 0.0,y: 0.0,r: toNumber c.size.w, start: 0.0, end: 2.0*pi}
-    closePath
-    stroke
-    
-render {shape: Rectangle, current: c} =
-  at c.pos.x c.pos.y do
-    strokeRect {x: 0.0, y:0.0, w: toNumber c.size.w, h: toNumber c.size.h}
+--this seems like it should work
+data Element a = Element { layer :: Int
+                         , keys :: Array a
+                         , current :: a
+                         , reconcile :: a -> a -> Int -> a
+                         , render :: a -> Graphics Unit
+                         }
   
+data Drawable = Drawable { drawn :: Graphics Unit
+                         , updated :: Unit -> Drawable
+                         }
+                         
+unfoldDrawable (Element el) 
+  = Drawable { drawn: el.render el.current
+             , updated: \_ -> unfoldDrawable (advanceFrame el)}
+             
+ 
+advanceFrame el = setTime el (el.current.time + 1)
+
+setTime el t =
+  let ms = findMoment el.keys t
+      l' = fromMaybe (el.current) ms.l
+      r' = fromMaybe (el.current) ms.r in
+  case ((==) t) <$> time <$> ms.r of
+    Nothing    -> Element el
+    Just false -> Element $ el {current = el.reconcile l' r' t}
+    Just true  -> Element $ el {current = r'}    
+
+time x = x.time --apparently ".foo" isn't a function, so...
+
+findMoment keys t = go 0 where
+  go x = case ((>=) t) <$> time <$> (keys !! x) of
+           Just true   -> {l: (keys !! (x-1)), r: (keys !! x)}
+           Just false  -> go (x+1)
+           Nothing     -> {l: (keys !! (x-1)), r: Nothing}
+          
+setKeys :: forall a. Element a -> Array a -> Element a
+setKeys (Element el) ks = Element (el {keys=ks})
+          
+          
+--some shared functions for graphics
 at x y gfx = do
   save
   translate (toNumber x) (toNumber y)
   gfx
   restore
+  
+
+colorToStr {r,g,b} = "#" <> (joinWith "" $ map (\x -> (if x < 16 then "0" else "") <> (toStringAs hexadecimal x)) [r,g,b])
+
+setBorder :: Boolean -> Graphics Unit
+setBorder bordered = 
+  if bordered
+    then setStrokeStyle "#000000"
+    else pure unit
