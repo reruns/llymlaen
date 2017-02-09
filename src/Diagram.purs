@@ -2,7 +2,8 @@ module App.Diagram where
 
 import App.Element as E
 import Data.Foldable
-import Prelude (map, bind, ($), unit)
+import Prelude
+import Data.Array (insertBy)
 import Graphics.Canvas.Free (fillRect, setFillStyle)
 
 type State = { paused :: Boolean
@@ -15,6 +16,9 @@ advanceFrame :: State -> State
 advanceFrame st = st {elements = map updateOne st.elements } where
   updateOne (E.Drawable d) = d.updated unit
 
+insertElement :: State -> E.Drawable -> State
+insertElement st dr = 
+  st {elements = insertBy (comparing (\(E.Drawable d) -> d.layer)) dr st.elements}
 
 render st = 
   let drawOne (E.Drawable d) = d.drawn in
@@ -23,3 +27,5 @@ render st =
     fillRect {x: 0.0, y:0.0, w: 1000.0, h: 1000.0}
     traverse_ drawOne st.statics
     traverse_ drawOne st.elements
+    
+  --do stuff to render the HTML element here!

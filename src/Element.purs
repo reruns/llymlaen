@@ -1,7 +1,7 @@
 module App.Element where
 
 import Prelude
-import Data.Array ((!!))
+import Data.Array ((!!), insertBy)
 import Data.String (joinWith)
 import Data.Int (toNumber, round, toStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
@@ -19,12 +19,19 @@ data Element a = Element { layer :: Int
                          }
   
 data Drawable = Drawable { drawn :: Graphics Unit
+                         , layer :: Int
                          , updated :: Unit -> Drawable
+                         , setTime :: Int -> Drawable
+                         , insertKey :: Unit -> Drawable
                          }
                          
 unfoldDrawable (Element el) 
   = Drawable { drawn: el.render el.current
-             , updated: \_ -> unfoldDrawable (advanceFrame el)}
+             , layer: el.layer
+             , updated: \_ -> unfoldDrawable (advanceFrame el)
+             , setTime: \t -> unfoldDrawable (setTime el t)
+             , insertKey: \_ -> unfoldDrawable (insertKey el el.current)
+             }
              
  
 advanceFrame el = setTime el (el.current.time + 1)
@@ -49,6 +56,8 @@ findMoment keys t = go 0 where
 setKeys :: forall a. Element a -> Array a -> Element a
 setKeys (Element el) ks = Element (el {keys=ks})
           
+insertKey el k = 
+  Element (el {keys = insertBy (comparing time) k el.keys})
           
 --some shared functions for graphics
 at x y gfx = do

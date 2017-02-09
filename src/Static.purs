@@ -10,4 +10,7 @@ data Static a = Static { moment :: a
                 
 boxStatic (Static s) = Drawable { drawn: s.render s.moment
                                 , updated: \_ -> boxStatic (Static s)
+                                , setTime: \t -> boxStatic (Static s)
+                                , insertKey:  \_ -> boxStatic (Static s)
+                                , layer: 0
                                 }
