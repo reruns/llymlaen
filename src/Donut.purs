@@ -8,6 +8,12 @@ import Math (pi)
 
 import Graphics.Canvas.Free
 
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Events.Handler as EH
+import Halogen.HTML.Properties.Indexed as P
+
+
 type DonutMoment = { enabled :: Boolean
                    , time :: Int
                    , size :: {r1::Int, r2::Int}
@@ -16,6 +22,24 @@ type DonutMoment = { enabled :: Boolean
                    , color :: { r :: Int, g :: Int, b :: Int }
                    }
                    
+showData moment = 
+  H.form_ 
+    [ H.input [ P.inputType P.InputCheckbox
+              , P.title "enabled"
+              , P.checked moment.completed ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "Inner radius"
+              , P.value moment.size.r1 ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "Outer radius"
+              , P.value moment.size.r2 ]          
+    , H.input [ P.inputType P.InputNumber
+              , P.title "x"
+              , P.value moment.pos.x ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "y"
+              , P.value moment.pos.y ]
+    ]
 defaultDonutMoment :: DonutMoment
 defaultDonutMoment = { enabled: false
                      , time: -1
