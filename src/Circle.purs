@@ -8,6 +8,11 @@ import Math (pi)
 
 import Graphics.Canvas.Free
 
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Events.Handler as EH
+import Halogen.HTML.Properties.Indexed as P
+
 type CircleMoment = { enabled :: Boolean
                     , bordered :: Boolean
                     , time :: Int
@@ -16,6 +21,25 @@ type CircleMoment = { enabled :: Boolean
                     , opacity :: Int
                     , color :: { r :: Int, g :: Int, b :: Int }
                     }
+
+showData moment = 
+  H.form_ 
+    [ H.input [ P.inputType P.InputCheckbox
+              , P.title "enabled"
+              , P.checked moment.completed ]
+    , H.input [ P.inputType P.InputCheckbox
+              , P.title "bordered"
+              , P.checked moment.bordered ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "radius"
+              , P.value moment.radius ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "x"
+              , P.value moment.pos.x ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "y"
+              , P.value moment.pos.y ]
+    ]
 
 defaultCircleMoment = { enabled: false
                       , bordered: false
