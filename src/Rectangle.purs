@@ -34,12 +34,13 @@ defaultRectMoment = { enabled: false
                     , opacity: 0
                     , color: {r:0, g:0, b:0}
                     }  
-                    
+             
+showData :: forall p i. RectMoment -> H.HTML p i             
 showData moment = 
   H.form_ 
     [ H.input [ P.inputType P.InputCheckbox
               , P.title "enabled"
-              , P.checked moment.completed ]
+              , P.checked moment.enabled ]
     , H.input [ P.inputType P.InputCheckbox
               , P.title "bordered"
               , P.checked moment.bordered ]
@@ -47,19 +48,19 @@ showData moment =
               , P.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
               , P.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 360
               , P.title "angle" 
-              , P.value moment.angle]
+              , P.value $ show moment.angle]
     , H.input [ P.inputType P.InputNumber
               , P.title "width"
-              , P.value moment.size.w ]
+              , P.value $ show moment.size.w ]
     , H.input [ P.inputType P.InputNumber
               , P.title "height"
-              , P.value moment.size.h ]
+              , P.value $ show moment.size.h ]
     , H.input [ P.inputType P.InputNumber
               , P.title "x"
-              , P.value moment.pos.x ]
+              , P.value $ show moment.pos.x ]
     , H.input [ P.inputType P.InputNumber
               , P.title "y"
-              , P.value moment.pos.y ]
+              , P.value $ show moment.pos.y ]
     ]
 
 rectElem :: Element RectMoment
@@ -68,10 +69,12 @@ rectElem = Element { layer: 0
                    , render: renderRect
                    , reconcile: reconcileRect
                    , current: defaultRectMoment
+                   , form: showData
                    }
 
 staticRect moment = Static { moment: moment
                            , render: renderRect
+                           , form: showData
                            }                   
                   
 renderRect c = at c.pos.x c.pos.y $ do

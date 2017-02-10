@@ -6,6 +6,8 @@ import Data.String (joinWith)
 import Data.Int (toNumber, round, toStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 
+import Halogen.HTML.Indexed as H
+
 import Math(pi)
 
 import Graphics.Canvas.Free
@@ -16,6 +18,7 @@ data Element a = Element { layer :: Int
                          , current :: a
                          , reconcile :: a -> a -> Int -> a
                          , render :: a -> Graphics Unit
+                         , form :: forall p i. a -> H.HTML p i
                          }
   
 data Drawable = Drawable { drawn :: Graphics Unit
@@ -23,6 +26,7 @@ data Drawable = Drawable { drawn :: Graphics Unit
                          , updated :: Unit -> Drawable
                          , setTime :: Int -> Drawable
                          , insertKey :: Unit -> Drawable
+                         , formed :: forall p i. H.HTML p i
                          }
                          
 unfoldDrawable (Element el) 
@@ -31,6 +35,7 @@ unfoldDrawable (Element el)
              , updated: \_ -> unfoldDrawable (advanceFrame el)
              , setTime: \t -> unfoldDrawable (setTime el t)
              , insertKey: \_ -> unfoldDrawable (insertKey el el.current)
+             , formed: el.form el.current
              }
              
  

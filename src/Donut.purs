@@ -21,25 +21,28 @@ type DonutMoment = { enabled :: Boolean
                    , opacity :: Int
                    , color :: { r :: Int, g :: Int, b :: Int }
                    }
-                   
+        
+showData :: forall p i. DonutMoment -> H.HTML p i           
 showData moment = 
   H.form_ 
     [ H.input [ P.inputType P.InputCheckbox
               , P.title "enabled"
-              , P.checked moment.completed ]
+              , P.checked moment.enabled ]
     , H.input [ P.inputType P.InputNumber
               , P.title "Inner radius"
-              , P.value moment.size.r1 ]
+              , P.value $ show moment.size.r1 ]
     , H.input [ P.inputType P.InputNumber
               , P.title "Outer radius"
-              , P.value moment.size.r2 ]          
+              , P.value $ show moment.size.r2 ]          
     , H.input [ P.inputType P.InputNumber
               , P.title "x"
-              , P.value moment.pos.x ]
+              , P.value $ show moment.pos.x ]
     , H.input [ P.inputType P.InputNumber
               , P.title "y"
-              , P.value moment.pos.y ]
+              , P.value $ show moment.pos.y ]
     ]
+    
+    
 defaultDonutMoment :: DonutMoment
 defaultDonutMoment = { enabled: false
                      , time: -1
@@ -55,6 +58,7 @@ donutElem = Element { layer: 0
                     , render: renderDonut
                     , reconcile: reconcileDonut
                     , current: defaultDonutMoment
+                    , form: showData
                     }  
                     
 renderDonut c = at c.pos.x c.pos.y $ do

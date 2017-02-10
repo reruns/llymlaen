@@ -22,23 +22,24 @@ type CircleMoment = { enabled :: Boolean
                     , color :: { r :: Int, g :: Int, b :: Int }
                     }
 
+showData :: forall p i. CircleMoment -> H.HTML p i
 showData moment = 
   H.form_ 
     [ H.input [ P.inputType P.InputCheckbox
               , P.title "enabled"
-              , P.checked moment.completed ]
+              , P.checked moment.enabled ]
     , H.input [ P.inputType P.InputCheckbox
               , P.title "bordered"
               , P.checked moment.bordered ]
     , H.input [ P.inputType P.InputNumber
               , P.title "radius"
-              , P.value moment.radius ]
+              , P.value $ show moment.radius ]
     , H.input [ P.inputType P.InputNumber
               , P.title "x"
-              , P.value moment.pos.x ]
+              , P.value $ show moment.pos.x ]
     , H.input [ P.inputType P.InputNumber
               , P.title "y"
-              , P.value moment.pos.y ]
+              , P.value $ show moment.pos.y ]
     ]
 
 defaultCircleMoment = { enabled: false
@@ -56,6 +57,7 @@ circleElem = Element { layer: 0
                      , render: renderCircle
                      , reconcile: reconcileCircle
                      , current: defaultCircleMoment
+                     , form: showData
                      }
                   
 renderCircle c = at c.pos.x c.pos.y $ do
