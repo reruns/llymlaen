@@ -6,8 +6,14 @@ import App.Static
 import Prelude
 import Data.Int (toNumber, round)
 import Math (pi)
+import Data.Maybe (Maybe (Just,Nothing))
 
 import Graphics.Canvas.Free
+
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Events.Handler as EH
+import Halogen.HTML.Properties.Indexed as P
 
 type RectMoment = { enabled :: Boolean
                   , bordered :: Boolean
@@ -28,6 +34,33 @@ defaultRectMoment = { enabled: false
                     , opacity: 0
                     , color: {r:0, g:0, b:0}
                     }  
+                    
+showData moment = 
+  H.form_ 
+    [ H.input [ P.inputType P.InputCheckbox
+              , P.title "enabled"
+              , P.checked moment.completed ]
+    , H.input [ P.inputType P.InputCheckbox
+              , P.title "bordered"
+              , P.checked moment.bordered ]
+    , H.input [ P.inputType P.InputRange
+              , P.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
+              , P.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 360
+              , P.title "angle" 
+              , P.value moment.angle]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "width"
+              , P.value moment.size.w ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "height"
+              , P.value moment.size.h ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "x"
+              , P.value moment.pos.x ]
+    , H.input [ P.inputType P.InputNumber
+              , P.title "y"
+              , P.value moment.pos.y ]
+    ]
 
 rectElem :: Element RectMoment
 rectElem = Element { layer: 0
