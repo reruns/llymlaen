@@ -2,8 +2,8 @@ module App.Diagram where
 
 import Prelude
 import Data.Foldable
-import Data.Array (insertBy)
-import Data.Maybe (Maybe(Just,Nothing))
+import Data.Array (insertBy, (!!))
+import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 
@@ -22,6 +22,7 @@ type State = { paused :: Boolean
              , color :: { r :: Int, g :: Int, b :: Int }
              , statics :: Array E.Drawable
              , elements :: Array E.Drawable 
+             , targetIndex :: Int
              }
              
 data Query a 
@@ -60,6 +61,7 @@ diaComp = lifecycleComponent
   render st =
     H.div_
       [ H.canvas [ HP.id_ "canvas" ]
+      , fromMaybe (H.div_ []) $ ((\(E.Drawable d) -> d.formed) <$> (st.elements !! st.targetIndex))
       ]
       
   eval :: Query ~> ComponentDSL State Query (Aff (canvas :: CANVAS | eff))
