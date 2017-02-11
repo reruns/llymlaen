@@ -38,7 +38,9 @@ defaultRectMoment = { enabled: false
 showData :: forall p i. RectMoment -> H.HTML p i             
 showData moment = 
   H.form_ 
-    [ H.input [ P.inputType P.InputCheckbox
+    [ H.h1_   [ H.text $ show moment.time]
+    , H.h2_   [ H.text $ show moment.opacity]
+    , H.input [ P.inputType P.InputCheckbox
               , P.title "enabled"
               , P.checked moment.enabled ]
     , H.input [ P.inputType P.InputCheckbox
@@ -48,7 +50,7 @@ showData moment =
               , P.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
               , P.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 360
               , P.title "angle" 
-              , P.value $ show moment.angle]
+              , P.value $ show moment.angle ]
     , H.input [ P.inputType P.InputNumber
               , P.title "width"
               , P.value $ show moment.size.w ]
@@ -76,10 +78,12 @@ staticRect moment = Static { moment: moment
                            , render: renderRect
                            , form: showData
                            }                   
-                  
+                
+renderRect {enabled: false} = pure unit                
 renderRect c = at c.pos.x c.pos.y $ do
+  setAlpha ((toNumber c.opacity) / 100.0)
   setFillStyle $ colorToStr c.color
-  setBorder c.bordered
+  setBorder c.bordered c.color
   rotate ((toNumber c.angle) * pi / 180.0)
   fillRect {x: 0.0, y:0.0, w: toNumber c.size.w, h: toNumber c.size.h}
   strokeRect {x: 0.0, y:0.0, w: toNumber c.size.w, h: toNumber c.size.h}
@@ -88,7 +92,8 @@ reconcileRect :: RectMoment -> RectMoment -> Int -> RectMoment
 reconcileRect l r t = 
   let p = (toNumber (t-l.time)) / (toNumber (r.time-l.time))
       f :: Int -> Int -> Int
-      f a b = a + (round $ p * (toNumber (b-a)))  in
+      f a b | b == a    = a
+            | otherwise = a + (round $ p * (toNumber (b-a)))  in
   { enabled: l.enabled
   , bordered: l.bordered
   , time: t

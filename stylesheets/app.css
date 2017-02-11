@@ -1,0 +1,14 @@
+canvas {
+  display: inline-block;
+}
+
+form {
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: top;
+  width: 250px;
+}
+
+form > * {
+  display: block;
+}

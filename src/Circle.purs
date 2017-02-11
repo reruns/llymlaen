@@ -62,7 +62,7 @@ circleElem = Element { layer: 0
                   
 renderCircle c = at c.pos.x c.pos.y $ do
   setFillStyle $ colorToStr c.color
-  setBorder c.bordered
+  setBorder c.bordered c.color
   setAlpha ((toNumber c.opacity) / 100.0)
   beginPath
   arc {x: 0.0,y: 0.0,r: toNumber c.radius, start: 0.0, end: 2.0*pi}

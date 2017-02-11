@@ -15,4 +15,5 @@ import Control.Monad.Eff.Timer (setInterval)
 main = runHalogenAff do
   body <- awaitBody
   driver <- H.runUI diaComp interA body
-  liftEff $ setInterval 16 $ runHalogenAff (driver (H.action Tick)) --what.
+  liftEff $ setInterval 16 $ do
+    runHalogenAff (driver (H.action Tick)) --what.

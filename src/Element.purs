@@ -38,31 +38,28 @@ unfoldDrawable (Element el)
              , formed: el.form el.current
              }
              
- 
 advanceFrame el = setTime el (el.current.time + 1)
 
 setTime el t =
   let ms = findMoment el.keys t
       l' = fromMaybe (el.current) ms.l
       r' = fromMaybe (el.current) ms.r in
-  case ((==) t) <$> time <$> ms.r of
-    Nothing    -> Element el
+  case ((==) t) <$> _.time <$> ms.r of
+    Nothing    -> Element $ el {current = l' {time=t}}
     Just false -> Element $ el {current = el.reconcile l' r' t}
     Just true  -> Element $ el {current = r'}    
-
-time x = x.time --apparently ".foo" isn't a function, so...
-
+    
 findMoment keys t = go 0 where
-  go x = case ((>=) t) <$> time <$> (keys !! x) of
-           Just true   -> {l: (keys !! (x-1)), r: (keys !! x)}
-           Just false  -> go (x+1)
-           Nothing     -> {l: (keys !! (x-1)), r: Nothing}
+  go x = case ((<) t) <$> _.time <$> (keys !! x) of
+           Just true  -> {l: (keys !! (x-1)), r: (keys !! x)}
+           Just false -> go (x+1)
+           Nothing    -> {l: (keys !! (x-1)), r: Nothing}
           
 setKeys :: forall a. Element a -> Array a -> Element a
 setKeys (Element el) ks = Element (el {keys=ks})
           
 insertKey el k = 
-  Element (el {keys = insertBy (comparing time) k el.keys})
+  Element (el {keys = insertBy (comparing _.time) k el.keys})
           
 --some shared functions for graphics
 at x y gfx = do
@@ -74,8 +71,8 @@ at x y gfx = do
 
 colorToStr {r,g,b} = "#" <> (joinWith "" $ map (\x -> (if x < 16 then "0" else "") <> (toStringAs hexadecimal x)) [r,g,b])
 
-setBorder :: Boolean -> Graphics Unit
-setBorder bordered = 
+setBorder :: Boolean -> {r::Int, g::Int, b::Int} -> Graphics Unit
+setBorder bordered color = 
   if bordered
     then setStrokeStyle "#000000"
-    else pure unit
+    else setStrokeStyle $ colorToStr color

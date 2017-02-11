@@ -6,6 +6,7 @@ import Data.Array (insertBy, (!!))
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (log, CONSOLE)
 
 import Halogen
 import Halogen.HTML.Indexed as H
@@ -45,12 +46,12 @@ drawGraphics st = let
   case st.ctx of
     Just ctx -> runGraphics ctx $ do
                   setFillStyle $ E.colorToStr st.color
-                  fillRect {x: 0.0, y:0.0, w: 1000.0, h: 1000.0}
+                  fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
                   traverse_ drawOne st.statics
                   traverse_ drawOne st.elements
     Nothing  -> pure unit
 
-diaComp :: forall eff. Component State Query (Aff (canvas :: CANVAS | eff))
+diaComp :: forall eff. Component State Query (Aff (canvas :: CANVAS, console :: CONSOLE | eff))
 diaComp = lifecycleComponent
   { render: render
   , eval: eval
@@ -64,7 +65,7 @@ diaComp = lifecycleComponent
       , fromMaybe (H.div_ []) $ ((\(E.Drawable d) -> d.formed) <$> (st.elements !! st.targetIndex))
       ]
       
-  eval :: Query ~> ComponentDSL State Query (Aff (canvas :: CANVAS | eff))
+  eval :: Query ~> ComponentDSL State Query (Aff (canvas :: CANVAS, console :: CONSOLE | eff))
   eval (TogglePlay next) = do
     pause <- gets _.paused
     modify (\st -> st {paused = not pause})
