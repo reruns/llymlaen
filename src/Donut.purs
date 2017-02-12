@@ -4,7 +4,7 @@ import App.Element
 
 import Prelude
 import Data.Int (toNumber, round)
-import Math (pi)
+import Math (pi, pow, sqrt)
 
 import Graphics.Canvas.Free
 
@@ -60,7 +60,8 @@ donutElem = Element { layer: 0
                     , current: defaultDonutMoment
                     , form: showData
                     }  
-                    
+                  
+renderDonut {enabled: false} = pure unit                   
 renderDonut c = at c.pos.x c.pos.y $ do
   setFillStyle $ colorToStr c.color
   setLineWidth (toNumber (c.size.r2 - c.size.r1))
@@ -88,3 +89,8 @@ reconcileDonut l r t =
            , b: f l.color.b r.color.b
            }
   }
+  
+overlap :: DonutMoment -> { x :: Int, y :: Int } -> Boolean
+overlap m@{pos:{x:x1,y:y1}} {x:x2,y:y2} = 
+  let d = sqrt $ (pow (toNumber x1 - toNumber x2) 2.0) + (pow (toNumber y1 - toNumber y2) 2.0)
+  in d >= (toNumber m.size.r1) && d <= (toNumber m.size.r2)

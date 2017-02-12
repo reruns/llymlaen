@@ -4,7 +4,7 @@ import App.Element
 
 import Prelude
 import Data.Int (toNumber, round)
-import Math (pi)
+import Math (pi, pow, sqrt)
 
 import Graphics.Canvas.Free
 
@@ -59,7 +59,8 @@ circleElem = Element { layer: 0
                      , current: defaultCircleMoment
                      , form: showData
                      }
-                  
+              
+renderCircle {enabled: false} = pure unit               
 renderCircle c = at c.pos.x c.pos.y $ do
   setFillStyle $ colorToStr c.color
   setBorder c.bordered c.color
@@ -88,3 +89,8 @@ reconcileCircle l r t =
            , b: f l.color.g r.color.b
            }         
   }
+  
+overlap :: CircleMoment -> { x :: Int, y :: Int } -> Boolean
+overlap m@{pos:{x:x1,y:y1}} {x:x2,y:y2} = 
+  let d = sqrt $ (pow (toNumber x1 - toNumber x2) 2.0) + (pow (toNumber y1 - toNumber y2) 2.0)
+  in d <= (toNumber m.radius)
