@@ -58,6 +58,7 @@ circleElem = Element { layer: 0
                      , reconcile: reconcileCircle
                      , current: defaultCircleMoment
                      , form: showData
+                     , overlap: overlap
                      }
               
 renderCircle {enabled: false} = pure unit               

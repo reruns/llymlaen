@@ -19,6 +19,7 @@ data Element a = Element { layer :: Int
                          , reconcile :: a -> a -> Int -> a
                          , render :: a -> Graphics Unit
                          , form :: forall p i. a -> H.HTML p i
+                         , overlap :: a -> {x :: Int, y :: Int} -> Boolean
                          }
   
 data Drawable = Drawable { drawn :: Graphics Unit
@@ -27,6 +28,7 @@ data Drawable = Drawable { drawn :: Graphics Unit
                          , setTime :: Int -> Drawable
                          , insertKey :: Unit -> Drawable
                          , formed :: forall p i. H.HTML p i
+                         , overlap :: {x :: Int, y :: Int} -> Boolean
                          }
                          
 unfoldDrawable (Element el) 
@@ -36,6 +38,7 @@ unfoldDrawable (Element el)
              , setTime: \t -> unfoldDrawable (setTime el t)
              , insertKey: \_ -> unfoldDrawable (insertKey el el.current)
              , formed: el.form el.current
+             , overlap: el.overlap el.current
              }
              
 advanceFrame el = setTime el (el.current.time + 1)

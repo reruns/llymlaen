@@ -17,4 +17,5 @@ boxStatic (Static s) = Drawable { drawn: s.render s.moment
                                 , insertKey:  \_ -> boxStatic (Static s)
                                 , layer: 0
                                 , formed: s.form s.moment
+                                , overlap: \_ -> false
                                 }

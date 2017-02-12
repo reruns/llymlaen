@@ -72,6 +72,7 @@ rectElem = Element { layer: 0
                    , reconcile: reconcileRect
                    , current: defaultRectMoment
                    , form: showData
+                   , overlap: overlap
                    }
 
 staticRect moment = Static { moment: moment

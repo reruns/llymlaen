@@ -59,6 +59,7 @@ donutElem = Element { layer: 0
                     , reconcile: reconcileDonut
                     , current: defaultDonutMoment
                     , form: showData
+                    , overlap: overlap
                     }  
                   
 renderDonut {enabled: false} = pure unit                   
