@@ -1257,24 +1257,30 @@ var Halogen_HTML_Elements = require("../Halogen.HTML.Elements");
 var Halogen_HTML_Elements_Indexed = require("../Halogen.HTML.Elements.Indexed");
 var Data_Function = require("../Data.Function");
 var Data_Show = require("../Data.Show");
-var Data_Identity = require("../Data.Identity");
-var Control_Bind = require("../Control.Bind");
+var Control_Applicative = require("../Control.Applicative");
 var Control_Monad_Free_Trans = require("../Control.Monad.Free.Trans");
+var Data_Identity = require("../Data.Identity");
+var Data_Unit = require("../Data.Unit");
+var Control_Bind = require("../Control.Bind");
 var Data_EuclideanRing = require("../Data.EuclideanRing");
 var Data_Semiring = require("../Data.Semiring");
 var Data_Ring = require("../Data.Ring");
+var Data_Ord = require("../Data.Ord");
 var showData = function (moment) {
     return Halogen_HTML_Elements.form_([ Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputCheckbox.value), Halogen_HTML_Properties_Indexed.title("enabled"), Halogen_HTML_Properties_Indexed.checked(moment.enabled) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputCheckbox.value), Halogen_HTML_Properties_Indexed.title("bordered"), Halogen_HTML_Properties_Indexed.checked(moment.bordered) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("radius"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.radius)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("x"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.pos.x)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("y"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.pos.y)) ]) ]);
 };
-var renderCircle = function (c) {
-    return App_Element.at(Data_Identity.monadIdentity)(c.pos.x)(c.pos.y)(Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(Graphics_Canvas_Free.setFillStyle(Data_Identity.monadIdentity)(App_Element.colorToStr(c.color)))(function () {
-        return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(App_Element.setBorder(c.bordered)(c.color))(function () {
-            return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(Graphics_Canvas_Free.setAlpha(Data_Identity.monadIdentity)(Data_Int.toNumber(c.opacity) / 100.0))(function () {
+var renderCircle = function (v) {
+    if (!v.enabled) {
+        return Control_Applicative.pure(Control_Monad_Free_Trans.applicativeFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(Data_Unit.unit);
+    };
+    return App_Element.at(Data_Identity.monadIdentity)(v.pos.x)(v.pos.y)(Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(Graphics_Canvas_Free.setFillStyle(Data_Identity.monadIdentity)(App_Element.colorToStr(v.color)))(function () {
+        return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(App_Element.setBorder(v.bordered)(v.color))(function () {
+            return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(Graphics_Canvas_Free.setAlpha(Data_Identity.monadIdentity)(Data_Int.toNumber(v.opacity) / 100.0))(function () {
                 return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(Graphics_Canvas_Free.beginPath(Data_Identity.monadIdentity))(function () {
                     return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(Data_Identity.monadIdentity))(Graphics_Canvas_Free.arc(Data_Identity.monadIdentity)({
                         x: 0.0, 
                         y: 0.0, 
-                        r: Data_Int.toNumber(c.radius), 
+                        r: Data_Int.toNumber(v.radius), 
                         start: 0.0, 
                         end: 2.0 * $$Math.pi
                     }))(function () {
@@ -1317,6 +1323,12 @@ var reconcileCircle = function (l) {
         };
     };
 };
+var overlap = function (v) {
+    return function (v1) {
+        var d = $$Math.sqrt($$Math.pow(Data_Int.toNumber(v.pos.x) - v1.x)(2.0) + $$Math.pow(Data_Int.toNumber(v.pos.y) - v1.y)(2.0));
+        return d <= Data_Int.toNumber(v.radius);
+    };
+};
 var defaultCircleMoment = {
     enabled: false, 
     bordered: false, 
@@ -1339,17 +1351,19 @@ var circleElem = new App_Element.Element({
     render: renderCircle, 
     reconcile: reconcileCircle, 
     current: defaultCircleMoment, 
-    form: showData
+    form: showData, 
+    overlap: overlap
 });
 module.exports = {
     circleElem: circleElem, 
     defaultCircleMoment: defaultCircleMoment, 
+    overlap: overlap, 
     reconcileCircle: reconcileCircle, 
     renderCircle: renderCircle, 
     showData: showData
 };
 
-},{"../App.Element":30,"../Control.Bind":41,"../Control.Monad.Free.Trans":75,"../Data.EuclideanRing":150,"../Data.Function":168,"../Data.Identity":179,"../Data.Int":185,"../Data.Ring":215,"../Data.Semiring":219,"../Data.Show":221,"../Graphics.Canvas.Free":235,"../Halogen.HTML.Elements":246,"../Halogen.HTML.Elements.Indexed":245,"../Halogen.HTML.Events.Handler":249,"../Halogen.HTML.Events.Indexed":250,"../Halogen.HTML.Indexed":253,"../Halogen.HTML.Properties.Indexed":254,"../Math":268,"../Prelude":273}],28:[function(require,module,exports){
+},{"../App.Element":30,"../Control.Applicative":35,"../Control.Bind":41,"../Control.Monad.Free.Trans":75,"../Data.EuclideanRing":150,"../Data.Function":168,"../Data.Identity":179,"../Data.Int":185,"../Data.Ord":210,"../Data.Ring":215,"../Data.Semiring":219,"../Data.Show":221,"../Data.Unit":232,"../Graphics.Canvas.Free":235,"../Halogen.HTML.Elements":246,"../Halogen.HTML.Elements.Indexed":245,"../Halogen.HTML.Events.Handler":249,"../Halogen.HTML.Events.Indexed":250,"../Halogen.HTML.Indexed":253,"../Halogen.HTML.Properties.Indexed":254,"../Math":268,"../Prelude":273}],28:[function(require,module,exports){
 // Generated by psc version 0.10.5
 "use strict";
 var Prelude = require("../Prelude");
@@ -1358,29 +1372,34 @@ var Data_Array = require("../Data.Array");
 var Data_Maybe = require("../Data.Maybe");
 var Control_Monad_Aff = require("../Control.Monad.Aff");
 var Control_Monad_Eff = require("../Control.Monad.Eff");
+var Control_Monad_Eff_Class = require("../Control.Monad.Eff.Class");
 var Control_Monad_Eff_Console = require("../Control.Monad.Eff.Console");
+var Control_Apply = require("../Control.Apply");
 var Halogen = require("../Halogen");
 var Halogen_HTML_Indexed = require("../Halogen.HTML.Indexed");
 var Halogen_HTML_Events_Indexed = require("../Halogen.HTML.Events.Indexed");
 var Halogen_HTML_Properties_Indexed = require("../Halogen.HTML.Properties.Indexed");
+var Halogen_HTML_Events_Types = require("../Halogen.HTML.Events.Types");
+var Halogen_HTML_Events_Handler = require("../Halogen.HTML.Events.Handler");
 var Graphics_Canvas = require("../Graphics.Canvas");
 var Graphics_Canvas_Free = require("../Graphics.Canvas.Free");
 var App_Element = require("../App.Element");
 var Data_Ord = require("../Data.Ord");
 var Data_Function = require("../Data.Function");
+var Control_Applicative = require("../Control.Applicative");
+var Halogen_Query = require("../Halogen.Query");
 var Control_Bind = require("../Control.Bind");
 var Control_Monad_Free_Trans = require("../Control.Monad.Free.Trans");
 var Data_Identity = require("../Data.Identity");
-var Control_Applicative = require("../Control.Applicative");
 var Data_Unit = require("../Data.Unit");
 var Data_Functor = require("../Data.Functor");
 var Halogen_HTML_Elements = require("../Halogen.HTML.Elements");
 var Halogen_HTML_Elements_Indexed = require("../Halogen.HTML.Elements.Indexed");
 var Control_Monad_Free = require("../Control.Monad.Free");
-var Halogen_Query = require("../Halogen.Query");
 var Data_HeytingAlgebra = require("../Data.HeytingAlgebra");
 var Control_Monad_Aff_Free = require("../Control.Monad.Aff.Free");
 var Halogen_Query_HalogenF = require("../Halogen.Query.HalogenF");
+var Data_Ring = require("../Data.Ring");
 var Halogen_Component = require("../Halogen.Component");
 var TogglePlay = (function () {
     function TogglePlay(value0) {
@@ -1409,18 +1428,38 @@ var Tick = (function () {
     };
     return Tick;
 })();
+var UpdateTarget = (function () {
+    function UpdateTarget(value0, value1) {
+        this.value0 = value0;
+        this.value1 = value1;
+    };
+    UpdateTarget.create = function (value0) {
+        return function (value1) {
+            return new UpdateTarget(value0, value1);
+        };
+    };
+    return UpdateTarget;
+})();
 var insertElement = function (st) {
     return function (dr) {
-        var $16 = {};
-        for (var $17 in st) {
-            if ({}.hasOwnProperty.call(st, $17)) {
-                $16[$17] = st[$17];
+        var $19 = {};
+        for (var $20 in st) {
+            if ({}.hasOwnProperty.call(st, $20)) {
+                $19[$20] = st[$20];
             };
         };
-        $16.elements = Data_Array.insertBy(Data_Ord.comparing(Data_Ord.ordInt)(function (v) {
+        $19.elements = Data_Array.insertBy(Data_Ord.comparing(Data_Ord.ordInt)(function (v) {
             return v.value0.layer;
         }))(dr)(st.elements);
-        return $16;
+        return $19;
+    };
+};
+var getCoords = function (dictApplicative) {
+    return function (e) {
+        return Control_Applicative.pure(dictApplicative)(Data_Maybe.Just.create(Halogen_Query.action(UpdateTarget.create({
+            x: e.pageX, 
+            y: e.pageY
+        }))));
     };
 };
 var drawGraphics = function (dictFoldable) {
@@ -1446,7 +1485,7 @@ var drawGraphics = function (dictFoldable) {
             if (st.ctx instanceof Data_Maybe.Nothing) {
                 return Control_Applicative.pure(Control_Monad_Eff.applicativeEff)(Data_Unit.unit);
             };
-            throw new Error("Failed pattern match at App.Diagram line 46, column 3 - line 52, column 26: " + [ st.ctx.constructor.name ]);
+            throw new Error("Failed pattern match at App.Diagram line 53, column 3 - line 59, column 26: " + [ st.ctx.constructor.name ]);
         };
     };
 };
@@ -1454,18 +1493,20 @@ var advanceFrame = function (st) {
     var updateOne = function (v) {
         return v.value0.updated(Data_Unit.unit);
     };
-    var $25 = {};
-    for (var $26 in st) {
-        if ({}.hasOwnProperty.call(st, $26)) {
-            $25[$26] = st[$26];
+    var $28 = {};
+    for (var $29 in st) {
+        if ({}.hasOwnProperty.call(st, $29)) {
+            $28[$29] = st[$29];
         };
     };
-    $25.elements = Data_Functor.map(Data_Functor.functorArray)(updateOne)(st.elements);
-    return $25;
+    $28.elements = Data_Functor.map(Data_Functor.functorArray)(updateOne)(st.elements);
+    return $28;
 };
 var diaComp = (function () {
     var render = function (st) {
-        return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements_Indexed.canvas([ Halogen_HTML_Properties_Indexed.id_("canvas") ]), Data_Maybe.fromMaybe(Halogen_HTML_Elements.div_([  ]))(Data_Functor.map(Data_Maybe.functorMaybe)(function (v) {
+        return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements_Indexed.canvas([ Halogen_HTML_Properties_Indexed.id_("canvas"), Halogen_HTML_Events_Indexed.onClick(function (e) {
+            return Control_Apply.applySecond(Halogen_HTML_Events_Handler.applyEventHandler)(Halogen_HTML_Events_Handler.preventDefault)(getCoords(Halogen_HTML_Events_Handler.applicativeEventHandler)(e));
+        }) ]), Data_Maybe.fromMaybe(Halogen_HTML_Elements.div_([  ]))(Data_Functor.map(Data_Maybe.functorMaybe)(function (v) {
             return v.value0.formed;
         })(Data_Array.index(st.elements)(st.targetIndex))) ]);
     };
@@ -1475,14 +1516,14 @@ var diaComp = (function () {
                 return v1.paused;
             }))(function (v1) {
                 return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (st) {
-                    var $32 = {};
-                    for (var $33 in st) {
-                        if ({}.hasOwnProperty.call(st, $33)) {
-                            $32[$33] = st[$33];
+                    var $35 = {};
+                    for (var $36 in st) {
+                        if ({}.hasOwnProperty.call(st, $36)) {
+                            $35[$36] = st[$36];
                         };
                     };
-                    $32.paused = !v1;
-                    return $32;
+                    $35.paused = !v1;
+                    return $35;
                 }))(function () {
                     return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value0);
                 });
@@ -1504,7 +1545,7 @@ var diaComp = (function () {
                         });
                     });
                 };
-                throw new Error("Failed pattern match at App.Diagram line 76, column 5 - line 82, column 18: " + [ v1.constructor.name ]);
+                throw new Error("Failed pattern match at App.Diagram line 88, column 5 - line 94, column 18: " + [ v1.constructor.name ]);
             });
         };
         if (v instanceof Initialize) {
@@ -1519,24 +1560,69 @@ var diaComp = (function () {
                     })(v1.value0)))(function () {
                         return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(Graphics_Canvas.getContext2D(v1.value0)))(function (v2) {
                             return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (state) {
-                                var $43 = {};
-                                for (var $44 in state) {
-                                    if ({}.hasOwnProperty.call(state, $44)) {
-                                        $43[$44] = state[$44];
+                                var $46 = {};
+                                for (var $47 in state) {
+                                    if ({}.hasOwnProperty.call(state, $47)) {
+                                        $46[$47] = state[$47];
                                     };
                                 };
-                                $43.ctx = new Data_Maybe.Just(v2);
-                                return $43;
+                                $46.ctx = new Data_Maybe.Just(v2);
+                                return $46;
                             }))(function () {
                                 return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value0);
                             });
                         });
                     });
                 };
-                throw new Error("Failed pattern match at App.Diagram line 86, column 5 - line 92, column 16: " + [ v1.constructor.name ]);
+                throw new Error("Failed pattern match at App.Diagram line 98, column 5 - line 104, column 20: " + [ v1.constructor.name ]);
             });
         };
-        throw new Error("Failed pattern match at App.Diagram line 69, column 3 - line 72, column 14: " + [ v.constructor.name ]);
+        if (v instanceof UpdateTarget) {
+            var go = function (__copy_es$prime) {
+                return function (__copy_i) {
+                    var es$prime = __copy_es$prime;
+                    var i = __copy_i;
+                    tco: while (true) {
+                        var $51 = Data_Array.index(es$prime)(i);
+                        if ($51 instanceof Data_Maybe.Just) {
+                            var $52 = $51.value0.value0.overlap(v.value0);
+                            if ($52) {
+                                return i;
+                            };
+                            if (!$52) {
+                                var __tco_es$prime = es$prime;
+                                var __tco_i = i - 1;
+                                es$prime = __tco_es$prime;
+                                i = __tco_i;
+                                continue tco;
+                            };
+                            throw new Error("Failed pattern match at App.Diagram line 111, column 36 - line 111, column 77: " + [ $52.constructor.name ]);
+                        };
+                        if ($51 instanceof Data_Maybe.Nothing) {
+                            return -1;
+                        };
+                        throw new Error("Failed pattern match at App.Diagram line 110, column 22 - line 112, column 37: " + [ $51.constructor.name ]);
+                    };
+                };
+            };
+            return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.gets(function (v1) {
+                return v1.elements;
+            }))(function (v1) {
+                return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (s) {
+                    var $56 = {};
+                    for (var $57 in s) {
+                        if ({}.hasOwnProperty.call(s, $57)) {
+                            $56[$57] = s[$57];
+                        };
+                    };
+                    $56.targetIndex = go(v1)(Data_Array.length(v1) - 1);
+                    return $56;
+                }))(function () {
+                    return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value1);
+                });
+            });
+        };
+        throw new Error("Failed pattern match at App.Diagram line 81, column 3 - line 84, column 14: " + [ v.constructor.name ]);
     };
     return Halogen_Component.lifecycleComponent({
         render: render, 
@@ -1549,13 +1635,15 @@ module.exports = {
     TogglePlay: TogglePlay, 
     Initialize: Initialize, 
     Tick: Tick, 
+    UpdateTarget: UpdateTarget, 
     advanceFrame: advanceFrame, 
     diaComp: diaComp, 
     drawGraphics: drawGraphics, 
+    getCoords: getCoords, 
     insertElement: insertElement
 };
 
-},{"../App.Element":30,"../Control.Applicative":35,"../Control.Bind":41,"../Control.Monad.Aff":55,"../Control.Monad.Aff.Free":51,"../Control.Monad.Eff":71,"../Control.Monad.Eff.Console":60,"../Control.Monad.Free":76,"../Control.Monad.Free.Trans":75,"../Data.Array":125,"../Data.Foldable":155,"../Data.Function":168,"../Data.Functor":174,"../Data.HeytingAlgebra":178,"../Data.Identity":179,"../Data.Maybe":194,"../Data.Ord":210,"../Data.Unit":232,"../Graphics.Canvas":237,"../Graphics.Canvas.Free":235,"../Halogen":265,"../Halogen.Component":241,"../Halogen.HTML.Elements":246,"../Halogen.HTML.Elements.Indexed":245,"../Halogen.HTML.Events.Indexed":250,"../Halogen.HTML.Indexed":253,"../Halogen.HTML.Properties.Indexed":254,"../Halogen.Query":263,"../Halogen.Query.HalogenF":261,"../Prelude":273}],29:[function(require,module,exports){
+},{"../App.Element":30,"../Control.Applicative":35,"../Control.Apply":37,"../Control.Bind":41,"../Control.Monad.Aff":55,"../Control.Monad.Aff.Free":51,"../Control.Monad.Eff":71,"../Control.Monad.Eff.Class":58,"../Control.Monad.Eff.Console":60,"../Control.Monad.Free":76,"../Control.Monad.Free.Trans":75,"../Data.Array":125,"../Data.Foldable":155,"../Data.Function":168,"../Data.Functor":174,"../Data.HeytingAlgebra":178,"../Data.Identity":179,"../Data.Maybe":194,"../Data.Ord":210,"../Data.Ring":215,"../Data.Unit":232,"../Graphics.Canvas":237,"../Graphics.Canvas.Free":235,"../Halogen":265,"../Halogen.Component":241,"../Halogen.HTML.Elements":246,"../Halogen.HTML.Elements.Indexed":245,"../Halogen.HTML.Events.Handler":249,"../Halogen.HTML.Events.Indexed":250,"../Halogen.HTML.Events.Types":251,"../Halogen.HTML.Indexed":253,"../Halogen.HTML.Properties.Indexed":254,"../Halogen.Query":263,"../Halogen.Query.HalogenF":261,"../Prelude":273}],29:[function(require,module,exports){
 // Generated by psc version 0.10.5
 "use strict";
 var App_Element = require("../App.Element");
@@ -1571,24 +1659,31 @@ var Halogen_HTML_Elements = require("../Halogen.HTML.Elements");
 var Halogen_HTML_Elements_Indexed = require("../Halogen.HTML.Elements.Indexed");
 var Data_Function = require("../Data.Function");
 var Data_Show = require("../Data.Show");
-var Control_Bind = require("../Control.Bind");
+var Control_Applicative = require("../Control.Applicative");
 var Control_Monad_Free_Trans = require("../Control.Monad.Free.Trans");
+var Data_Unit = require("../Data.Unit");
+var Control_Bind = require("../Control.Bind");
 var Data_Ring = require("../Data.Ring");
 var Data_Semiring = require("../Data.Semiring");
 var Data_EuclideanRing = require("../Data.EuclideanRing");
+var Data_HeytingAlgebra = require("../Data.HeytingAlgebra");
+var Data_Ord = require("../Data.Ord");
 var Data_Identity = require("../Data.Identity");
 var showData = function (moment) {
     return Halogen_HTML_Elements.form_([ Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputCheckbox.value), Halogen_HTML_Properties_Indexed.title("enabled"), Halogen_HTML_Properties_Indexed.checked(moment.enabled) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("Inner radius"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.size.r1)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("Outer radius"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.size.r2)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("x"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.pos.x)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("y"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.pos.y)) ]) ]);
 };
 var renderDonut = function (dictMonad) {
-    return function (c) {
-        return App_Element.at(dictMonad)(c.pos.x)(c.pos.y)(Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(dictMonad))(Graphics_Canvas_Free.setFillStyle(dictMonad)(App_Element.colorToStr(c.color)))(function () {
-            return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(dictMonad))(Graphics_Canvas_Free.setLineWidth(dictMonad)(Data_Int.toNumber(c.size.r2 - c.size.r1)))(function () {
+    return function (v) {
+        if (!v.enabled) {
+            return Control_Applicative.pure(Control_Monad_Free_Trans.applicativeFreeT(Graphics_Canvas_Free.functorGraphicsF)(dictMonad))(Data_Unit.unit);
+        };
+        return App_Element.at(dictMonad)(v.pos.x)(v.pos.y)(Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(dictMonad))(Graphics_Canvas_Free.setFillStyle(dictMonad)(App_Element.colorToStr(v.color)))(function () {
+            return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(dictMonad))(Graphics_Canvas_Free.setLineWidth(dictMonad)(Data_Int.toNumber(v.size.r2 - v.size.r1)))(function () {
                 return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(dictMonad))(Graphics_Canvas_Free.beginPath(dictMonad))(function () {
                     return Control_Bind.bind(Control_Monad_Free_Trans.bindFreeT(Graphics_Canvas_Free.functorGraphicsF)(dictMonad))(Graphics_Canvas_Free.arc(dictMonad)({
                         x: 0.0, 
                         y: 0.0, 
-                        r: Data_Int.toNumber(c.size.r1), 
+                        r: Data_Int.toNumber(v.size.r1), 
                         start: 0.0, 
                         end: 2.0 * $$Math.pi
                     }))(function () {
@@ -1631,6 +1726,12 @@ var reconcileDonut = function (l) {
         };
     };
 };
+var overlap = function (v) {
+    return function (v1) {
+        var d = $$Math.sqrt($$Math.pow(Data_Int.toNumber(v.pos.x) - v1.x)(2.0) + $$Math.pow(Data_Int.toNumber(v.pos.y) - v1.y)(2.0));
+        return d >= Data_Int.toNumber(v.size.r1) && d <= Data_Int.toNumber(v.size.r2);
+    };
+};
 var defaultDonutMoment = {
     enabled: false, 
     time: -1, 
@@ -1655,17 +1756,19 @@ var donutElem = new App_Element.Element({
     render: renderDonut(Data_Identity.monadIdentity), 
     reconcile: reconcileDonut, 
     current: defaultDonutMoment, 
-    form: showData
+    form: showData, 
+    overlap: overlap
 });
 module.exports = {
     defaultDonutMoment: defaultDonutMoment, 
     donutElem: donutElem, 
+    overlap: overlap, 
     reconcileDonut: reconcileDonut, 
     renderDonut: renderDonut, 
     showData: showData
 };
 
-},{"../App.Element":30,"../Control.Bind":41,"../Control.Monad.Free.Trans":75,"../Data.EuclideanRing":150,"../Data.Function":168,"../Data.Identity":179,"../Data.Int":185,"../Data.Ring":215,"../Data.Semiring":219,"../Data.Show":221,"../Graphics.Canvas.Free":235,"../Halogen.HTML.Elements":246,"../Halogen.HTML.Elements.Indexed":245,"../Halogen.HTML.Events.Handler":249,"../Halogen.HTML.Events.Indexed":250,"../Halogen.HTML.Indexed":253,"../Halogen.HTML.Properties.Indexed":254,"../Math":268,"../Prelude":273}],30:[function(require,module,exports){
+},{"../App.Element":30,"../Control.Applicative":35,"../Control.Bind":41,"../Control.Monad.Free.Trans":75,"../Data.EuclideanRing":150,"../Data.Function":168,"../Data.HeytingAlgebra":178,"../Data.Identity":179,"../Data.Int":185,"../Data.Ord":210,"../Data.Ring":215,"../Data.Semiring":219,"../Data.Show":221,"../Data.Unit":232,"../Graphics.Canvas.Free":235,"../Halogen.HTML.Elements":246,"../Halogen.HTML.Elements.Indexed":245,"../Halogen.HTML.Events.Handler":249,"../Halogen.HTML.Events.Indexed":250,"../Halogen.HTML.Indexed":253,"../Halogen.HTML.Properties.Indexed":254,"../Math":268,"../Prelude":273}],30:[function(require,module,exports){
 // Generated by psc version 0.10.5
 "use strict";
 var Prelude = require("../Prelude");
@@ -1762,7 +1865,7 @@ var findMoment = function (dictOrd) {
                             r: Data_Maybe.Nothing.value
                         };
                     };
-                    throw new Error("Failed pattern match at App.Element line 53, column 10 - line 56, column 58: " + [ $20.constructor.name ]);
+                    throw new Error("Failed pattern match at App.Element line 56, column 10 - line 59, column 58: " + [ $20.constructor.name ]);
                 };
             };
             return go(0);
@@ -1822,7 +1925,7 @@ var setTime = function (el) {
                 return $34;
             })());
         };
-        throw new Error("Failed pattern match at App.Element line 47, column 3 - line 50, column 46: " + [ $23.constructor.name ]);
+        throw new Error("Failed pattern match at App.Element line 50, column 3 - line 53, column 46: " + [ $23.constructor.name ]);
     };
 };
 var colorToStr = function (v) {
@@ -1835,7 +1938,7 @@ var colorToStr = function (v) {
             if (!$39) {
                 return "";
             };
-            throw new Error("Failed pattern match at App.Element line 72, column 56 - line 72, column 82: " + [ $39.constructor.name ]);
+            throw new Error("Failed pattern match at App.Element line 75, column 56 - line 75, column 82: " + [ $39.constructor.name ]);
         })() + Data_Int.toStringAs(Data_Int.hexadecimal)(x);
     })([ v.r, v.g, v.b ]));
 };
@@ -1847,7 +1950,7 @@ var setBorder = function (bordered) {
         if (!bordered) {
             return Graphics_Canvas_Free.setStrokeStyle(Data_Identity.monadIdentity)(colorToStr(color));
         };
-        throw new Error("Failed pattern match at App.Element line 76, column 3 - line 78, column 38: " + [ bordered.constructor.name ]);
+        throw new Error("Failed pattern match at App.Element line 79, column 3 - line 81, column 38: " + [ bordered.constructor.name ]);
     };
 };
 var at = function (dictMonad) {
@@ -1881,7 +1984,8 @@ var unfoldDrawable = function (v) {
         insertKey: function (v1) {
             return unfoldDrawable(insertKey(Data_Ord.ordInt)(v.value0)(v.value0.current));
         }, 
-        formed: v.value0.form(v.value0.current)
+        formed: v.value0.form(v.value0.current), 
+        overlap: v.value0.overlap(v.value0.current)
     });
 };
 module.exports = {
@@ -1928,6 +2032,8 @@ var Data_Semiring = require("../Data.Semiring");
 var Data_Ring = require("../Data.Ring");
 var Data_Eq = require("../Data.Eq");
 var Data_Boolean = require("../Data.Boolean");
+var Data_HeytingAlgebra = require("../Data.HeytingAlgebra");
+var Data_Ord = require("../Data.Ord");
 var showData = function (moment) {
     return Halogen_HTML_Elements.form_([ Halogen_HTML_Elements.h1_([ Halogen_HTML.text(Data_Show.show(Data_Show.showInt)(moment.time)) ]), Halogen_HTML_Elements.h2_([ Halogen_HTML.text(Data_Show.show(Data_Show.showInt)(moment.opacity)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputCheckbox.value), Halogen_HTML_Properties_Indexed.title("enabled"), Halogen_HTML_Properties_Indexed.checked(moment.enabled) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputCheckbox.value), Halogen_HTML_Properties_Indexed.title("bordered"), Halogen_HTML_Properties_Indexed.checked(moment.bordered) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputRange.value), Halogen_HTML_Properties_Indexed.IProp(Halogen_HTML_Core.prop(Halogen_HTML_Core.intIsProp)(Halogen_HTML_Core.propName("min"))(Data_Maybe.Just.create(Halogen_HTML_Core.attrName("min")))(0)), Halogen_HTML_Properties_Indexed.IProp(Halogen_HTML_Core.prop(Halogen_HTML_Core.intIsProp)(Halogen_HTML_Core.propName("max"))(Data_Maybe.Just.create(Halogen_HTML_Core.attrName("max")))(360)), Halogen_HTML_Properties_Indexed.title("angle"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.angle)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("width"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.size.w)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("height"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.size.h)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("x"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.pos.x)) ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputNumber.value), Halogen_HTML_Properties_Indexed.title("y"), Halogen_HTML_Properties_Indexed.value(Data_Show.show(Data_Show.showInt)(moment.pos.y)) ]) ]);
 };
@@ -1976,7 +2082,7 @@ var reconcileRect = function (l) {
                     if (Data_Boolean.otherwise) {
                         return a + Data_Int.round(p * Data_Int.toNumber(b - a)) | 0;
                     };
-                    throw new Error("Failed pattern match at App.Rectangle line 95, column 7 - line 96, column 61: " + [ a.constructor.name, b.constructor.name ]);
+                    throw new Error("Failed pattern match at App.Rectangle line 96, column 7 - line 97, column 61: " + [ a.constructor.name, b.constructor.name ]);
                 };
             };
             return {
@@ -2000,6 +2106,13 @@ var reconcileRect = function (l) {
                 }
             };
         };
+    };
+};
+var overlap = function (m) {
+    return function (v) {
+        var d2 = v.y - Data_Int.toNumber(m.pos.y);
+        var d1 = v.x - Data_Int.toNumber(m.pos.x);
+        return d1 >= 0.0 && (d1 <= Data_Int.toNumber(m.size.w) && (d2 >= 0.0 && d2 <= Data_Int.toNumber(m.size.h)));
     };
 };
 var defaultRectMoment = {
@@ -2028,10 +2141,12 @@ var rectElem = new App_Element.Element({
     render: renderRect, 
     reconcile: reconcileRect, 
     current: defaultRectMoment, 
-    form: showData
+    form: showData, 
+    overlap: overlap
 });
 module.exports = {
     defaultRectMoment: defaultRectMoment, 
+    overlap: overlap, 
     reconcileRect: reconcileRect, 
     rectElem: rectElem, 
     renderRect: renderRect, 
@@ -2039,7 +2154,7 @@ module.exports = {
     staticRect: staticRect
 };
 
-},{"../App.Element":30,"../App.Static":32,"../Control.Applicative":35,"../Control.Bind":41,"../Control.Monad.Free.Trans":75,"../Data.Boolean":135,"../Data.Eq":148,"../Data.EuclideanRing":150,"../Data.Function":168,"../Data.Identity":179,"../Data.Int":185,"../Data.Maybe":194,"../Data.Ring":215,"../Data.Semiring":219,"../Data.Show":221,"../Data.Unit":232,"../Graphics.Canvas.Free":235,"../Halogen.HTML":257,"../Halogen.HTML.Core":244,"../Halogen.HTML.Elements":246,"../Halogen.HTML.Elements.Indexed":245,"../Halogen.HTML.Events.Handler":249,"../Halogen.HTML.Events.Indexed":250,"../Halogen.HTML.Indexed":253,"../Halogen.HTML.Properties.Indexed":254,"../Math":268,"../Prelude":273}],32:[function(require,module,exports){
+},{"../App.Element":30,"../App.Static":32,"../Control.Applicative":35,"../Control.Bind":41,"../Control.Monad.Free.Trans":75,"../Data.Boolean":135,"../Data.Eq":148,"../Data.EuclideanRing":150,"../Data.Function":168,"../Data.HeytingAlgebra":178,"../Data.Identity":179,"../Data.Int":185,"../Data.Maybe":194,"../Data.Ord":210,"../Data.Ring":215,"../Data.Semiring":219,"../Data.Show":221,"../Data.Unit":232,"../Graphics.Canvas.Free":235,"../Halogen.HTML":257,"../Halogen.HTML.Core":244,"../Halogen.HTML.Elements":246,"../Halogen.HTML.Elements.Indexed":245,"../Halogen.HTML.Events.Handler":249,"../Halogen.HTML.Events.Indexed":250,"../Halogen.HTML.Indexed":253,"../Halogen.HTML.Properties.Indexed":254,"../Math":268,"../Prelude":273}],32:[function(require,module,exports){
 // Generated by psc version 0.10.5
 "use strict";
 var Graphics_Canvas_Free = require("../Graphics.Canvas.Free");
@@ -2068,7 +2183,10 @@ var boxStatic = function (v) {
             return boxStatic(new Static(v.value0));
         }, 
         layer: 0, 
-        formed: v.value0.form(v.value0.moment)
+        formed: v.value0.form(v.value0.moment), 
+        overlap: function (v1) {
+            return false;
+        }
     });
 };
 module.exports = {
@@ -25255,74 +25373,66 @@ var App_Donut = require("../App.Donut");
 var App_Static = require("../App.Static");
 var Prelude = require("../Prelude");
 var Data_Maybe = require("../Data.Maybe");
-var Data_Ring = require("../Data.Ring");
 var Data_Function = require("../Data.Function");
-var beam0 = (function () {
-    var $1 = {};
-    for (var $2 in App_Rectangle.defaultRectMoment) {
-        if ({}.hasOwnProperty.call(App_Rectangle.defaultRectMoment, $2)) {
-            $1[$2] = App_Rectangle.defaultRectMoment[$2];
+var Data_Ring = require("../Data.Ring");
+var testm2 = [ (function () {
+    var $2 = {};
+    for (var $3 in App_Circle.defaultCircleMoment) {
+        if ({}.hasOwnProperty.call(App_Circle.defaultCircleMoment, $3)) {
+            $2[$3] = App_Circle.defaultCircleMoment[$3];
         };
     };
-    $1.enabled = true;
-    $1.time = 900;
-    $1.angle = 0;
-    $1.size = {
-        w: 400, 
-        h: 80
+    $2.enabled = true;
+    $2.time = 0;
+    $2.radius = 200;
+    $2.pos = {
+        x: 450, 
+        y: 450
     };
-    $1.pos = {
-        x: 0, 
-        y: 360
-    };
-    $1.opacity = 30;
-    $1.color = {
-        r: 100, 
-        g: 255, 
+    $2.opacity = 100;
+    $2.color = {
+        r: 0, 
+        g: 0, 
         b: 255
     };
-    return $1;
-})();
-var beam1 = (function () {
-    var $4 = {};
-    for (var $5 in beam0) {
-        if ({}.hasOwnProperty.call(beam0, $5)) {
-            $4[$5] = beam0[$5];
-        };
-    };
-    $4.angle = -45;
-    $4.pos = {
-        x: 400, 
-        y: 350
-    };
-    $4.size = {
-        w: 600, 
-        h: 80
-    };
-    $4.time = 1680;
-    return $4;
-})();
-var beams = [ (function () {
-    var $7 = {};
-    for (var $8 in beam0) {
-        if ({}.hasOwnProperty.call(beam0, $8)) {
-            $7[$8] = beam0[$8];
-        };
-    };
-    $7.time = 0;
-    return $7;
-})(), (function () {
-    var $10 = {};
-    for (var $11 in beam0) {
-        if ({}.hasOwnProperty.call(beam0, $11)) {
-            $10[$11] = beam0[$11];
-        };
-    };
-    $10.time = 60;
-    $10.enabled = false;
-    return $10;
+    return $2;
 })() ];
-var megabeam = App_Element.unfoldDrawable((function (v) {
+var testm1 = [ (function () {
+    var $5 = {};
+    for (var $6 in App_Circle.defaultCircleMoment) {
+        if ({}.hasOwnProperty.call(App_Circle.defaultCircleMoment, $6)) {
+            $5[$6] = App_Circle.defaultCircleMoment[$6];
+        };
+    };
+    $5.enabled = true;
+    $5.time = 0;
+    $5.radius = 200;
+    $5.pos = {
+        x: 150, 
+        y: 150
+    };
+    $5.opacity = 100;
+    $5.color = {
+        r: 255, 
+        g: 0, 
+        b: 0
+    };
+    return $5;
+})() ];
+var test2 = App_Element.unfoldDrawable((function (v) {
+    return App_Element.Element.create((function () {
+        var $9 = {};
+        for (var $10 in v.value0) {
+            if ({}.hasOwnProperty.call(v.value0, $10)) {
+                $9[$10] = v.value0[$10];
+            };
+        };
+        $9.layer = 1;
+        $9.keys = testm2;
+        return $9;
+    })());
+})(App_Circle.circleElem));
+var test1 = App_Element.unfoldDrawable((function (v) {
     return App_Element.Element.create((function () {
         var $14 = {};
         for (var $15 in v.value0) {
@@ -25330,11 +25440,11 @@ var megabeam = App_Element.unfoldDrawable((function (v) {
                 $14[$15] = v.value0[$15];
             };
         };
-        $14.layer = 2;
-        $14.keys = beams;
+        $14.layer = 1;
+        $14.keys = testm1;
         return $14;
     })());
-})(App_Rectangle.rectElem));
+})(App_Circle.circleElem));
 var interA = {
     paused: false, 
     ctx: Data_Maybe.Nothing.value, 
@@ -25344,15 +25454,15 @@ var interA = {
         b: 90
     }, 
     statics: [  ], 
-    elements: [ megabeam ], 
-    targetIndex: 0
+    elements: [ test1, test2 ], 
+    targetIndex: -1
 };
 module.exports = {
-    beam0: beam0, 
-    beam1: beam1, 
-    beams: beams, 
     interA: interA, 
-    megabeam: megabeam
+    test1: test1, 
+    test2: test2, 
+    testm1: testm1, 
+    testm2: testm2
 };
 
 },{"../App.Circle":27,"../App.Diagram":28,"../App.Donut":29,"../App.Element":30,"../App.Rectangle":31,"../App.Static":32,"../Data.Function":168,"../Data.Maybe":194,"../Data.Ring":215,"../Prelude":273}],235:[function(require,module,exports){

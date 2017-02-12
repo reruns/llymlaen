@@ -19,7 +19,7 @@ data Element a = Element { layer :: Int
                          , reconcile :: a -> a -> Int -> a
                          , render :: a -> Graphics Unit
                          , form :: forall p i. a -> H.HTML p i
-                         , overlap :: a -> {x :: Int, y :: Int} -> Boolean
+                         , overlap :: a -> {x :: Number, y :: Number} -> Boolean
                          }
   
 data Drawable = Drawable { drawn :: Graphics Unit
@@ -28,7 +28,7 @@ data Drawable = Drawable { drawn :: Graphics Unit
                          , setTime :: Int -> Drawable
                          , insertKey :: Unit -> Drawable
                          , formed :: forall p i. H.HTML p i
-                         , overlap :: {x :: Int, y :: Int} -> Boolean
+                         , overlap :: {x :: Number, y :: Number} -> Boolean
                          }
                          
 unfoldDrawable (Element el) 

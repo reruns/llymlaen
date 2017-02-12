@@ -112,8 +112,8 @@ reconcileRect l r t =
            }
   }
   
-overlap :: RectMoment -> { x :: Int, y :: Int } -> Boolean
+overlap :: RectMoment -> { x :: Number, y :: Number } -> Boolean
 overlap m {x,y} = 
-  let d1 = x-m.pos.x
-      d2 = y-m.pos.y
-  in d1 >= 0 && d1 <= m.size.w && d2 >= 0 && d2 <= m.size.h
+  let d1 = x-(toNumber m.pos.x)
+      d2 = y-(toNumber m.pos.y)
+  in d1 >= 0.0 && d1 <= (toNumber m.size.w) && d2 >= 0.0 && d2 <= (toNumber m.size.h)

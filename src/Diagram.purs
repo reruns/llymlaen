@@ -1,17 +1,23 @@
 module App.Diagram where
 
 import Prelude
+
 import Data.Foldable
-import Data.Array (insertBy, (!!))
+import Data.Array (insertBy, (!!), length)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
+
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class
 import Control.Monad.Eff.Console (log, CONSOLE)
+import Control.Apply ((*>))
 
 import Halogen
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as HE
 import Halogen.HTML.Properties.Indexed as HP
+import Halogen.HTML.Events.Types (MouseEvent)
+import Halogen.HTML.Events.Handler (preventDefault, EventHandler)
 
 import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDimensions, Context2D)
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
@@ -30,6 +36,7 @@ data Query a
   = TogglePlay a
   | Initialize a
   | Tick a
+  | UpdateTarget {x :: Number, y :: Number} a
 
 
 advanceFrame :: State -> State
@@ -50,6 +57,10 @@ drawGraphics st = let
                   traverse_ drawOne st.statics
                   traverse_ drawOne st.elements
     Nothing  -> pure unit
+    
+getCoords e = do
+  pure $ Just $ action $ UpdateTarget {x:e.pageX, y:e.pageY}
+  
 
 diaComp :: forall eff. Component State Query (Aff (canvas :: CANVAS, console :: CONSOLE | eff))
 diaComp = lifecycleComponent
@@ -61,7 +72,8 @@ diaComp = lifecycleComponent
   render :: State -> ComponentHTML Query
   render st =
     H.div_
-      [ H.canvas [ HP.id_ "canvas" ]
+      [ H.canvas [ HP.id_ "canvas"
+                 , HE.onClick (\e -> preventDefault *> getCoords e) ]
       , fromMaybe (H.div_ []) $ ((\(E.Drawable d) -> d.formed) <$> (st.elements !! st.targetIndex))
       ]
       
@@ -90,3 +102,11 @@ diaComp = lifecycleComponent
           context <- fromEff $ getContext2D canvas
           modify (\state -> state {ctx = Just context})
           pure next
+          
+  eval (UpdateTarget pos next) = do
+    es <- gets _.elements
+    modify (\s -> s {targetIndex = go es ((length es) - 1) })
+    pure next 
+    where go es' i = case (es' !! i) of
+            Just (E.Drawable e) -> if e.overlap pos then i else go es' (i-1)
+            Nothing             -> -1

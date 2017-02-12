@@ -91,7 +91,7 @@ reconcileDonut l r t =
            }
   }
   
-overlap :: DonutMoment -> { x :: Int, y :: Int } -> Boolean
+overlap :: DonutMoment -> { x :: Number, y :: Number } -> Boolean
 overlap m@{pos:{x:x1,y:y1}} {x:x2,y:y2} = 
-  let d = sqrt $ (pow (toNumber x1 - toNumber x2) 2.0) + (pow (toNumber y1 - toNumber y2) 2.0)
+  let d = sqrt $ (pow (toNumber x1 - x2) 2.0) + (pow (toNumber y1 - y2) 2.0)
   in d >= (toNumber m.size.r1) && d <= (toNumber m.size.r2)
