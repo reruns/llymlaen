@@ -1452,7 +1452,7 @@ var Halogen_HTML_Events_Handler = require("../Halogen.HTML.Events.Handler");
 var Graphics_Canvas = require("../Graphics.Canvas");
 var Graphics_Canvas_Free = require("../Graphics.Canvas.Free");
 var App_Element = require("../App.Element");
-var Data_Ord = require("../Data.Ord");
+var App_Validators = require("../App.Validators");
 var Data_Function = require("../Data.Function");
 var Control_Applicative = require("../Control.Applicative");
 var Halogen_Query = require("../Halogen.Query");
@@ -1463,11 +1463,14 @@ var Data_Unit = require("../Data.Unit");
 var Data_Functor = require("../Data.Functor");
 var Halogen_HTML_Elements = require("../Halogen.HTML.Elements");
 var Halogen_HTML_Elements_Indexed = require("../Halogen.HTML.Elements.Indexed");
+var Halogen_HTML_Core = require("../Halogen.HTML.Core");
+var Control_Semigroupoid = require("../Control.Semigroupoid");
 var Control_Monad_Free = require("../Control.Monad.Free");
 var Data_HeytingAlgebra = require("../Data.HeytingAlgebra");
 var Control_Monad_Aff_Free = require("../Control.Monad.Aff.Free");
 var Halogen_Query_HalogenF = require("../Halogen.Query.HalogenF");
 var Data_Ring = require("../Data.Ring");
+var Data_Ord = require("../Data.Ord");
 var Halogen_Component = require("../Halogen.Component");
 var TogglePlay = (function () {
     function TogglePlay(value0) {
@@ -1496,6 +1499,18 @@ var Tick = (function () {
     };
     return Tick;
 })();
+var SetTime = (function () {
+    function SetTime(value0, value1) {
+        this.value0 = value0;
+        this.value1 = value1;
+    };
+    SetTime.create = function (value0) {
+        return function (value1) {
+            return new SetTime(value0, value1);
+        };
+    };
+    return SetTime;
+})();
 var UpdateTarget = (function () {
     function UpdateTarget(value0, value1) {
         this.value0 = value0;
@@ -1520,20 +1535,27 @@ var ModTarget = (function () {
     };
     return ModTarget;
 })();
-var insertElement = function (st) {
-    return function (dr) {
-        var $20 = {};
-        for (var $21 in st) {
-            if ({}.hasOwnProperty.call(st, $21)) {
-                $20[$21] = st[$21];
-            };
-        };
-        $20.elements = Data_Array.insertBy(Data_Ord.comparing(Data_Ord.ordInt)(function (v) {
-            return v.value0.layer;
-        }))(dr)(st.elements);
-        return $20;
+var AddMoment = (function () {
+    function AddMoment(value0) {
+        this.value0 = value0;
     };
-};
+    AddMoment.create = function (value0) {
+        return new AddMoment(value0);
+    };
+    return AddMoment;
+})();
+var AddElement = (function () {
+    function AddElement(value0, value1) {
+        this.value0 = value0;
+        this.value1 = value1;
+    };
+    AddElement.create = function (value0) {
+        return function (value1) {
+            return new AddElement(value0, value1);
+        };
+    };
+    return AddElement;
+})();
 var getCoords = function (dictApplicative) {
     return function (e) {
         return Control_Applicative.pure(dictApplicative)(Data_Maybe.Just.create(Halogen_Query.action(UpdateTarget.create({
@@ -1573,22 +1595,26 @@ var advanceFrame = function (st) {
     var updateOne = function (v) {
         return v.value0.updated(Data_Unit.unit);
     };
-    var $29 = {};
-    for (var $30 in st) {
-        if ({}.hasOwnProperty.call(st, $30)) {
-            $29[$30] = st[$30];
+    var $27 = {};
+    for (var $28 in st) {
+        if ({}.hasOwnProperty.call(st, $28)) {
+            $27[$28] = st[$28];
         };
     };
-    $29.elements = Data_Functor.map(Data_Functor.functorArray)(updateOne)(st.elements);
-    return $29;
+    $27.elements = Data_Functor.map(Data_Functor.functorArray)(updateOne)(st.elements);
+    return $27;
 };
 var diaComp = (function () {
     var render = function (st) {
         return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements_Indexed.canvas([ Halogen_HTML_Properties_Indexed.id_("canvas"), Halogen_HTML_Events_Indexed.onClick(function (e) {
             return Control_Apply.applySecond(Halogen_HTML_Events_Handler.applyEventHandler)(Halogen_HTML_Events_Handler.preventDefault)(getCoords(Halogen_HTML_Events_Handler.applicativeEventHandler)(e));
-        }) ]), Data_Maybe.fromMaybe(Halogen_HTML_Elements.div_([  ]))(Data_Functor.map(Data_Maybe.functorMaybe)(function (v) {
+        }) ]), Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.button_([ new Halogen_HTML_Core.Text("Circle") ]), Halogen_HTML_Elements.button_([ new Halogen_HTML_Core.Text("Rectangle") ]), Halogen_HTML_Elements.button_([ new Halogen_HTML_Core.Text("Donut") ]) ]), Data_Maybe.fromMaybe(Halogen_HTML_Elements.div_([  ]))(Data_Functor.map(Data_Maybe.functorMaybe)(function (v) {
             return v.value0.formed(ModTarget.create);
-        })(Data_Array.index(st.elements)(st.targetIndex))) ]);
+        })(Data_Array.index(st.elements)(st.targetIndex))), Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.button_([ new Halogen_HTML_Core.Text("Play") ]), Halogen_HTML_Elements_Indexed.input([ Halogen_HTML_Properties_Indexed.inputType(Halogen_HTML_Properties_Indexed.InputRange.value), Halogen_HTML_Properties_Indexed.IProp(Halogen_HTML_Core.prop(Halogen_HTML_Core.intIsProp)(Halogen_HTML_Core.propName("min"))(Data_Maybe.Just.create(Halogen_HTML_Core.attrName("min")))(0)), Halogen_HTML_Properties_Indexed.IProp(Halogen_HTML_Core.prop(Halogen_HTML_Core.intIsProp)(Halogen_HTML_Core.propName("max"))(Data_Maybe.Just.create(Halogen_HTML_Core.attrName("max")))(1000)), Halogen_HTML_Events_Indexed.onValueChange(function (s) {
+            return Data_Functor.map(Halogen_HTML_Events_Handler.functorEventHandler)(Data_Functor.map(Data_Maybe.functorMaybe)(function ($97) {
+                return Halogen_Query.action(SetTime.create($97));
+            }))(App_Validators.validateSetTime(Halogen_HTML_Events_Handler.applicativeEventHandler)(s)(1000));
+        }) ]) ]) ]);
     };
     var $$eval = function (v) {
         if (v instanceof TogglePlay) {
@@ -1596,14 +1622,14 @@ var diaComp = (function () {
                 return v1.paused;
             }))(function (v1) {
                 return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (st) {
-                    var $36 = {};
-                    for (var $37 in st) {
-                        if ({}.hasOwnProperty.call(st, $37)) {
-                            $36[$37] = st[$37];
+                    var $34 = {};
+                    for (var $35 in st) {
+                        if ({}.hasOwnProperty.call(st, $35)) {
+                            $34[$35] = st[$35];
                         };
                     };
-                    $36.paused = !v1;
-                    return $36;
+                    $34.paused = !v1;
+                    return $34;
                 }))(function () {
                     return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value0);
                 });
@@ -1620,7 +1646,7 @@ var diaComp = (function () {
                     if (!v1) {
                         return Halogen_Query.modify(advanceFrame);
                     };
-                    throw new Error("Failed pattern match at App.Diagram line 89, column 5 - line 91, column 31: " + [ v1.constructor.name ]);
+                    throw new Error("Failed pattern match at App.Diagram line 100, column 5 - line 102, column 31: " + [ v1.constructor.name ]);
                 })())(function () {
                     return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.get)(function (v2) {
                         return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(drawGraphics(Data_Foldable.foldableArray)(Data_Foldable.foldableArray)(v2)))(function () {
@@ -1628,6 +1654,22 @@ var diaComp = (function () {
                         });
                     });
                 });
+            });
+        };
+        if (v instanceof SetTime) {
+            return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (st) {
+                var $44 = {};
+                for (var $45 in st) {
+                    if ({}.hasOwnProperty.call(st, $45)) {
+                        $44[$45] = st[$45];
+                    };
+                };
+                $44.elements = Data_Functor.map(Data_Functor.functorArray)(function (v1) {
+                    return v1.value0.setTime(v.value0);
+                })(st.elements);
+                return $44;
+            }))(function () {
+                return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value1);
             });
         };
         if (v instanceof Initialize) {
@@ -1642,21 +1684,21 @@ var diaComp = (function () {
                     })(v1.value0)))(function () {
                         return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(Graphics_Canvas.getContext2D(v1.value0)))(function (v2) {
                             return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (state) {
-                                var $47 = {};
-                                for (var $48 in state) {
-                                    if ({}.hasOwnProperty.call(state, $48)) {
-                                        $47[$48] = state[$48];
+                                var $52 = {};
+                                for (var $53 in state) {
+                                    if ({}.hasOwnProperty.call(state, $53)) {
+                                        $52[$53] = state[$53];
                                     };
                                 };
-                                $47.ctx = new Data_Maybe.Just(v2);
-                                return $47;
+                                $52.ctx = new Data_Maybe.Just(v2);
+                                return $52;
                             }))(function () {
                                 return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value0);
                             });
                         });
                     });
                 };
-                throw new Error("Failed pattern match at App.Diagram line 98, column 5 - line 104, column 20: " + [ v1.constructor.name ]);
+                throw new Error("Failed pattern match at App.Diagram line 113, column 5 - line 119, column 20: " + [ v1.constructor.name ]);
             });
         };
         if (v instanceof UpdateTarget) {
@@ -1665,25 +1707,25 @@ var diaComp = (function () {
                     var es$prime = __copy_es$prime;
                     var i = __copy_i;
                     tco: while (true) {
-                        var $52 = Data_Array.index(es$prime)(i);
-                        if ($52 instanceof Data_Maybe.Just) {
-                            var $53 = $52.value0.value0.overlap(v.value0);
-                            if ($53) {
+                        var $57 = Data_Array.index(es$prime)(i);
+                        if ($57 instanceof Data_Maybe.Just) {
+                            var $58 = $57.value0.value0.overlap(v.value0);
+                            if ($58) {
                                 return i;
                             };
-                            if (!$53) {
+                            if (!$58) {
                                 var __tco_es$prime = es$prime;
                                 var __tco_i = i - 1;
                                 es$prime = __tco_es$prime;
                                 i = __tco_i;
                                 continue tco;
                             };
-                            throw new Error("Failed pattern match at App.Diagram line 111, column 36 - line 111, column 77: " + [ $53.constructor.name ]);
+                            throw new Error("Failed pattern match at App.Diagram line 126, column 36 - line 126, column 77: " + [ $58.constructor.name ]);
                         };
-                        if ($52 instanceof Data_Maybe.Nothing) {
+                        if ($57 instanceof Data_Maybe.Nothing) {
                             return -1;
                         };
-                        throw new Error("Failed pattern match at App.Diagram line 110, column 22 - line 114, column 3: " + [ $52.constructor.name ]);
+                        throw new Error("Failed pattern match at App.Diagram line 125, column 22 - line 129, column 3: " + [ $57.constructor.name ]);
                     };
                 };
             };
@@ -1691,14 +1733,14 @@ var diaComp = (function () {
                 return v1.elements;
             }))(function (v1) {
                 return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (s) {
-                    var $57 = {};
-                    for (var $58 in s) {
-                        if ({}.hasOwnProperty.call(s, $58)) {
-                            $57[$58] = s[$58];
+                    var $62 = {};
+                    for (var $63 in s) {
+                        if ({}.hasOwnProperty.call(s, $63)) {
+                            $62[$63] = s[$63];
                         };
                     };
-                    $57.targetIndex = go(v1)(Data_Array.length(v1) - 1);
-                    return $57;
+                    $62.targetIndex = go(v1)(Data_Array.length(v1) - 1);
+                    return $62;
                 }))(function () {
                     return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value1);
                 });
@@ -1707,29 +1749,88 @@ var diaComp = (function () {
         if (v instanceof ModTarget) {
             return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.get)(function (v1) {
                 return Control_Bind.bind(Control_Monad_Free.freeBind)((function () {
-                    var $63 = Data_Array.updateAt(v1.targetIndex)(v.value0)(v1.elements);
-                    if ($63 instanceof Data_Maybe.Just) {
+                    var $68 = Data_Array.updateAt(v1.targetIndex)(v.value0)(v1.elements);
+                    if ($68 instanceof Data_Maybe.Just) {
                         return Halogen_Query.modify(function (st1) {
-                            var $64 = {};
-                            for (var $65 in st1) {
-                                if ({}.hasOwnProperty.call(st1, $65)) {
-                                    $64[$65] = st1[$65];
+                            var $69 = {};
+                            for (var $70 in st1) {
+                                if ({}.hasOwnProperty.call(st1, $70)) {
+                                    $69[$70] = st1[$70];
                                 };
                             };
-                            $64.elements = $63.value0;
-                            return $64;
+                            $69.elements = $68.value0;
+                            return $69;
                         });
                     };
-                    if ($63 instanceof Data_Maybe.Nothing) {
+                    if ($68 instanceof Data_Maybe.Nothing) {
                         return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(Data_Unit.unit);
                     };
-                    throw new Error("Failed pattern match at App.Diagram line 116, column 5 - line 118, column 27: " + [ $63.constructor.name ]);
+                    throw new Error("Failed pattern match at App.Diagram line 131, column 5 - line 133, column 27: " + [ $68.constructor.name ]);
                 })())(function () {
                     return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value1);
                 });
             });
         };
-        throw new Error("Failed pattern match at App.Diagram line 82, column 3 - line 85, column 14: " + [ v.constructor.name ]);
+        if (v instanceof AddMoment) {
+            return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.get)(function (v1) {
+                return Control_Bind.bind(Control_Monad_Free.freeBind)((function () {
+                    var $78 = Data_Array.modifyAt(v1.targetIndex)(function (v2) {
+                        return v2.value0.addMoment(Data_Unit.unit);
+                    })(v1.elements);
+                    if ($78 instanceof Data_Maybe.Just) {
+                        return Halogen_Query.modify(function (st1) {
+                            var $79 = {};
+                            for (var $80 in st1) {
+                                if ({}.hasOwnProperty.call(st1, $80)) {
+                                    $79[$80] = st1[$80];
+                                };
+                            };
+                            $79.elements = $78.value0;
+                            return $79;
+                        });
+                    };
+                    if ($78 instanceof Data_Maybe.Nothing) {
+                        return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(Data_Unit.unit);
+                    };
+                    throw new Error("Failed pattern match at App.Diagram line 138, column 5 - line 140, column 27: " + [ $78.constructor.name ]);
+                })())(function () {
+                    return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value0);
+                });
+            });
+        };
+        if (v instanceof AddElement) {
+            return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (st) {
+                var $86 = Data_Array.findLastIndex(function (v1) {
+                    return v1.value0.layer < v.value0.value0.layer;
+                })(st.elements);
+                if ($86 instanceof Data_Maybe.Just) {
+                    var $87 = {};
+                    for (var $88 in st) {
+                        if ({}.hasOwnProperty.call(st, $88)) {
+                            $87[$88] = st[$88];
+                        };
+                    };
+                    $87.elements = Data_Maybe.fromMaybe(st.elements)(Data_Array.insertAt($86.value0)(new App_Element.Drawable(v.value0.value0))(st.elements));
+                    $87.targetIndex = $86.value0;
+                    return $87;
+                };
+                if ($86 instanceof Data_Maybe.Nothing) {
+                    var $91 = {};
+                    for (var $92 in st) {
+                        if ({}.hasOwnProperty.call(st, $92)) {
+                            $91[$92] = st[$92];
+                        };
+                    };
+                    $91.elements = Data_Array.cons(new App_Element.Drawable(v.value0.value0))(st.elements);
+                    $91.targetIndex = 0;
+                    return $91;
+                };
+                throw new Error("Failed pattern match at App.Diagram line 145, column 7 - line 147, column 85: " + [ $86.constructor.name ]);
+            }))(function () {
+                return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value1);
+            });
+        };
+        throw new Error("Failed pattern match at App.Diagram line 93, column 3 - line 96, column 14: " + [ v.constructor.name ]);
     };
     return Halogen_Component.lifecycleComponent({
         render: render, 
@@ -1742,16 +1843,18 @@ module.exports = {
     TogglePlay: TogglePlay, 
     Initialize: Initialize, 
     Tick: Tick, 
+    SetTime: SetTime, 
     UpdateTarget: UpdateTarget, 
     ModTarget: ModTarget, 
+    AddMoment: AddMoment, 
+    AddElement: AddElement, 
     advanceFrame: advanceFrame, 
     diaComp: diaComp, 
     drawGraphics: drawGraphics, 
-    getCoords: getCoords, 
-    insertElement: insertElement
+    getCoords: getCoords
 };
 
-},{"../App.Element":30,"../Control.Applicative":36,"../Control.Apply":38,"../Control.Bind":42,"../Control.Monad.Aff":56,"../Control.Monad.Aff.Free":52,"../Control.Monad.Eff":72,"../Control.Monad.Eff.Class":59,"../Control.Monad.Eff.Console":61,"../Control.Monad.Free":77,"../Control.Monad.Free.Trans":76,"../Data.Array":126,"../Data.Foldable":156,"../Data.Function":169,"../Data.Functor":175,"../Data.HeytingAlgebra":179,"../Data.Identity":180,"../Data.Maybe":195,"../Data.Ord":211,"../Data.Ring":216,"../Data.Unit":233,"../Graphics.Canvas":238,"../Graphics.Canvas.Free":236,"../Halogen":266,"../Halogen.Component":242,"../Halogen.HTML.Elements":247,"../Halogen.HTML.Elements.Indexed":246,"../Halogen.HTML.Events.Handler":250,"../Halogen.HTML.Events.Indexed":251,"../Halogen.HTML.Events.Types":252,"../Halogen.HTML.Indexed":254,"../Halogen.HTML.Properties.Indexed":255,"../Halogen.Query":264,"../Halogen.Query.HalogenF":262,"../Prelude":274}],29:[function(require,module,exports){
+},{"../App.Element":30,"../App.Validators":33,"../Control.Applicative":36,"../Control.Apply":38,"../Control.Bind":42,"../Control.Monad.Aff":56,"../Control.Monad.Aff.Free":52,"../Control.Monad.Eff":72,"../Control.Monad.Eff.Class":59,"../Control.Monad.Eff.Console":61,"../Control.Monad.Free":77,"../Control.Monad.Free.Trans":76,"../Control.Semigroupoid":99,"../Data.Array":126,"../Data.Foldable":156,"../Data.Function":169,"../Data.Functor":175,"../Data.HeytingAlgebra":179,"../Data.Identity":180,"../Data.Maybe":195,"../Data.Ord":211,"../Data.Ring":216,"../Data.Unit":233,"../Graphics.Canvas":238,"../Graphics.Canvas.Free":236,"../Halogen":266,"../Halogen.Component":242,"../Halogen.HTML.Core":245,"../Halogen.HTML.Elements":247,"../Halogen.HTML.Elements.Indexed":246,"../Halogen.HTML.Events.Handler":250,"../Halogen.HTML.Events.Indexed":251,"../Halogen.HTML.Events.Types":252,"../Halogen.HTML.Indexed":254,"../Halogen.HTML.Properties.Indexed":255,"../Halogen.Query":264,"../Halogen.Query.HalogenF":262,"../Prelude":274}],29:[function(require,module,exports){
 // Generated by psc version 0.10.5
 "use strict";
 var App_Element = require("../App.Element");
@@ -1940,12 +2043,12 @@ var Halogen = require("../Halogen");
 var Halogen_HTML_Indexed = require("../Halogen.HTML.Indexed");
 var $$Math = require("../Math");
 var Graphics_Canvas_Free = require("../Graphics.Canvas.Free");
+var Data_Eq = require("../Data.Eq");
+var Data_Function = require("../Data.Function");
 var Data_Ord = require("../Data.Ord");
 var Data_Functor = require("../Data.Functor");
 var Data_Ring = require("../Data.Ring");
 var Data_Semiring = require("../Data.Semiring");
-var Data_Eq = require("../Data.Eq");
-var Data_Function = require("../Data.Function");
 var Data_Semigroup = require("../Data.Semigroup");
 var Data_Identity = require("../Data.Identity");
 var Control_Bind = require("../Control.Bind");
@@ -1971,32 +2074,52 @@ var Element = (function () {
 var setKeys = function (v) {
     return function (ks) {
         return new Element((function () {
-            var $13 = {};
-            for (var $14 in v.value0) {
-                if ({}.hasOwnProperty.call(v.value0, $14)) {
-                    $13[$14] = v.value0[$14];
+            var $14 = {};
+            for (var $15 in v.value0) {
+                if ({}.hasOwnProperty.call(v.value0, $15)) {
+                    $14[$15] = v.value0[$15];
                 };
             };
-            $13.keys = ks;
-            return $13;
+            $14.keys = ks;
+            return $14;
         })());
     };
 };
-var insertKey = function (dictOrd) {
-    return function (el) {
-        return function (k) {
-            return new Element((function () {
-                var $17 = {};
-                for (var $18 in el) {
-                    if ({}.hasOwnProperty.call(el, $18)) {
-                        $17[$18] = el[$18];
-                    };
+var insertKey = function (dictEq) {
+    return function (dictOrd) {
+        return function (el) {
+            return function (k) {
+                var $18 = Data_Array.findIndex(function (a) {
+                    return Data_Eq.eq(dictEq)(a.time)(k.time);
+                })(el.keys);
+                if ($18 instanceof Data_Maybe.Just) {
+                    return new Element((function () {
+                        var $19 = {};
+                        for (var $20 in el) {
+                            if ({}.hasOwnProperty.call(el, $20)) {
+                                $19[$20] = el[$20];
+                            };
+                        };
+                        $19.keys = Data_Maybe.fromMaybe(el.keys)(Data_Array.updateAt($18.value0)(k)(el.keys));
+                        return $19;
+                    })());
                 };
-                $17.keys = Data_Array.insertBy(Data_Ord.comparing(dictOrd)(function (v) {
-                    return v.time;
-                }))(k)(el.keys);
-                return $17;
-            })());
+                if ($18 instanceof Data_Maybe.Nothing) {
+                    return new Element((function () {
+                        var $23 = {};
+                        for (var $24 in el) {
+                            if ({}.hasOwnProperty.call(el, $24)) {
+                                $23[$24] = el[$24];
+                            };
+                        };
+                        $23.keys = Data_Array.insertBy(Data_Ord.comparing(dictOrd)(function (v) {
+                            return v.time;
+                        }))(k)(el.keys);
+                        return $23;
+                    })());
+                };
+                throw new Error("Failed pattern match at App.Element line 66, column 3 - line 68, column 75: " + [ $18.constructor.name ]);
+            };
         };
     };
 };
@@ -2006,27 +2129,27 @@ var findMoment = function (dictOrd) {
             var go = function (__copy_x) {
                 var x = __copy_x;
                 tco: while (true) {
-                    var $20 = Data_Functor.map(Data_Maybe.functorMaybe)(Data_Functor.map(Data_Functor.functorFn)(Data_Ord.lessThan(dictOrd)(t))(function (v) {
+                    var $26 = Data_Functor.map(Data_Maybe.functorMaybe)(Data_Functor.map(Data_Functor.functorFn)(Data_Ord.lessThan(dictOrd)(t))(function (v) {
                         return v.time;
                     }))(Data_Array.index(keys)(x));
-                    if ($20 instanceof Data_Maybe.Just && $20.value0) {
+                    if ($26 instanceof Data_Maybe.Just && $26.value0) {
                         return {
                             l: Data_Array.index(keys)(x - 1), 
                             r: Data_Array.index(keys)(x)
                         };
                     };
-                    if ($20 instanceof Data_Maybe.Just && !$20.value0) {
+                    if ($26 instanceof Data_Maybe.Just && !$26.value0) {
                         var __tco_x = x + 1 | 0;
                         x = __tco_x;
                         continue tco;
                     };
-                    if ($20 instanceof Data_Maybe.Nothing) {
+                    if ($26 instanceof Data_Maybe.Nothing) {
                         return {
                             l: Data_Array.index(keys)(x - 1), 
                             r: Data_Maybe.Nothing.value
                         };
                     };
-                    throw new Error("Failed pattern match at App.Element line 57, column 10 - line 60, column 58: " + [ $20.constructor.name ]);
+                    throw new Error("Failed pattern match at App.Element line 57, column 10 - line 60, column 58: " + [ $26.constructor.name ]);
                 };
             };
             return go(0);
@@ -2038,68 +2161,68 @@ var setTime = function (el) {
         var ms = findMoment(Data_Ord.ordInt)(el.keys)(t);
         var r$prime = Data_Maybe.fromMaybe(el.current)(ms.r);
         var l$prime = Data_Maybe.fromMaybe(el.current)(ms.l);
-        var $23 = Data_Functor.map(Data_Maybe.functorMaybe)(Data_Functor.map(Data_Functor.functorFn)(Data_Eq.eq(Data_Eq.eqInt)(t))(function (v) {
+        var $29 = Data_Functor.map(Data_Maybe.functorMaybe)(Data_Functor.map(Data_Functor.functorFn)(Data_Eq.eq(Data_Eq.eqInt)(t))(function (v) {
             return v.time;
         }))(ms.r);
-        if ($23 instanceof Data_Maybe.Nothing) {
+        if ($29 instanceof Data_Maybe.Nothing) {
             return Element.create((function () {
-                var $27 = {};
-                for (var $28 in el) {
-                    if ({}.hasOwnProperty.call(el, $28)) {
-                        $27[$28] = el[$28];
+                var $33 = {};
+                for (var $34 in el) {
+                    if ({}.hasOwnProperty.call(el, $34)) {
+                        $33[$34] = el[$34];
                     };
                 };
-                $27.current = (function () {
-                    var $24 = {};
-                    for (var $25 in l$prime) {
-                        if ({}.hasOwnProperty.call(l$prime, $25)) {
-                            $24[$25] = l$prime[$25];
+                $33.current = (function () {
+                    var $30 = {};
+                    for (var $31 in l$prime) {
+                        if ({}.hasOwnProperty.call(l$prime, $31)) {
+                            $30[$31] = l$prime[$31];
                         };
                     };
-                    $24.time = t;
-                    return $24;
+                    $30.time = t;
+                    return $30;
                 })();
-                return $27;
+                return $33;
             })());
         };
-        if ($23 instanceof Data_Maybe.Just && !$23.value0) {
+        if ($29 instanceof Data_Maybe.Just && !$29.value0) {
             return Element.create((function () {
-                var $30 = {};
-                for (var $31 in el) {
-                    if ({}.hasOwnProperty.call(el, $31)) {
-                        $30[$31] = el[$31];
+                var $36 = {};
+                for (var $37 in el) {
+                    if ({}.hasOwnProperty.call(el, $37)) {
+                        $36[$37] = el[$37];
                     };
                 };
-                $30.current = el.reconcile(l$prime)(r$prime)(t);
-                return $30;
+                $36.current = el.reconcile(l$prime)(r$prime)(t);
+                return $36;
             })());
         };
-        if ($23 instanceof Data_Maybe.Just && $23.value0) {
+        if ($29 instanceof Data_Maybe.Just && $29.value0) {
             return Element.create((function () {
-                var $34 = {};
-                for (var $35 in el) {
-                    if ({}.hasOwnProperty.call(el, $35)) {
-                        $34[$35] = el[$35];
+                var $40 = {};
+                for (var $41 in el) {
+                    if ({}.hasOwnProperty.call(el, $41)) {
+                        $40[$41] = el[$41];
                     };
                 };
-                $34.current = r$prime;
-                return $34;
+                $40.current = r$prime;
+                return $40;
             })());
         };
-        throw new Error("Failed pattern match at App.Element line 51, column 3 - line 54, column 46: " + [ $23.constructor.name ]);
+        throw new Error("Failed pattern match at App.Element line 51, column 3 - line 54, column 46: " + [ $29.constructor.name ]);
     };
 };
 var colorToStr = function (v) {
     return "#" + Data_String.joinWith("")(Data_Functor.map(Data_Functor.functorArray)(function (x) {
         return (function () {
-            var $39 = x < 16;
-            if ($39) {
+            var $45 = x < 16;
+            if ($45) {
                 return "0";
             };
-            if (!$39) {
+            if (!$45) {
                 return "";
             };
-            throw new Error("Failed pattern match at App.Element line 77, column 56 - line 77, column 82: " + [ $39.constructor.name ]);
+            throw new Error("Failed pattern match at App.Element line 78, column 56 - line 78, column 82: " + [ $45.constructor.name ]);
         })() + Data_Int.toStringAs(Data_Int.hexadecimal)(x);
     })([ v.r, v.g, v.b ]));
 };
@@ -2111,7 +2234,7 @@ var setBorder = function (bordered) {
         if (!bordered) {
             return Graphics_Canvas_Free.setStrokeStyle(Data_Identity.monadIdentity)(colorToStr(color));
         };
-        throw new Error("Failed pattern match at App.Element line 81, column 3 - line 83, column 38: " + [ bordered.constructor.name ]);
+        throw new Error("Failed pattern match at App.Element line 82, column 3 - line 84, column 38: " + [ bordered.constructor.name ]);
     };
 };
 var at = function (dictMonad) {
@@ -2142,8 +2265,8 @@ var unfoldDrawable = function (v) {
         setTime: function (t) {
             return unfoldDrawable(setTime(v.value0)(t));
         }, 
-        insertKey: function (v1) {
-            return unfoldDrawable(insertKey(Data_Ord.ordInt)(v.value0)(v.value0.current));
+        addMoment: function (v1) {
+            return unfoldDrawable(insertKey(Data_Eq.eqInt)(Data_Ord.ordInt)(v.value0)(v.value0.current));
         }, 
         formed: v.value0.form(new Element(v.value0)), 
         overlap: v.value0.overlap(v.value0.current)
@@ -2415,7 +2538,7 @@ var boxStatic = function (v) {
         setTime: function (t) {
             return boxStatic(v);
         }, 
-        insertKey: function (v1) {
+        addMoment: function (v1) {
             return boxStatic(v);
         }, 
         layer: 0, 
@@ -2446,8 +2569,8 @@ var Data_Ring = require("../Data.Ring");
 var validateNumber = function (p) {
     return function (v) {
         var n = Data_Int.fromString(v);
-        var $16 = Data_Functor.map(Data_Maybe.functorMaybe)(p)(n);
-        if ($16 instanceof Data_Maybe.Just && $16.value0) {
+        var $17 = Data_Functor.map(Data_Maybe.functorMaybe)(p)(n);
+        if ($17 instanceof Data_Maybe.Just && $17.value0) {
             return n;
         };
         return Data_Maybe.Nothing.value;
@@ -2458,32 +2581,32 @@ var validateR1 = function (dictApplicative) {
         return function (v) {
             return Control_Applicative.pure(dictApplicative)(Data_Functor.map(Data_Maybe.functorMaybe)(function (v1) {
                 return App_Element.unfoldDrawable(App_Element.Element.create((function () {
-                    var $26 = {};
-                    for (var $27 in v.value0) {
-                        if ({}.hasOwnProperty.call(v.value0, $27)) {
-                            $26[$27] = v.value0[$27];
+                    var $27 = {};
+                    for (var $28 in v.value0) {
+                        if ({}.hasOwnProperty.call(v.value0, $28)) {
+                            $27[$28] = v.value0[$28];
                         };
                     };
-                    $26.current = (function () {
-                        var $23 = {};
-                        for (var $24 in v.value0.current) {
-                            if ({}.hasOwnProperty.call(v.value0.current, $24)) {
-                                $23[$24] = v.value0.current[$24];
+                    $27.current = (function () {
+                        var $24 = {};
+                        for (var $25 in v.value0.current) {
+                            if ({}.hasOwnProperty.call(v.value0.current, $25)) {
+                                $24[$25] = v.value0.current[$25];
                             };
                         };
-                        $23.size = (function () {
-                            var $20 = {};
-                            for (var $21 in v.value0.current.size) {
-                                if ({}.hasOwnProperty.call(v.value0.current.size, $21)) {
-                                    $20[$21] = v.value0.current.size[$21];
+                        $24.size = (function () {
+                            var $21 = {};
+                            for (var $22 in v.value0.current.size) {
+                                if ({}.hasOwnProperty.call(v.value0.current.size, $22)) {
+                                    $21[$22] = v.value0.current.size[$22];
                                 };
                             };
-                            $20.r1 = v1;
-                            return $20;
+                            $21.r1 = v1;
+                            return $21;
                         })();
-                        return $23;
+                        return $24;
                     })();
-                    return $26;
+                    return $27;
                 })()));
             })(validateNumber(Data_Ord.between(Data_Ord.ordInt)(1)(v.value0.current.size.r2 - 1))(value)));
         };
@@ -2494,32 +2617,32 @@ var validateR2 = function (dictApplicative) {
         return function (v) {
             return Control_Applicative.pure(dictApplicative)(Data_Functor.map(Data_Maybe.functorMaybe)(function (v1) {
                 return App_Element.unfoldDrawable(App_Element.Element.create((function () {
-                    var $38 = {};
-                    for (var $39 in v.value0) {
-                        if ({}.hasOwnProperty.call(v.value0, $39)) {
-                            $38[$39] = v.value0[$39];
+                    var $39 = {};
+                    for (var $40 in v.value0) {
+                        if ({}.hasOwnProperty.call(v.value0, $40)) {
+                            $39[$40] = v.value0[$40];
                         };
                     };
-                    $38.current = (function () {
-                        var $35 = {};
-                        for (var $36 in v.value0.current) {
-                            if ({}.hasOwnProperty.call(v.value0.current, $36)) {
-                                $35[$36] = v.value0.current[$36];
+                    $39.current = (function () {
+                        var $36 = {};
+                        for (var $37 in v.value0.current) {
+                            if ({}.hasOwnProperty.call(v.value0.current, $37)) {
+                                $36[$37] = v.value0.current[$37];
                             };
                         };
-                        $35.size = (function () {
-                            var $32 = {};
-                            for (var $33 in v.value0.current.size) {
-                                if ({}.hasOwnProperty.call(v.value0.current.size, $33)) {
-                                    $32[$33] = v.value0.current.size[$33];
+                        $36.size = (function () {
+                            var $33 = {};
+                            for (var $34 in v.value0.current.size) {
+                                if ({}.hasOwnProperty.call(v.value0.current.size, $34)) {
+                                    $33[$34] = v.value0.current.size[$34];
                                 };
                             };
-                            $32.r2 = v1;
-                            return $32;
+                            $33.r2 = v1;
+                            return $33;
                         })();
-                        return $35;
+                        return $36;
                     })();
-                    return $38;
+                    return $39;
                 })()));
             })(validateNumber(Data_Ord.lessThan(Data_Ord.ordInt)(v.value0.current.size.r1))(value)));
         };
@@ -2530,25 +2653,32 @@ var validateRadius = function (dictApplicative) {
         return function (v) {
             return Control_Applicative.pure(dictApplicative)(Data_Functor.map(Data_Maybe.functorMaybe)(function (v1) {
                 return App_Element.unfoldDrawable(App_Element.Element.create((function () {
-                    var $47 = {};
-                    for (var $48 in v.value0) {
-                        if ({}.hasOwnProperty.call(v.value0, $48)) {
-                            $47[$48] = v.value0[$48];
+                    var $48 = {};
+                    for (var $49 in v.value0) {
+                        if ({}.hasOwnProperty.call(v.value0, $49)) {
+                            $48[$49] = v.value0[$49];
                         };
                     };
-                    $47.current = (function () {
-                        var $44 = {};
-                        for (var $45 in v.value0.current) {
-                            if ({}.hasOwnProperty.call(v.value0.current, $45)) {
-                                $44[$45] = v.value0.current[$45];
+                    $48.current = (function () {
+                        var $45 = {};
+                        for (var $46 in v.value0.current) {
+                            if ({}.hasOwnProperty.call(v.value0.current, $46)) {
+                                $45[$46] = v.value0.current[$46];
                             };
                         };
-                        $44.radius = v1;
-                        return $44;
+                        $45.radius = v1;
+                        return $45;
                     })();
-                    return $47;
+                    return $48;
                 })()));
             })(validateNumber(Data_Ord.lessThan(Data_Ord.ordInt)(0))(value)));
+        };
+    };
+};
+var validateSetTime = function (dictApplicative) {
+    return function (value) {
+        return function (max) {
+            return Control_Applicative.pure(dictApplicative)(validateNumber(Data_Ord.between(Data_Ord.ordInt)(0)(360))(value));
         };
     };
 };
@@ -2557,32 +2687,32 @@ var validateWidth = function (dictApplicative) {
         return function (v) {
             return Control_Applicative.pure(dictApplicative)(Data_Functor.map(Data_Maybe.functorMaybe)(function (v1) {
                 return App_Element.unfoldDrawable(App_Element.Element.create((function () {
-                    var $59 = {};
-                    for (var $60 in v.value0) {
-                        if ({}.hasOwnProperty.call(v.value0, $60)) {
-                            $59[$60] = v.value0[$60];
+                    var $60 = {};
+                    for (var $61 in v.value0) {
+                        if ({}.hasOwnProperty.call(v.value0, $61)) {
+                            $60[$61] = v.value0[$61];
                         };
                     };
-                    $59.current = (function () {
-                        var $56 = {};
-                        for (var $57 in v.value0.current) {
-                            if ({}.hasOwnProperty.call(v.value0.current, $57)) {
-                                $56[$57] = v.value0.current[$57];
+                    $60.current = (function () {
+                        var $57 = {};
+                        for (var $58 in v.value0.current) {
+                            if ({}.hasOwnProperty.call(v.value0.current, $58)) {
+                                $57[$58] = v.value0.current[$58];
                             };
                         };
-                        $56.size = (function () {
-                            var $53 = {};
-                            for (var $54 in v.value0.current.size) {
-                                if ({}.hasOwnProperty.call(v.value0.current.size, $54)) {
-                                    $53[$54] = v.value0.current.size[$54];
+                        $57.size = (function () {
+                            var $54 = {};
+                            for (var $55 in v.value0.current.size) {
+                                if ({}.hasOwnProperty.call(v.value0.current.size, $55)) {
+                                    $54[$55] = v.value0.current.size[$55];
                                 };
                             };
-                            $53.w = v1;
-                            return $53;
+                            $54.w = v1;
+                            return $54;
                         })();
-                        return $56;
+                        return $57;
                     })();
-                    return $59;
+                    return $60;
                 })()));
             })(validateNumber(Data_Ord.lessThan(Data_Ord.ordInt)(0))(value)));
         };
@@ -2593,32 +2723,32 @@ var validateX = function (dictApplicative) {
         return function (v) {
             return Control_Applicative.pure(dictApplicative)(Data_Functor.map(Data_Maybe.functorMaybe)(function (v1) {
                 return App_Element.unfoldDrawable(App_Element.Element.create((function () {
-                    var $71 = {};
-                    for (var $72 in v.value0) {
-                        if ({}.hasOwnProperty.call(v.value0, $72)) {
-                            $71[$72] = v.value0[$72];
+                    var $72 = {};
+                    for (var $73 in v.value0) {
+                        if ({}.hasOwnProperty.call(v.value0, $73)) {
+                            $72[$73] = v.value0[$73];
                         };
                     };
-                    $71.current = (function () {
-                        var $68 = {};
-                        for (var $69 in v.value0.current) {
-                            if ({}.hasOwnProperty.call(v.value0.current, $69)) {
-                                $68[$69] = v.value0.current[$69];
+                    $72.current = (function () {
+                        var $69 = {};
+                        for (var $70 in v.value0.current) {
+                            if ({}.hasOwnProperty.call(v.value0.current, $70)) {
+                                $69[$70] = v.value0.current[$70];
                             };
                         };
-                        $68.pos = (function () {
-                            var $65 = {};
-                            for (var $66 in v.value0.current.pos) {
-                                if ({}.hasOwnProperty.call(v.value0.current.pos, $66)) {
-                                    $65[$66] = v.value0.current.pos[$66];
+                        $69.pos = (function () {
+                            var $66 = {};
+                            for (var $67 in v.value0.current.pos) {
+                                if ({}.hasOwnProperty.call(v.value0.current.pos, $67)) {
+                                    $66[$67] = v.value0.current.pos[$67];
                                 };
                             };
-                            $65.x = v1;
-                            return $65;
+                            $66.x = v1;
+                            return $66;
                         })();
-                        return $68;
+                        return $69;
                     })();
-                    return $71;
+                    return $72;
                 })()));
             })(validateNumber(Data_Ord.lessThan(Data_Ord.ordInt)(0))(value)));
         };
@@ -2629,32 +2759,32 @@ var validateY = function (dictApplicative) {
         return function (v) {
             return Control_Applicative.pure(dictApplicative)(Data_Functor.map(Data_Maybe.functorMaybe)(function (v1) {
                 return App_Element.unfoldDrawable(App_Element.Element.create((function () {
-                    var $83 = {};
-                    for (var $84 in v.value0) {
-                        if ({}.hasOwnProperty.call(v.value0, $84)) {
-                            $83[$84] = v.value0[$84];
+                    var $84 = {};
+                    for (var $85 in v.value0) {
+                        if ({}.hasOwnProperty.call(v.value0, $85)) {
+                            $84[$85] = v.value0[$85];
                         };
                     };
-                    $83.current = (function () {
-                        var $80 = {};
-                        for (var $81 in v.value0.current) {
-                            if ({}.hasOwnProperty.call(v.value0.current, $81)) {
-                                $80[$81] = v.value0.current[$81];
+                    $84.current = (function () {
+                        var $81 = {};
+                        for (var $82 in v.value0.current) {
+                            if ({}.hasOwnProperty.call(v.value0.current, $82)) {
+                                $81[$82] = v.value0.current[$82];
                             };
                         };
-                        $80.pos = (function () {
-                            var $77 = {};
-                            for (var $78 in v.value0.current.pos) {
-                                if ({}.hasOwnProperty.call(v.value0.current.pos, $78)) {
-                                    $77[$78] = v.value0.current.pos[$78];
+                        $81.pos = (function () {
+                            var $78 = {};
+                            for (var $79 in v.value0.current.pos) {
+                                if ({}.hasOwnProperty.call(v.value0.current.pos, $79)) {
+                                    $78[$79] = v.value0.current.pos[$79];
                                 };
                             };
-                            $77.y = v1;
-                            return $77;
+                            $78.y = v1;
+                            return $78;
                         })();
-                        return $80;
+                        return $81;
                     })();
-                    return $83;
+                    return $84;
                 })()));
             })(validateNumber(Data_Ord.lessThan(Data_Ord.ordInt)(0))(value)));
         };
@@ -2665,32 +2795,32 @@ var validateHeight = function (dictApplicative) {
         return function (v) {
             return Control_Applicative.pure(dictApplicative)(Data_Functor.map(Data_Maybe.functorMaybe)(function (v1) {
                 return App_Element.unfoldDrawable(App_Element.Element.create((function () {
-                    var $95 = {};
-                    for (var $96 in v.value0) {
-                        if ({}.hasOwnProperty.call(v.value0, $96)) {
-                            $95[$96] = v.value0[$96];
+                    var $96 = {};
+                    for (var $97 in v.value0) {
+                        if ({}.hasOwnProperty.call(v.value0, $97)) {
+                            $96[$97] = v.value0[$97];
                         };
                     };
-                    $95.current = (function () {
-                        var $92 = {};
-                        for (var $93 in v.value0.current) {
-                            if ({}.hasOwnProperty.call(v.value0.current, $93)) {
-                                $92[$93] = v.value0.current[$93];
+                    $96.current = (function () {
+                        var $93 = {};
+                        for (var $94 in v.value0.current) {
+                            if ({}.hasOwnProperty.call(v.value0.current, $94)) {
+                                $93[$94] = v.value0.current[$94];
                             };
                         };
-                        $92.size = (function () {
-                            var $89 = {};
-                            for (var $90 in v.value0.current.size) {
-                                if ({}.hasOwnProperty.call(v.value0.current.size, $90)) {
-                                    $89[$90] = v.value0.current.size[$90];
+                        $93.size = (function () {
+                            var $90 = {};
+                            for (var $91 in v.value0.current.size) {
+                                if ({}.hasOwnProperty.call(v.value0.current.size, $91)) {
+                                    $90[$91] = v.value0.current.size[$91];
                                 };
                             };
-                            $89.h = v1;
-                            return $89;
+                            $90.h = v1;
+                            return $90;
                         })();
-                        return $92;
+                        return $93;
                     })();
-                    return $95;
+                    return $96;
                 })()));
             })(validateNumber(Data_Ord.lessThan(Data_Ord.ordInt)(0))(value)));
         };
@@ -2701,23 +2831,23 @@ var validateAngle = function (dictApplicative) {
         return function (v) {
             return Control_Applicative.pure(dictApplicative)(Data_Functor.map(Data_Maybe.functorMaybe)(function (v1) {
                 return App_Element.unfoldDrawable(App_Element.Element.create((function () {
-                    var $104 = {};
-                    for (var $105 in v.value0) {
-                        if ({}.hasOwnProperty.call(v.value0, $105)) {
-                            $104[$105] = v.value0[$105];
+                    var $105 = {};
+                    for (var $106 in v.value0) {
+                        if ({}.hasOwnProperty.call(v.value0, $106)) {
+                            $105[$106] = v.value0[$106];
                         };
                     };
-                    $104.current = (function () {
-                        var $101 = {};
-                        for (var $102 in v.value0.current) {
-                            if ({}.hasOwnProperty.call(v.value0.current, $102)) {
-                                $101[$102] = v.value0.current[$102];
+                    $105.current = (function () {
+                        var $102 = {};
+                        for (var $103 in v.value0.current) {
+                            if ({}.hasOwnProperty.call(v.value0.current, $103)) {
+                                $102[$103] = v.value0.current[$103];
                             };
                         };
-                        $101.angle = v1;
-                        return $101;
+                        $102.angle = v1;
+                        return $102;
                     })();
-                    return $104;
+                    return $105;
                 })()));
             })(validateNumber(Data_Ord.between(Data_Ord.ordInt)(0)(360))(value)));
         };
@@ -2730,6 +2860,7 @@ module.exports = {
     validateR1: validateR1, 
     validateR2: validateR2, 
     validateRadius: validateRadius, 
+    validateSetTime: validateSetTime, 
     validateWidth: validateWidth, 
     validateX: validateX, 
     validateY: validateY

@@ -23,6 +23,7 @@ import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDim
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
 import App.Element as E
+import App.Validators (validateSetTime)
 
 type State = { paused :: Boolean
              , ctx :: Maybe Context2D
@@ -83,6 +84,7 @@ diaComp = lifecycleComponent
                , H.input [ HP.inputType HP.InputRange 
                          , HP.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
                          , HP.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 1000 --TODO: config max time
+                         , HE.onValueChange (\s -> (map (action <<< SetTime)) <$> (validateSetTime s 1000))
                          ]
                ]
       ]
