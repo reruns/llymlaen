@@ -8,10 +8,14 @@ import Data.Int (fromString)
 
 import Halogen.HTML.Events.Handler (EventHandler)
 
+
+--we can abstract this whole pattern out into one function
+--which takes a thing, a lens setter for it, (String->Boolean), and the string
+--but I don't know how to lens atm, so...
+
 validateAngle value (Element el) = do
   pure $ (\v -> unfoldDrawable $ Element $ el {current=el.current {angle=v}}) <$> (validateNumber (between 0 360) value)
 
---ah, I see the reason we would use lenses now. We'll come back to that later, then.
 validateWidth value (Element el) = do
   pure $ (\v -> unfoldDrawable $ Element $ el {current=el.current {size = el.current.size {w=v}}}) <$> (validateNumber ((<) 0) value)
       

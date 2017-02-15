@@ -3,7 +3,7 @@ module App.Diagram where
 import Prelude
 
 import Data.Foldable
-import Data.Array (insertBy, (!!), length, updateAt, modifyAt)
+import Data.Array (insertBy, (!!), length, updateAt, modifyAt, findLastIndex, insertAt, cons)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 
 import Control.Monad.Aff (Aff)
@@ -36,19 +36,17 @@ data Query a
   = TogglePlay a
   | Initialize a
   | Tick a
+  | SetTime Int a
   | UpdateTarget {x :: Number, y :: Number} a
   | ModTarget E.Drawable a
   | AddMoment a
+  | AddElement E.Drawable a --TODO: redo the interaction model
+  
 
 
 advanceFrame :: State -> State
 advanceFrame st = st {elements = map updateOne st.elements } where
   updateOne (E.Drawable d) = d.updated unit
-
-insertElement :: State -> E.Drawable -> State
-insertElement st dr = 
-  st {elements = insertBy (comparing (\(E.Drawable d) -> d.layer)) dr st.elements}
-  
   
 drawGraphics st = let 
   drawOne (E.Drawable d) = d.drawn in
@@ -76,7 +74,17 @@ diaComp = lifecycleComponent
     H.div_
       [ H.canvas [ HP.id_ "canvas"
                  , HE.onClick (\e -> preventDefault *> getCoords e) ]
+      , H.div_ [ H.button_ [H.Text "Circle"]
+               , H.button_ [H.Text "Rectangle"]
+               , H.button_ [H.Text "Donut"]
+               ]
       , fromMaybe (H.div_ []) $ ((\(E.Drawable d) -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex))
+      , H.div_ [ H.button_ [H.Text "Play"]
+               , H.input [ HP.inputType HP.InputRange 
+                         , HP.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
+                         , HP.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 1000 --TODO: config max time
+                         ]
+               ]
       ]
       
   eval :: Query ~> ComponentDSL State Query (Aff (canvas :: CANVAS, console :: CONSOLE | eff))
@@ -92,6 +100,10 @@ diaComp = lifecycleComponent
       else modify advanceFrame
     st <- get
     fromEff $ drawGraphics st
+    pure next
+    
+  eval (SetTime t next) = do
+    modify (\st -> st {elements = map (\(E.Drawable d) -> d.setTime t) st.elements})
     pure next
     
   eval (Initialize next) = do
@@ -124,5 +136,12 @@ diaComp = lifecycleComponent
     case modifyAt (st.targetIndex) (\(E.Drawable d) -> d.addMoment unit) st.elements of
       Just as -> modify (\st -> st {elements=as})
       Nothing -> pure unit
+    pure next
+    
+  eval (AddElement (E.Drawable el) next) = do
+    modify (\st ->
+      case findLastIndex (\(E.Drawable d) -> d.layer < el.layer) st.elements of
+        Just i  -> st {elements = fromMaybe st.elements $ insertAt i (E.Drawable el) st.elements, targetIndex = i}
+        Nothing -> st {elements = cons (E.Drawable el) st.elements, targetIndex = 0})
     pure next
     

@@ -6,3 +6,4 @@
 /.psa*
 *.txt
 /src/examples/
+bundle.js
