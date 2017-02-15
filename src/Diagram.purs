@@ -3,7 +3,7 @@ module App.Diagram where
 import Prelude
 
 import Data.Foldable
-import Data.Array (insertBy, (!!), length)
+import Data.Array (insertBy, (!!), length, updateAt)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 
 import Control.Monad.Aff (Aff)
@@ -37,6 +37,7 @@ data Query a
   | Initialize a
   | Tick a
   | UpdateTarget {x :: Number, y :: Number} a
+  | ModTarget E.Drawable a
 
 
 advanceFrame :: State -> State
@@ -74,7 +75,7 @@ diaComp = lifecycleComponent
     H.div_
       [ H.canvas [ HP.id_ "canvas"
                  , HE.onClick (\e -> preventDefault *> getCoords e) ]
-      , fromMaybe (H.div_ []) $ ((\(E.Drawable d) -> d.formed) <$> (st.elements !! st.targetIndex))
+      , fromMaybe (H.div_ []) $ ((\(E.Drawable d) -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex))
       ]
       
   eval :: Query ~> ComponentDSL State Query (Aff (canvas :: CANVAS, console :: CONSOLE | eff))
@@ -86,12 +87,11 @@ diaComp = lifecycleComponent
   eval (Tick next) = do
     pause <- gets _.paused
     if pause
-      then pure next
-      else do
-        modify advanceFrame
-        st <- get
-        fromEff $ drawGraphics st
-        pure next
+      then pure unit
+      else modify advanceFrame
+    st <- get
+    fromEff $ drawGraphics st
+    pure next
     
   eval (Initialize next) = do
     cv <- fromEff $ getCanvasElementById "canvas"
@@ -110,3 +110,10 @@ diaComp = lifecycleComponent
     where go es' i = case (es' !! i) of
             Just (E.Drawable e) -> if e.overlap pos then i else go es' (i-1)
             Nothing             -> -1
+            
+  eval (ModTarget d next) = do
+    st <- get
+    case updateAt (st.targetIndex) d (st.elements) of
+      Just as -> modify (\st -> st {elements=as})
+      Nothing -> pure unit
+    pure next

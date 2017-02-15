@@ -2,6 +2,7 @@ module App.Rectangle where
 
 import App.Element
 import App.Static
+import App.Validators
 
 import Prelude
 import Data.Int (toNumber, round)
@@ -10,6 +11,7 @@ import Data.Maybe (Maybe (Just,Nothing))
 
 import Graphics.Canvas.Free
 
+import Halogen (Action, action)
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as E
 import Halogen.HTML.Events.Handler as EH
@@ -35,35 +37,53 @@ defaultRectMoment = { enabled: false
                     , color: {r:0, g:0, b:0}
                     }  
              
-showData :: forall p i. RectMoment -> H.HTML p i             
-showData moment = 
+showData :: forall p a. Element RectMoment -> (Drawable -> Action a) -> H.HTML p (a Unit)
+showData (Element el) qr = 
+  let moment = el.current in
   H.form_ 
-    [ H.h1_   [ H.text $ show moment.time]
-    , H.h2_   [ H.text $ show moment.opacity]
+    [ H.h1_   [ H.text $ show moment.time ]
+    , H.h2_   [ H.text $ show moment.opacity ]
     , H.input [ P.inputType P.InputCheckbox
               , P.title "enabled"
-              , P.checked moment.enabled ]
+              , P.checked moment.enabled
+              , E.onChecked $ E.input (\b -> qr $ unfoldDrawable $ Element $ el{current=moment{enabled=b}})
+              ]
     , H.input [ P.inputType P.InputCheckbox
               , P.title "bordered"
-              , P.checked moment.bordered ]
+              , P.checked moment.bordered 
+              , E.onChecked $ E.input (\b -> qr $ unfoldDrawable $ Element $ el{current=moment{bordered=b}})
+              ]
     , H.input [ P.inputType P.InputRange
               , P.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
               , P.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 360
               , P.title "angle" 
-              , P.value $ show moment.angle ]
+              , P.value $ show moment.angle
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateAngle s (Element el))) --this can be nicer
+              ]
     , H.input [ P.inputType P.InputNumber
               , P.title "width"
-              , P.value $ show moment.size.w ]
+              , P.value $ show moment.size.w 
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateWidth s (Element el)))
+              ]
     , H.input [ P.inputType P.InputNumber
               , P.title "height"
-              , P.value $ show moment.size.h ]
+              , P.value $ show moment.size.h 
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateHeight s (Element el)))
+              ]
     , H.input [ P.inputType P.InputNumber
               , P.title "x"
-              , P.value $ show moment.pos.x ]
+              , P.value $ show moment.pos.x 
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateX s (Element el)))
+              ]
     , H.input [ P.inputType P.InputNumber
               , P.title "y"
-              , P.value $ show moment.pos.y ]
+              , P.value $ show moment.pos.y
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateY s (Element el)))
+              ]
     ]
+    
+showStat :: forall p i a. Static RectMoment -> (Drawable -> Action a) -> H.HTML p i  
+showStat (Static s) qr = H.div_ []    
 
 rectElem :: Element RectMoment
 rectElem = Element { layer: 0
@@ -77,7 +97,7 @@ rectElem = Element { layer: 0
 
 staticRect moment = Static { moment: moment
                            , render: renderRect
-                           , form: showData
+                           , form: showStat
                            }                   
                 
 renderRect {enabled: false} = pure unit                

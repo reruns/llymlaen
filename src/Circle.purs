@@ -1,6 +1,8 @@
 module App.Circle where
 
 import App.Element
+import App.Static
+import App.Validators
 
 import Prelude
 import Data.Int (toNumber, round)
@@ -8,6 +10,7 @@ import Math (pi, pow, sqrt)
 
 import Graphics.Canvas.Free
 
+import Halogen (Action, action)
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as E
 import Halogen.HTML.Events.Handler as EH
@@ -22,25 +25,38 @@ type CircleMoment = { enabled :: Boolean
                     , color :: { r :: Int, g :: Int, b :: Int }
                     }
 
-showData :: forall p i. CircleMoment -> H.HTML p i
-showData moment = 
+showData :: forall p a. Element CircleMoment -> (Drawable -> Action a) -> H.HTML p (a Unit)
+showData (Element el) qr = 
+  let moment = el.current in
   H.form_ 
     [ H.input [ P.inputType P.InputCheckbox
               , P.title "enabled"
-              , P.checked moment.enabled ]
+              , P.checked moment.enabled
+              , E.onChecked $ E.input (\b -> qr $ unfoldDrawable $ Element $ el{current=moment{enabled=b}})]
     , H.input [ P.inputType P.InputCheckbox
               , P.title "bordered"
-              , P.checked moment.bordered ]
+              , P.checked moment.bordered 
+              , E.onChecked $ E.input (\b -> qr $ unfoldDrawable $ Element $ el{current=moment{bordered=b}})
+              ]
     , H.input [ P.inputType P.InputNumber
               , P.title "radius"
-              , P.value $ show moment.radius ]
+              , P.value $ show moment.radius 
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateRadius s (Element el)))
+              ]
     , H.input [ P.inputType P.InputNumber
               , P.title "x"
-              , P.value $ show moment.pos.x ]
+              , P.value $ show moment.pos.x 
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateX s (Element el)))
+              ]
     , H.input [ P.inputType P.InputNumber
               , P.title "y"
-              , P.value $ show moment.pos.y ]
+              , P.value $ show moment.pos.y 
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateY s (Element el)))
+              ]
     ]
+    
+showStat :: forall p i a. Static CircleMoment ->  (Drawable -> Action a) -> H.HTML p i
+showStat (Static s) qr = H.div_ []    
 
 defaultCircleMoment = { enabled: false
                       , bordered: false

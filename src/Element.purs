@@ -6,6 +6,7 @@ import Data.String (joinWith)
 import Data.Int (toNumber, round, toStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 
+import Halogen (Action)
 import Halogen.HTML.Indexed as H
 
 import Math(pi)
@@ -18,7 +19,7 @@ data Element a = Element { layer :: Int
                          , current :: a
                          , reconcile :: a -> a -> Int -> a
                          , render :: a -> Graphics Unit
-                         , form :: forall p i. a -> H.HTML p i
+                         , form :: forall p b. Element a -> (Drawable -> Action b) -> H.HTML p (b Unit)
                          , overlap :: a -> {x :: Number, y :: Number} -> Boolean
                          }
   
@@ -27,7 +28,7 @@ data Drawable = Drawable { drawn :: Graphics Unit
                          , updated :: Unit -> Drawable
                          , setTime :: Int -> Drawable
                          , insertKey :: Unit -> Drawable
-                         , formed :: forall p i. H.HTML p i
+                         , formed :: forall p a. (Drawable -> Action a) -> H.HTML p (a Unit)
                          , overlap :: {x :: Number, y :: Number} -> Boolean
                          }
                          
@@ -37,7 +38,7 @@ unfoldDrawable (Element el)
              , updated: \_ -> unfoldDrawable (advanceFrame el)
              , setTime: \t -> unfoldDrawable (setTime el t)
              , insertKey: \_ -> unfoldDrawable (insertKey el el.current)
-             , formed: el.form el.current
+             , formed: el.form (Element el)
              , overlap: el.overlap el.current
              }
              
@@ -61,6 +62,7 @@ findMoment keys t = go 0 where
 setKeys :: forall a. Element a -> Array a -> Element a
 setKeys (Element el) ks = Element (el {keys=ks})
           
+--TODO: make this replace when time is the same
 insertKey el k = 
   Element (el {keys = insertBy (comparing _.time) k el.keys})
           
