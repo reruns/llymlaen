@@ -3,7 +3,7 @@ module App.Diagram where
 import Prelude
 
 import Data.Foldable
-import Data.Array (insertBy, (!!), length, updateAt)
+import Data.Array (insertBy, (!!), length, updateAt, modifyAt)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 
 import Control.Monad.Aff (Aff)
@@ -38,6 +38,7 @@ data Query a
   | Tick a
   | UpdateTarget {x :: Number, y :: Number} a
   | ModTarget E.Drawable a
+  | AddMoment a
 
 
 advanceFrame :: State -> State
@@ -117,3 +118,11 @@ diaComp = lifecycleComponent
       Just as -> modify (\st -> st {elements=as})
       Nothing -> pure unit
     pure next
+    
+  eval (AddMoment next) = do
+    st <- get
+    case modifyAt (st.targetIndex) (\(E.Drawable d) -> d.addMoment unit) st.elements of
+      Just as -> modify (\st -> st {elements=as})
+      Nothing -> pure unit
+    pure next
+    

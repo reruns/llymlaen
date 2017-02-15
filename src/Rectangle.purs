@@ -58,7 +58,7 @@ showData (Element el) qr =
               , P.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 360
               , P.title "angle" 
               , P.value $ show moment.angle
-              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateAngle s (Element el))) --this can be nicer
+              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateAngle s (Element el)))
               ]
     , H.input [ P.inputType P.InputNumber
               , P.title "width"

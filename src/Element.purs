@@ -1,7 +1,7 @@
 module App.Element where
 
 import Prelude
-import Data.Array ((!!), insertBy)
+import Data.Array ((!!), insertBy, findIndex, updateAt)
 import Data.String (joinWith)
 import Data.Int (toNumber, round, toStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
@@ -27,7 +27,7 @@ data Drawable = Drawable { drawn :: Graphics Unit
                          , layer :: Int
                          , updated :: Unit -> Drawable
                          , setTime :: Int -> Drawable
-                         , insertKey :: Unit -> Drawable
+                         , addMoment :: Unit -> Drawable
                          , formed :: forall p a. (Drawable -> Action a) -> H.HTML p (a Unit)
                          , overlap :: {x :: Number, y :: Number} -> Boolean
                          }
@@ -37,7 +37,7 @@ unfoldDrawable (Element el)
              , layer: el.layer
              , updated: \_ -> unfoldDrawable (advanceFrame el)
              , setTime: \t -> unfoldDrawable (setTime el t)
-             , insertKey: \_ -> unfoldDrawable (insertKey el el.current)
+             , addMoment: \_ -> unfoldDrawable (insertKey el el.current)
              , formed: el.form (Element el)
              , overlap: el.overlap el.current
              }
@@ -62,9 +62,10 @@ findMoment keys t = go 0 where
 setKeys :: forall a. Element a -> Array a -> Element a
 setKeys (Element el) ks = Element (el {keys=ks})
           
---TODO: make this replace when time is the same
 insertKey el k = 
-  Element (el {keys = insertBy (comparing _.time) k el.keys})
+  case findIndex (\a -> a.time == k.time) el.keys of
+    Just i  -> Element (el {keys = fromMaybe el.keys $ updateAt i k el.keys})
+    Nothing -> Element (el {keys = insertBy (comparing _.time) k el.keys})
           
 --some shared functions for graphics
 at x y gfx = do

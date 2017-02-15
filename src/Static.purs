@@ -16,7 +16,7 @@ boxStatic s@(Static {render,moment,form}) =
   Drawable { drawn: render moment
            , updated: \_ -> boxStatic s
            , setTime: \t -> boxStatic s
-           , insertKey:  \_ -> boxStatic s
+           , addMoment:  \_ -> boxStatic s
            , layer: 0
            , formed: form s
            , overlap: \_ -> false
