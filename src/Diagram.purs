@@ -83,7 +83,7 @@ diaComp = lifecycleComponent
       , case ((\(E.Drawable d) -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex)) of
           Just props -> H.form_ $ props <> [H.button [HE.onClick (\_ -> preventDefault $> (Just (action AddMoment)))] [H.Text "Apply"]]
           Nothing    -> H.div_ []
-      , H.div_ [ H.button_ [H.Text "Play"]
+      , H.div_ [ H.button [HE.onClick (\_ -> preventDefault $> (Just (action TogglePlay)))] [H.Text "Play"]
                , H.input [ HP.inputType HP.InputRange 
                          , HP.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
                          , HP.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 1000 --TODO: config max time
