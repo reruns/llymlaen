@@ -26,6 +26,7 @@ import App.Element as E
 import App.Validators (validateSetTime)
 
 type State = { paused :: Boolean
+             , time :: Int
              , ctx :: Maybe Context2D
              , color :: { r :: Int, g :: Int, b :: Int }
              , statics :: Array E.Drawable
@@ -46,7 +47,7 @@ data Query a
 
 
 advanceFrame :: State -> State
-advanceFrame st = st {elements = map updateOne st.elements } where
+advanceFrame st = st {elements = map updateOne st.elements, time=st.time+1 } where
   updateOne (E.Drawable d) = d.updated unit
   
 drawGraphics st = let 
@@ -79,13 +80,16 @@ diaComp = lifecycleComponent
                , H.button_ [H.Text "Rectangle"]
                , H.button_ [H.Text "Donut"]
                ]
-      , fromMaybe (H.div_ []) $ ((\(E.Drawable d) -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex))
+      , case ((\(E.Drawable d) -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex)) of
+          Just props -> H.form_ $ props <> [H.button [HE.onClick (\_ -> preventDefault $> (Just (action AddMoment)))] [H.Text "Apply"]]
+          Nothing    -> H.div_ []
       , H.div_ [ H.button_ [H.Text "Play"]
                , H.input [ HP.inputType HP.InputRange 
                          , HP.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
                          , HP.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 1000 --TODO: config max time
                          , HE.onValueChange (\s -> (map (action <<< SetTime)) <$> (validateSetTime s 1000))
                          ]
+               , H.h1_ [H.text (show st.time)]
                ]
       ]
       
@@ -105,7 +109,7 @@ diaComp = lifecycleComponent
     pure next
     
   eval (SetTime t next) = do
-    modify (\st -> st {elements = map (\(E.Drawable d) -> d.setTime t) st.elements})
+    modify (\st -> st {elements = map (\(E.Drawable d) -> d.setTime t) st.elements, time=t})
     pure next
     
   eval (Initialize next) = do

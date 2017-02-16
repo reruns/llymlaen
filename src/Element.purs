@@ -19,7 +19,7 @@ data Element a = Element { layer :: Int
                          , current :: a
                          , reconcile :: a -> a -> Int -> a
                          , render :: a -> Graphics Unit
-                         , form :: forall p b. Element a -> (Drawable -> Action b) -> H.HTML p (b Unit)
+                         , form :: forall p b. Element a -> (Drawable -> Action b) -> Array (H.HTML p (b Unit))
                          , overlap :: a -> {x :: Number, y :: Number} -> Boolean
                          }
   
@@ -28,7 +28,7 @@ data Drawable = Drawable { drawn :: Graphics Unit
                          , updated :: Unit -> Drawable
                          , setTime :: Int -> Drawable
                          , addMoment :: Unit -> Drawable
-                         , formed :: forall p a. (Drawable -> Action a) -> H.HTML p (a Unit)
+                         , formed :: forall p a. (Drawable -> Action a) -> Array (H.HTML p (a Unit))
                          , overlap :: {x :: Number, y :: Number} -> Boolean
                          }
                          

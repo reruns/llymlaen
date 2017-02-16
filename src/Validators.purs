@@ -14,7 +14,7 @@ import Halogen.HTML.Events.Handler (EventHandler)
 --but I don't know how to lens atm, so...
 
 validateSetTime value max = do
-  pure $ validateNumber (between 0 360) value
+  pure $ validateNumber (between 0 max) value
 
 validateAngle value (Element el) = do
   pure $ (\v -> unfoldDrawable $ Element $ el {current=el.current {angle=v}}) <$> (validateNumber (between 0 360) value)

@@ -9,7 +9,7 @@ import Halogen.HTML.Indexed as H
 
 data Static a = Static { moment :: a
                        , render :: a -> Graphics Unit
-                       , form :: forall p i b. Static a -> (Drawable -> Action b) -> H.HTML p i
+                       , form :: forall p i b. Static a -> (Drawable -> Action b) -> Array (H.HTML p i)
                        }
                 
 boxStatic s@(Static {render,moment,form}) = 

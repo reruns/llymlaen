@@ -25,35 +25,34 @@ type DonutMoment = { enabled :: Boolean
                    , color :: { r :: Int, g :: Int, b :: Int }
                    }
         
-showData :: forall p a. Element DonutMoment -> (Drawable -> Action a) -> H.HTML p (a Unit)
+showData :: forall p a. Element DonutMoment -> (Drawable -> Action a) -> Array (H.HTML p (a Unit))
 showData (Element el) qr =  
   let moment = el.current in
-  H.form_ 
-    [ H.input [ P.inputType P.InputCheckbox
-              , P.title "enabled"
-              , P.checked moment.enabled
-              , E.onChecked $ E.input (\b -> qr $ unfoldDrawable $ Element $ el{current=moment{enabled=b}})]
-    , H.input [ P.inputType P.InputNumber
-              , P.title "Inner radius"
-              , P.value $ show moment.size.r1 
-              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateR1 s (Element el))) 
-              ]
-    , H.input [ P.inputType P.InputNumber
-              , P.title "Outer radius"
-              , P.value $ show moment.size.r2 
-              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateX s (Element el)))
-              ]          
-    , H.input [ P.inputType P.InputNumber
-              , P.title "x"
-              , P.value $ show moment.pos.x 
-              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateX s (Element el)))
-              ]
-    , H.input [ P.inputType P.InputNumber
-              , P.title "y"
-              , P.value $ show moment.pos.y 
-              , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateY s (Element el)))
-              ]
-    ]
+  [ H.input [ P.inputType P.InputCheckbox
+            , P.title "enabled"
+            , P.checked moment.enabled
+            , E.onChecked $ E.input (\b -> qr $ unfoldDrawable $ Element $ el{current=moment{enabled=b}})]
+  , H.input [ P.inputType P.InputNumber
+            , P.title "Inner radius"
+            , P.value $ show moment.size.r1 
+            , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateR1 s (Element el))) 
+            ]
+  , H.input [ P.inputType P.InputNumber
+            , P.title "Outer radius"
+            , P.value $ show moment.size.r2 
+            , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateX s (Element el)))
+            ]          
+  , H.input [ P.inputType P.InputNumber
+            , P.title "x"
+            , P.value $ show moment.pos.x 
+            , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateX s (Element el)))
+            ]
+  , H.input [ P.inputType P.InputNumber
+            , P.title "y"
+            , P.value $ show moment.pos.y 
+            , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateY s (Element el)))
+            ]
+  ]
     
 showStat :: forall p i a. Static DonutMoment ->  (Drawable -> Action a) -> H.HTML p i  
 showStat (Static s) qr = H.div_ []    
