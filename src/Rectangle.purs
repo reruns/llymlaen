@@ -18,6 +18,8 @@ import Halogen.HTML.Events.Indexed as E
 import Halogen.HTML.Events.Handler as EH
 import Halogen.HTML.Properties.Indexed as P
 
+import App.Shape
+
 type RectMoment = { enabled :: Boolean
                   , bordered :: Boolean
                   , time :: Int

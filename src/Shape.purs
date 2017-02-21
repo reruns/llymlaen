@@ -24,5 +24,8 @@ class Shape a where
   reconcile    :: a -> a -> Int -> a
   
   
+element :: forall a. (Shape a) => Int -> a -> 
+element
+  
   
 input :: Property -> (Drawable -> Action b)
