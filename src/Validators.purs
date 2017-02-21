@@ -18,6 +18,12 @@ validateSetTime value max = do
 
 validateAngle value (Element el) = do
   pure $ (\v -> unfoldDrawable $ Element $ el {current=el.current {angle=v}}) <$> (validateNumber (between 0 360) value)
+  
+validateColor g value (Element el) = do
+  pure $ (\v -> unfoldDrawable $ Element $ g el v) <$> (validateNumber (between 0 255) value)
+  
+validateOp value (Element el) = do
+  pure $ (\v -> unfoldDrawable $ Element $ el {current=el.current {opacity=v}}) <$> (validateNumber (between 0 100) value)
 
 validateWidth value (Element el) = do
   pure $ (\v -> unfoldDrawable $ Element $ el {current=el.current {size = el.current.size {w=v}}}) <$> (validateNumber ((<) 0) value)
@@ -40,6 +46,7 @@ validateX value (Element el) = do
 validateY value (Element el) = do
   pure $ (\v -> unfoldDrawable $ Element $ el {current=el.current {pos = el.current.pos {y=v}}}) <$> (validateNumber ((<) 0) value)
       
+
 validateNumber p v = 
   let n = fromString v in
   case p <$> n of

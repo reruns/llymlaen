@@ -3,10 +3,12 @@ module App.Circle where
 import App.Element
 import App.Static
 import App.Validators
+import App.Element.Rendering
 
 import Prelude
 import Data.Int (toNumber, round)
 import Math (pi, pow, sqrt)
+import Data.Maybe (Maybe(Just,Nothing))
 
 import Graphics.Canvas.Free
 
@@ -26,7 +28,7 @@ type CircleMoment = { enabled :: Boolean
                     }
 
 showData :: forall p a. Element CircleMoment -> (Drawable -> Action a) -> Array (H.HTML p (a Unit))
-showData (Element el) qr = 
+showData elem@(Element el) qr = 
   let moment = el.current in
   [ H.input [ P.inputType P.InputCheckbox
             , P.title "enabled"
@@ -52,6 +54,16 @@ showData (Element el) qr =
             , P.value $ show moment.pos.y 
             , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateY s (Element el)))
             ]
+  , H.input [ P.inputType P.InputRange
+            , P.title "opacity"
+            , P.value $ show moment.opacity
+            , P.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
+            , P.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 100
+            , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateOp s (Element el)))
+            ]
+  , redInput qr elem
+  , blueInput qr elem
+  , greenInput qr elem
   ]
     
 showStat :: forall p i a. Static CircleMoment ->  (Drawable -> Action a) -> H.HTML p i
@@ -76,6 +88,8 @@ circleElem = Element { layer: 0
                      , overlap: overlap
                      }
               
+circBase = unfoldDrawable circleElem
+
 renderCircle {enabled: false} = pure unit               
 renderCircle c = at c.pos.x c.pos.y $ do
   setFillStyle $ colorToStr c.color

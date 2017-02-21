@@ -23,6 +23,9 @@ import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDim
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
 import App.Element as E
+import App.Circle (circBase)
+import App.Rectangle (rectBase)
+import App.Donut (donutBase)
 import App.Validators (validateSetTime)
 
 type State = { paused :: Boolean
@@ -76,9 +79,9 @@ diaComp = lifecycleComponent
     H.div_
       [ H.canvas [ HP.id_ "canvas"
                  , HE.onClick (\e -> preventDefault *> getCoords e) ]
-      , H.div_ [ H.button_ [H.Text "Circle"]
-               , H.button_ [H.Text "Rectangle"]
-               , H.button_ [H.Text "Donut"]
+      , H.div_ [ H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement circBase))))] [H.Text "Circle"]
+               , H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement rectBase))))] [H.Text "Rectangle"]
+               , H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement donutBase))))]  [H.Text "Donut"]
                ]
       , case ((\(E.Drawable d) -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex)) of
           Just props -> H.form_ $ props <> [H.button [HE.onClick (\_ -> preventDefault $> (Just (action AddMoment)))] [H.Text "Apply"]]

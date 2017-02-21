@@ -3,6 +3,7 @@ module App.Rectangle where
 import App.Element
 import App.Static
 import App.Validators
+import App.Element.Rendering
 
 import Prelude
 import Data.Int (toNumber, round)
@@ -38,7 +39,7 @@ defaultRectMoment = { enabled: false
                     }  
              
 showData :: forall p a. Element RectMoment -> (Drawable -> Action a) -> Array (H.HTML p (a Unit))
-showData (Element el) qr = 
+showData elem@(Element el) qr = 
   let moment = el.current in
   [ H.h1_   [ H.text $ show moment.time ]
   , H.h2_   [ H.text $ show moment.opacity ]
@@ -79,6 +80,16 @@ showData (Element el) qr =
             , P.value $ show moment.pos.y
             , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateY s (Element el)))
             ]
+  , H.input [ P.inputType P.InputRange
+            , P.title "opacity"
+            , P.value $ show moment.opacity
+            , P.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") 0
+            , P.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") 100
+            , E.onValueChange (\s -> (map $ (action <<< qr)) <$> (validateOp s (Element el)))
+            ]
+  , redInput qr elem
+  , blueInput qr elem
+  , greenInput qr elem
   ]
     
 showStat :: forall p i a. Static RectMoment -> (Drawable -> Action a) -> Array (H.HTML p i)
@@ -93,11 +104,13 @@ rectElem = Element { layer: 0
                    , form: showData
                    , overlap: overlap
                    }
+                   
+rectBase = unfoldDrawable rectElem
 
 staticRect moment = Static { moment: moment
                            , render: renderRect
                            , form: showStat
-                           }                   
+                           }                           
                 
 renderRect {enabled: false} = pure unit                
 renderRect c = at c.pos.x c.pos.y $ do
