@@ -13,6 +13,12 @@ import Halogen.HTML.Events.Handler (EventHandler)
 --which takes a thing, a lens setter for it, (String->Boolean), and the string
 --but I don't know how to lens atm, so...
 
+validateRange :: String -> Int -> Int -> Maybe Int
+validateRange s min max = validateNumber (between min max) s
+
+validateNonNeg :: String -> Maybe Int
+validateNonNeg s = validateNumber ((<=) 0) s
+
 validateSetTime value max = do
   pure $ validateNumber (between 0 max) value
 

@@ -51,10 +51,10 @@ data Query a
 
 advanceFrame :: State -> State
 advanceFrame st = st {elements = map updateOne st.elements, time=st.time+1 } where
-  updateOne (E.Drawable d) = d.updated unit
+  updateOne d = d.updated unit
   
 drawGraphics st = let 
-  drawOne (E.Drawable d) = d.drawn in
+  drawOne d = d.drawn in
   case st.ctx of
     Just ctx -> runGraphics ctx $ do
                   setFillStyle $ E.colorToStr st.color
@@ -83,7 +83,7 @@ diaComp = lifecycleComponent
                , H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement rectBase))))] [H.Text "Rectangle"]
                , H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement donutBase))))]  [H.Text "Donut"]
                ]
-      , case ((\(E.Drawable d) -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex)) of
+      , case ((\d -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex)) of
           Just props -> H.form_ $ props <> [H.button [HE.onClick (\_ -> preventDefault $> (Just (action AddMoment)))] [H.Text "Apply"]]
           Nothing    -> H.div_ []
       , H.div_ [ H.button [HE.onClick (\_ -> preventDefault $> (Just (action TogglePlay)))] [H.Text "Play"]
@@ -112,7 +112,7 @@ diaComp = lifecycleComponent
     pure next
     
   eval (SetTime t next) = do
-    modify (\st -> st {elements = map (\(E.Drawable d) -> d.setTime t) st.elements, time=t})
+    modify (\st -> st {elements = map (\d -> d.setTime t) st.elements, time=t})
     pure next
     
   eval (Initialize next) = do
@@ -130,8 +130,8 @@ diaComp = lifecycleComponent
     modify (\s -> s {targetIndex = go es ((length es) - 1) })
     pure next 
     where go es' i = case (es' !! i) of
-            Just (E.Drawable e) -> if e.overlap pos then i else go es' (i-1)
-            Nothing             -> -1
+            Just e  -> if e.overlap pos then i else go es' (i-1)
+            Nothing -> -1
             
   eval (ModTarget d next) = do
     st <- get
@@ -142,15 +142,15 @@ diaComp = lifecycleComponent
     
   eval (AddMoment next) = do
     st <- get
-    case modifyAt (st.targetIndex) (\(E.Drawable d) -> d.addMoment unit) st.elements of
+    case modifyAt (st.targetIndex) (\d -> d.addMoment unit) st.elements of
       Just as -> modify (\st -> st {elements=as})
       Nothing -> pure unit
     pure next
     
-  eval (AddElement (E.Drawable el) next) = do
+  eval (AddElement el next) = do
     modify (\st ->
-      case findLastIndex (\(E.Drawable d) -> d.layer < el.layer) st.elements of
-        Just i  -> st {elements = fromMaybe st.elements $ insertAt i (E.Drawable el) st.elements, targetIndex = i}
-        Nothing -> st {elements = cons (E.Drawable el) st.elements, targetIndex = 0})
+      case findLastIndex (\d -> d.layer < el.layer) st.elements of
+        Just i  -> st {elements = fromMaybe st.elements $ insertAt i el st.elements, targetIndex = i}
+        Nothing -> st {elements = cons el st.elements, targetIndex = 0})
     pure next
     
