@@ -99,7 +99,7 @@ renderHTML el@{current:{time:t,props:props}} qr = concat $ mapWithIndex renderPr
   renderProp i (Position p)  = map (\{v,h} -> number [] v (qr <<< (insertVal i) <<< Position <<< h)) [{v:p.x,h:setX p}, {v: p.y, h: setY p}]
   renderProp i (Opacity o)   = [slider [P.title "opacity"] 0 100 o (\v -> qr $ insertVal i (Opacity v))]
   renderProp i (Angle a)     = [slider [P.title "angle"] 0 360 a (\v -> qr $ insertVal i (Angle v))]
-  renderProp i (Circle r)    = []
+  renderProp i (Circle r)    = [] --TODO: These
   renderProp i (Rect w h)    = []
   renderProp i (Donut r1 r2) = []
               
