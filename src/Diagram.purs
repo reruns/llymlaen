@@ -5,6 +5,7 @@ import Prelude
 import Data.Foldable
 import Data.Array (insertBy, (!!), length, updateAt, modifyAt, findLastIndex, insertAt, cons)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
+import Data.Int (round)
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
@@ -23,17 +24,15 @@ import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDim
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
 import App.Element as E
-import App.Circle (circBase)
-import App.Rectangle (rectBase)
-import App.Donut (donutBase)
+import App.Static as S
 import App.Validators (validateSetTime)
 
 type State = { paused :: Boolean
              , time :: Int
              , ctx :: Maybe Context2D
              , color :: { r :: Int, g :: Int, b :: Int }
-             , statics :: Array E.Drawable
-             , elements :: Array E.Drawable 
+             , statics :: Array S.Static
+             , elements :: Array E.Element
              , targetIndex :: Int
              }
              
@@ -43,25 +42,22 @@ data Query a
   | Tick a
   | SetTime Int a
   | UpdateTarget {x :: Number, y :: Number} a
-  | ModTarget E.Drawable a
+  | ModTarget E.Element a
   | AddMoment a
-  | AddElement E.Drawable a --TODO: redo the interaction model
+  | AddElement E.Element a --TODO: redo the interaction model
   
 
 
 advanceFrame :: State -> State
-advanceFrame st = st {elements = map updateOne st.elements, time=st.time+1 } where
-  updateOne d = d.updated unit
+advanceFrame st = st { elements = map E.advanceFrame st.elements, time=st.time+1 }
   
-drawGraphics st = let 
-  drawOne d = d.drawn in
-  case st.ctx of
-    Just ctx -> runGraphics ctx $ do
-                  setFillStyle $ E.colorToStr st.color
-                  fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
-                  traverse_ drawOne st.statics
-                  traverse_ drawOne st.elements
-    Nothing  -> pure unit
+drawGraphics st = case st.ctx of
+  Just ctx -> runGraphics ctx $ do
+                setFillStyle $ E.colorToStr st.color
+                fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
+                traverse_ S.renderStatic st.statics
+                traverse_ E.renderEl st.elements
+  Nothing  -> pure unit
     
 getCoords e = do
   pure $ Just $ action $ UpdateTarget {x:e.pageX, y:e.pageY}
@@ -79,11 +75,11 @@ diaComp = lifecycleComponent
     H.div_
       [ H.canvas [ HP.id_ "canvas"
                  , HE.onClick (\e -> preventDefault *> getCoords e) ]
-      , H.div_ [ H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement circBase))))] [H.Text "Circle"]
-               , H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement rectBase))))] [H.Text "Rectangle"]
-               , H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement donutBase))))]  [H.Text "Donut"]
+      , H.div_ [ H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement E.circBase))))] [H.Text "Circle"]
+               , H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement E.rectBase))))] [H.Text "Rectangle"]
+               , H.button [HE.onClick (\_ -> preventDefault $> (Just (action (AddElement E.donutBase))))]  [H.Text "Donut"]
                ]
-      , case ((\d -> (d.formed ModTarget)) <$> (st.elements !! st.targetIndex)) of
+      , case ((\d -> (E.renderHTML d ModTarget)) <$> (st.elements !! st.targetIndex)) of
           Just props -> H.form_ $ props <> [H.button [HE.onClick (\_ -> preventDefault $> (Just (action AddMoment)))] [H.Text "Apply"]]
           Nothing    -> H.div_ []
       , H.div_ [ H.button [HE.onClick (\_ -> preventDefault $> (Just (action TogglePlay)))] [H.Text "Play"]
@@ -112,7 +108,7 @@ diaComp = lifecycleComponent
     pure next
     
   eval (SetTime t next) = do
-    modify (\st -> st {elements = map (\d -> d.setTime t) st.elements, time=t})
+    modify (\st -> st {elements = map (\e -> E.setTime e t) st.elements, time=t})
     pure next
     
   eval (Initialize next) = do
@@ -130,27 +126,27 @@ diaComp = lifecycleComponent
     modify (\s -> s {targetIndex = go es ((length es) - 1) })
     pure next 
     where go es' i = case (es' !! i) of
-            Just e  -> if e.overlap pos then i else go es' (i-1)
+            Just e  -> if E.overlap e {x: round pos.x, y: round pos.y} then i else go es' (i-1) --TODO: Maybe it's time to move away from Ints entirely?
             Nothing -> -1
             
-  eval (ModTarget d next) = do
+  eval (ModTarget e next) = do
     st <- get
-    case updateAt (st.targetIndex) d (st.elements) of
-      Just as -> modify (\st -> st {elements=as})
+    case updateAt (st.targetIndex) e (st.elements) of
+      Just es -> modify (\st -> st {elements=es})
       Nothing -> pure unit
     pure next
     
   eval (AddMoment next) = do
     st <- get
-    case modifyAt (st.targetIndex) (\d -> d.addMoment unit) st.elements of
-      Just as -> modify (\st -> st {elements=as})
+    case modifyAt (st.targetIndex) (\el -> E.insertKey el el.current) st.elements of
+      Just es -> modify (\st -> st {elements=es})
       Nothing -> pure unit
     pure next
     
-  eval (AddElement el next) = do
+  eval (AddElement e next) = do
     modify (\st ->
-      case findLastIndex (\d -> d.layer < el.layer) st.elements of
-        Just i  -> st {elements = fromMaybe st.elements $ insertAt i el st.elements, targetIndex = i}
-        Nothing -> st {elements = cons el st.elements, targetIndex = 0})
+      case findLastIndex (\d -> d.layer < e.layer) st.elements of
+        Just i  -> st {elements = fromMaybe st.elements $ insertAt i e st.elements, targetIndex = i}
+        Nothing -> st {elements = cons e st.elements, targetIndex = 0})
     pure next
     
