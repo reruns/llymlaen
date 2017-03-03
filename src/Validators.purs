@@ -10,8 +10,7 @@ validateRange s min max = validateNumber (between min max) s
 validateNonNeg :: String -> Maybe Int
 validateNonNeg s = validateNumber ((<=) 0) s
 
-validateSetTime value max = do
-  pure $ validateNumber (between 0 max) value
+validateSetTime value max = validateNumber (between 0 max) value
 
 validateNumber p v = 
   let n = fromString v in

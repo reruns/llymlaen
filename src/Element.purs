@@ -15,11 +15,9 @@ import Math (pi, sqrt, pow)
 import Graphics.Canvas.Free
 
 import Halogen (Action, action)
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Events.Indexed as E
-import Halogen.HTML.Events.Handler as EH
-import Halogen.HTML.Properties.Indexed as P
-import Halogen.HTML.Events.Handler (preventDefault)
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 
 
 --might need to split this into multiple files at some point
@@ -88,21 +86,7 @@ donutBase = { layer: 0
                                 , Donut 0 1
                                 ]
                        }
-            }
-            
-renderHTML :: forall p b. Element -> (Element -> Action b) -> Array (H.HTML p (b Unit))
-renderHTML el@{current:{time:t,props:props}} qr = concat $ mapWithIndex renderProp props where
-  insertVal  i prop = el {current = el.current {props = fromMaybe props (updateAt i prop props)}}
-  renderProp i (Enabled b)   = [checkBox [P.title "enabled"]  b (\v -> qr $ insertVal i (Enabled v))]
-  renderProp i (Bordered b)  = [checkBox [P.title "bordered"] b (\v -> qr $ insertVal i (Bordered v))]
-  renderProp i (Color c)     = map (\{v,h} -> slider [] 0 255 v (qr <<< (insertVal i) <<< Color <<< h)) [{v:c.r,h:setR c}, {v:c.g,h:setG c}, {v:c.b,h:setB c}]
-  renderProp i (Position p)  = map (\{v,h} -> number [] v (qr <<< (insertVal i) <<< Position <<< h)) [{v:p.x,h:setX p}, {v: p.y, h: setY p}]
-  renderProp i (Opacity o)   = [slider [P.title "opacity"] 0 100 o (\v -> qr $ insertVal i (Opacity v))]
-  renderProp i (Angle a)     = [slider [P.title "angle"] 0 360 a (\v -> qr $ insertVal i (Angle v))]
-  renderProp i (Circle r)    = [] --TODO: These
-  renderProp i (Rect w h)    = []
-  renderProp i (Donut r1 r2) = []
-              
+            }          
               
 renderEl :: Element -> Graphics Unit
 renderEl el = renderCanvas el.current.props
@@ -140,17 +124,18 @@ reconcile :: Moment -> Moment -> Int -> Moment
 reconcile {time:tl, props: left} {time: tr, props: right} t =
   let p = (toNumber (t-tl)) / (toNumber (tr-tl))
       f a b = a + (round $ p * (toNumber (b-a)))  
-      recProp (Enabled b1)  (Enabled b2)    = Just $ Enabled b1
-      recProp (Bordered b1) (Bordered b2)   = Just $ Bordered b1
-      recProp (Color c1)    (Color c2)      = Just $ Color {r: f c1.r c2.r, g: f c1.g c2.g, b: f c1.b c2.b}
-      recProp (Position p1) (Position p2)   = Just $ Position {x: f p1.x p2.x, y: f p1.y p2.y}
-      recProp (Angle a1)    (Angle a2)      = Just $ Angle (f a1 a2)
-      recProp (Opacity o1)  (Opacity o2)    = Just $ Opacity (f o1 o2)
-      recProp (Circle r1)   (Circle r2)     = Just $ Circle (f r1 r2)
-      recProp (Rect w1 h1)  (Rect w2 h2)    = Just $ Rect (f w1 w2) (f h1 h2)
-      recProp (Donut r1 r2) (Donut r1' r2') = Just $ Donut (f r1 r1') (f r2 r2')
-      recProp _             _               = Nothing --Mismatch! Quietly abort.
-  in {time: t, props: fromMaybe left $ sequence $ zipWith recProp left right}
+  in {time: t, props: fromMaybe left $ sequence $ zipWith (recProp f) left right}
+  
+recProp f (Enabled b1)  (Enabled b2)    = Just $ Enabled b1
+recProp f (Bordered b1) (Bordered b2)   = Just $ Bordered b1
+recProp f (Color c1)    (Color c2)      = Just $ Color {r: f c1.r c2.r, g: f c1.g c2.g, b: f c1.b c2.b}
+recProp f (Position p1) (Position p2)   = Just $ Position {x: f p1.x p2.x, y: f p1.y p2.y}
+recProp f (Angle a1)    (Angle a2)      = Just $ Angle (f a1 a2)
+recProp f (Opacity o1)  (Opacity o2)    = Just $ Opacity (f o1 o2)
+recProp f (Circle r1)   (Circle r2)     = Just $ Circle (f r1 r2)
+recProp f (Rect w1 h1)  (Rect w2 h2)    = Just $ Rect (f w1 w2) (f h1 h2)
+recProp f (Donut r1 r2) (Donut r1' r2') = Just $ Donut (f r1 r1') (f r2 r2')
+recProp f _             _               = Nothing --Mismatch! TODO: Add some kind of fail representation here.
   
 --note: this will compile but not work correctly if Position comes after the Shape property
 overlap :: Element -> Point -> Boolean
@@ -192,24 +177,24 @@ findMoment keys t = go 0 where
            
 --functions for Form elements
 checkBox props b h = 
-  H.input ([P.inputType P.InputCheckbox
-          , P.checked b
-          , E.onChecked $ E.input h
-          ] <> props)
+  HH.input ([ HP.prop (HH.PropName "InputType") HP.InputCheckbox
+            , HP.checked b
+            , HE.onChecked $ HE.input h
+            ] <> props)
           
 slider props min max v h =
-  H.input ([P.inputType P.InputRange
-          , P.value (show v)
-          , P.IProp $ H.prop (H.propName "min") (Just $ H.attrName "min") min
-          , P.IProp $ H.prop (H.propName "max") (Just $ H.attrName "max") max
-          , E.onValueChange (\s -> preventDefault $> ((action <<< h) <$> (validateRange s min max)))
-          ] <> props) 
+  HH.input ([ HP.prop (HH.PropName "InputType") HP.InputRange
+            , HP.value (show v)
+            , HP.prop (HH.PropName "min") min
+            , HP.prop (HH.PropName "max") max
+            , HE.onValueChange (\s -> (action <<< h) <$> (validateRange s min max))
+            ] <> props) 
           
 number props v h =
-  H.input ([ P.inputType P.InputNumber
-          , P.value (show v)
-          , E.onValueChange (\s -> preventDefault $> ((action <<< h) <$> (validateNonNeg s)))
-          ] <> props)
+  HH.input ([ HP.prop (HH.PropName "InputType") HP.InputNumber
+            , HP.value (show v)
+            , HE.onValueChange (\s -> (action <<< h) <$> (validateNonNeg s))
+            ] <> props)
 
           
 colorToStr {r,g,b} = "#" <> (joinWith "" $ map (\x -> (if x < 16 then "0" else "") <> (toStringAs hexadecimal x)) [r,g,b])

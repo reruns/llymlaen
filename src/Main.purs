@@ -3,17 +3,20 @@ module Main where
 import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class
+import Graphics.Canvas (CANVAS)
+import Control.Monad.Eff.Console (CONSOLE)
 
-import Halogen as H
-import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen (action)
+import Halogen.VDom.Driver (runUI)
+import Halogen.Aff as HA
 
 import Example.IntermissionA
 import App.Diagram
 
 import Control.Monad.Eff.Timer (setInterval)
 
-main = runHalogenAff do
-  body <- awaitBody
-  driver <- H.runUI diaComp interA body
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  driver <- runUI diaComp unit body
   liftEff $ setInterval 16 $ do
-    runHalogenAff (driver (H.action Tick)) --what.
+    HA.runHalogenAff (driver.query $ action Tick) --what.
