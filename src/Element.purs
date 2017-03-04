@@ -57,49 +57,7 @@ matchEl a b =  ( matchMoment a.current b.current )
 
 matchMoment :: Moment -> Moment -> Boolean
 matchMoment a b =  ( a.time == b.time )
-                && ( a.props == b.props )
-
-circBase :: Element
-circBase = { layer: 0
-           , keys: []
-           , current: { time: 0
-                      , props: [ Enabled false
-                               , Bordered false
-                               , Color {r:128,g:128,b:128}
-                               , Position {x:0,y:0}
-                               , Opacity 100
-                               , Circle 0
-                               ]
-                      }
-           }
-
-rectBase :: Element
-rectBase = { layer: 0
-           , keys: []
-           , current: { time: 0
-                      , props: [ Enabled false
-                               , Bordered false
-                               , Color {r:128,g:128,b:128}
-                               , Position {x:0,y:0}
-                               , Opacity 100
-                               , Angle 0
-                               , Rect 0 0
-                               ]
-                      }
-           }
-           
-donutBase :: Element
-donutBase = { layer: 0
-            , keys: []
-            , current: { time: 0
-                       , props: [ Enabled false
-                                , Color {r:128,g:128,b:128}
-                                , Position {x:0,y:0}
-                                , Opacity 100
-                                , Donut 0 1
-                                ]
-                       }
-            }          
+                && ( a.props == b.props )  
               
 renderEl :: Element -> Graphics Unit
 renderEl el = renderCanvas el.current.props

@@ -7,8 +7,8 @@ import Data.Array (insertBy, (!!), length, updateAt, modifyAt, findLastIndex, in
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 import Data.Int (round)
 
-import Data.Either.Nested (Either1)
-import Data.Functor.Coproduct.Nested (Coproduct1)
+import Data.Either.Nested (Either2)
+import Data.Functor.Coproduct.Nested (Coproduct2)
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
@@ -28,7 +28,9 @@ import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDim
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
 import App.Element as E
+import App.Element.Presets
 import App.ElementEditor as ElEdit
+import App.Toolbar as Toolbar
 import App.Static as S
 import App.Helpers
 import Example.IntermissionA
@@ -47,12 +49,11 @@ data Query a
   | Initialize a
   | Tick a
   | SetTime Int a
-  | UpdateTarget {x :: Int, y :: Int } a
   | ModTarget (Maybe E.Element) a
-  | AddElement E.Element a --TODO: redo the interaction model
+  | ClickCanvas E.Point a
   
-type ChildQuery = Coproduct1 ElEdit.Query
-type ChildSlot = Either1 Unit
+type ChildQuery = Coproduct2 ElEdit.Query Toolbar.Query
+type ChildSlot = Either2 Unit Unit
 
 type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE | eff)
 
@@ -81,12 +82,9 @@ diaComp = lifecycleParentComponent
   render :: State -> ParentHTML Query ChildQuery ChildSlot (UIEff eff)
   render st =
     HH.div_
-      [ HH.canvas [ HP.id_ "canvas"
-                  , HE.onClick $ HE.input (\e -> UpdateTarget {x: pageX e, y: pageY e}) ]
-      , HH.div_ [ HH.button [HE.onClick $ HE.input_ $ AddElement E.circBase ]  [HH.text "Circle"]
-                , HH.button [HE.onClick $ HE.input_ $ AddElement E.rectBase ]  [HH.text "Rectangle"]
-                , HH.button [HE.onClick $ HE.input_ $ AddElement E.donutBase ] [HH.text "Donut"]
-                ]
+      [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
+      , HH.canvas [ HP.id_ "canvas"
+                  , HE.onClick $ HE.input (\e -> ClickCanvas {x: pageX e, y: pageY e}) ]
       , case st.elements !! st.targetIndex of
           Just el -> HH.slot' cp1 unit ElEdit.component el (HE.input ModTarget)
           Nothing -> HH.div_ []
@@ -125,14 +123,25 @@ diaComp = lifecycleParentComponent
           modify (\state -> state {ctx = Just context})
           pure next
           
-  eval (UpdateTarget pos next) = do
-    es <- gets _.elements
-    modify (\s -> s {targetIndex = go es ((length es) - 1) })
-    pure next 
+  --this isn't ideal, but we can't look at the toolbar's state outside of eval
+  --so the other option is replicating the state on the diagram, which I like less
+  eval (ClickCanvas pos next) = do
+    t <- gets _.time
+    mode <- query' cp2 unit (request Toolbar.CheckClick)
+    case fromMaybe Nothing mode of
+      Nothing -> (gets _.elements) >>= (\es -> modify (\s -> s {targetIndex = go es ((length es) - 1) }))
+      Just Toolbar.CircB -> addElement $ circBase t pos
+      Just Toolbar.RectB -> addElement $ rectBase t pos
+      Just Toolbar.DnutB -> addElement $ dnutBase t pos
+    pure next
     where go es' i = case (es' !! i) of
-            Just e  -> if E.overlap e {x: pos.x, y: pos.y} then i else go es' (i-1)
-            Nothing -> -1
-            
+                      Just e  -> if E.overlap e {x: pos.x, y: pos.y} then i else go es' (i-1)
+                      Nothing -> -1
+          addElement e = modify (\st ->
+            case findLastIndex (\d -> d.layer < e.layer) st.elements of
+              Just i  -> st {elements = fromMaybe st.elements $ insertAt i e st.elements, targetIndex = i}
+              Nothing -> st {elements = cons e st.elements, targetIndex = 0})
+     
   eval (ModTarget Nothing next) = do
     pure next
     
@@ -141,12 +150,5 @@ diaComp = lifecycleParentComponent
     case updateAt (st.targetIndex) e (st.elements) of
       Just es -> modify (\st -> st {elements=es})
       Nothing -> pure unit
-    pure next
-    
-  eval (AddElement e next) = do
-    modify (\st ->
-      case findLastIndex (\d -> d.layer < e.layer) st.elements of
-        Just i  -> st {elements = fromMaybe st.elements $ insertAt i e st.elements, targetIndex = i}
-        Nothing -> st {elements = cons e st.elements, targetIndex = 0})
     pure next
     
