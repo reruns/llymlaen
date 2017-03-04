@@ -21,9 +21,11 @@ renderProp i (Color c)     = map (\{v,h} -> slider [] 0 255 v (FormChange i <<< 
 renderProp i (Position p)  = map (\{v,h} -> number [] v (FormChange i <<< Position <<< h)) [{v:p.x,h:setX p}, {v: p.y, h: setY p}]
 renderProp i (Opacity o)   = [slider [HP.title "opacity"] 0 100 o (FormChange i <<< Opacity)]
 renderProp i (Angle a)     = [slider [HP.title "angle"] 0 360 a (FormChange i <<< Angle)]
-renderProp i (Circle r)    = [] --TODO: These
-renderProp i (Rect w h)    = []
-renderProp i (Donut r1 r2) = []
+renderProp i (Circle r)    = [ number [] r (FormChange i <<< Circle) ]
+renderProp i (Rect w h)    = [ number [] w (FormChange i <<< (flip Rect) h)
+                             , number [] h (FormChange i <<< Rect w) ]
+renderProp i (Donut r1 r2) = [ number [] r1 (FormChange i <<< (flip Donut) r2)
+                             , number [] r2 (FormChange i <<< Rect r1) ]
   
 component :: forall m. H.Component HH.HTML Query Element State m
 component =
