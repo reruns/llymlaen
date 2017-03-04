@@ -7,7 +7,7 @@ import App.Validators
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 import Data.Array (insertBy, (!!), updateAt, findIndex, concat, zipWith, mapWithIndex)
 import Data.Traversable (sequence, sequence_)
-import Data.Foldable (foldl)
+import Data.Foldable (foldl, and)
 import Data.Int (toNumber, round, toStringAs, hexadecimal)
 import Data.String (joinWith)
 import Math (pi, sqrt, pow)
@@ -43,8 +43,21 @@ data Property = Enabled  Boolean
               | Rect     Int Int
               | Donut    Int Int
 
+derive instance eqProp :: Eq Property
+
 type Moment = { time :: Int, props :: Array Property }
 type Element = { current :: Moment, layer :: Int, keys :: Array Moment } 
+
+--a substitute for being able to have an Eq instance.
+--if doing this all the time ends up being slow we could revisit it, though.
+matchEl :: Element -> Element -> Boolean
+matchEl a b =  ( matchMoment a.current b.current )
+            && ( a.layer == b.layer )
+            && ( and $ zipWith matchMoment a.keys b.keys )
+
+matchMoment :: Moment -> Moment -> Boolean
+matchMoment a b =  ( a.time == b.time )
+                && ( a.props == b.props )
 
 circBase :: Element
 circBase = { layer: 0

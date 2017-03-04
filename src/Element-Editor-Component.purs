@@ -46,7 +46,10 @@ component =
     
   eval :: forall m. Query ~> H.ComponentDSL State Query State m
   eval (HandleInput el next) = do
-    H.put (Just el) --TODO: Compare against old state before doing this
+    st <- H.get
+    case st of
+      Just el' -> when (not $ matchEl el el') (H.put (Just el))
+      _      -> H.put (Just el)
     pure next
     
   eval (FormChange i prop next) = do
