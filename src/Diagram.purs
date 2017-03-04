@@ -7,13 +7,13 @@ import Data.Array (insertBy, (!!), length, updateAt, modifyAt, findLastIndex, in
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 import Data.Int (round)
 
-import Data.Either.Nested (Either2)
-import Data.Functor.Coproduct.Nested (Coproduct2)
+import Data.Either.Nested (Either3)
+import Data.Functor.Coproduct.Nested (Coproduct3)
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class
-import Control.Monad.Eff.Console (log, CONSOLE)
+import Control.Monad.Eff.Console (log, CONSOLE) --currently unused, but useful for debug potentially
 import Control.Apply ((*>))
 
 import Halogen
@@ -31,12 +31,12 @@ import App.Element as E
 import App.Element.Presets
 import App.ElementEditor as ElEdit
 import App.Toolbar as Toolbar
+import App.TimeControls as TControls
 import App.Static as S
 import App.Helpers
 import Example.IntermissionA
 
-type State = { paused :: Boolean
-             , time :: Int
+type State = { time :: Int
              , ctx :: Maybe Context2D
              , color :: { r :: Int, g :: Int, b :: Int }
              , statics :: Array S.Static
@@ -45,15 +45,14 @@ type State = { paused :: Boolean
              }
              
 data Query a 
-  = TogglePlay a
-  | Initialize a
+  = Initialize a
   | Tick a
   | SetTime Int a
   | ModTarget (Maybe E.Element) a
   | ClickCanvas E.Point a
   
-type ChildQuery = Coproduct2 ElEdit.Query Toolbar.Query
-type ChildSlot = Either2 Unit Unit
+type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
+type ChildSlot = Either3 Unit Unit Unit
 
 type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE | eff)
 
@@ -88,23 +87,15 @@ diaComp = lifecycleParentComponent
       , case st.elements !! st.targetIndex of
           Just el -> HH.slot' cp1 unit ElEdit.component el (HE.input ModTarget)
           Nothing -> HH.div_ []
-      , HH.div_ [ HH.button [HE.onClick $ HE.input_ TogglePlay ] [HH.text "Play"]
-                , E.slider [HP.title "time"] 0 1000 st.time SetTime
-                , HH.h1_ [HH.text (show st.time)]
-                ]
+      , HH.slot' cp3 unit TControls.controls st.time (tcListener st.time)
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
-  eval (TogglePlay next) = do
-    pause <- gets _.paused
-    modify (\st -> st {paused = not pause})
-    pure next
-  
   eval (Tick next) = do
-    pause <- gets _.paused
-    if pause
-      then pure unit
-      else modify advanceFrame
+    pause <- query' cp3 unit (request TControls.Paused)
+    if pause == Just false
+      then modify advanceFrame
+      else pure unit
     st <- get
     liftEff $ drawGraphics st
     pure next
@@ -125,6 +116,7 @@ diaComp = lifecycleParentComponent
           
   --this isn't ideal, but we can't look at the toolbar's state outside of eval
   --so the other option is replicating the state on the diagram, which I like less
+  --TODO: check the offset of the canvas
   eval (ClickCanvas pos next) = do
     t <- gets _.time
     mode <- query' cp2 unit (request Toolbar.CheckClick)
@@ -152,3 +144,7 @@ diaComp = lifecycleParentComponent
       Nothing -> pure unit
     pure next
     
+  tcListener :: Int -> Int -> Maybe (Query Unit)
+  tcListener t t' = if t == t'
+                      then Nothing
+                      else Just $ action $ SetTime t'
