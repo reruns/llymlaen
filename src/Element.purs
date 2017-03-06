@@ -10,7 +10,7 @@ import Data.Traversable (sequence, sequence_)
 import Data.Foldable (foldl, and)
 import Data.Int (toNumber, round, toStringAs, hexadecimal)
 import Data.String (joinWith)
-import Math (pi, sqrt, pow)
+import Math (pi, sqrt, pow, sin, cos)
 
 import Graphics.Canvas.Free
 
@@ -110,13 +110,16 @@ recProp f _             _               = Nothing --Mismatch! TODO: Add some kin
   
 --note: this will compile but not work correctly if Position comes after the Shape property
 overlap :: Element -> Point -> Boolean
-overlap {current:{props}} p = _.b $ foldl f {d:p,b:false} props where
-  f {d,b} (Position {x,y}) = {d:{x: d.x - x , y: d.y - y}, b: b}
-  f {d,b} (Circle r)       = {d:d, b: b || ((sqrt $ (pow (toNumber d.x) 2.0) + (pow (toNumber d.y) 2.0)) <= (toNumber r))}
-  f {d,b} (Rect w h)       = {d:d, b: b || (d.x >= 0 && d.x <= w && d.y >= 0 && d.y <= h)}
-  f {d,b} (Donut r1 r2)    = let dist = sqrt $ (pow (toNumber d.x) 2.0) + (pow (toNumber d.y) 2.0)
-                             in {d:d, b: b || (dist >= (toNumber r1) && dist <= (toNumber r2))}
-  f res _                  = res
+overlap {current:{props}} p = _.b $ foldl f {d:p, a: 0.0 , b:false} props where
+  f s@{d}     (Position {x,y}) = s { d= {x: p.x - x , y: p.y - y} }
+  f res       (Angle a')       = res { a = -2.0 * pi * (toNumber a') / 360.0 }
+  f s@{d,b}   (Circle r)       = s { b = b || ((sqrt $ (pow (toNumber d.x) 2.0) + (pow (toNumber d.y) 2.0)) <= (toNumber r))}
+  f s@{d,a,b} (Rect w h)       = let rot = { x: (toNumber d.x) * (cos a) - (toNumber d.y) * (sin a)
+                                       , y: (toNumber d.y) * (cos a) + (toNumber d.x) * (sin a) }
+                                 in s { b = b || (rot.x >= 0.0 && rot.x <= (toNumber w) && rot.y >= 0.0 && rot.y <= (toNumber h)) }
+  f s@{d,b}   (Donut r1 r2)    = let dist = sqrt $ (pow (toNumber d.x) 2.0) + (pow (toNumber d.y) 2.0)
+                                 in s { b = b || (dist >= (toNumber r1) && dist <= (toNumber r2))}
+  f res _                      = res
 
 insertKey :: Element -> Moment -> Element
 insertKey el k = 
