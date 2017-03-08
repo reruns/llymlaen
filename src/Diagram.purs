@@ -3,9 +3,10 @@ module App.Diagram where
 import Prelude
 
 import Data.Foldable
-import Data.Array (insertBy, (!!), length, updateAt, modifyAt, findLastIndex, insertAt, cons)
-import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
+import Data.Array (insertBy, (!!), length, updateAt, modifyAt, findLastIndex, insertAt, cons, last, filter, mapWithIndex, snoc)
+import Data.Maybe (Maybe(Just,Nothing), fromMaybe, isJust)
 import Data.Int (round)
+import Data.Traversable (sequence)
 
 import Data.Either.Nested (Either3)
 import Data.Functor.Coproduct.Nested (Coproduct3)
@@ -15,7 +16,6 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class
 import Control.Monad.Eff.Console (log, CONSOLE) --currently unused, but useful for debug potentially
 import Control.Apply ((*>))
-import Control.Fold (mconcat)
 
 import Halogen
 import Halogen.Component.ChildPath (cp1, cp2, cp3)
@@ -25,6 +25,7 @@ import Halogen.HTML.Properties as HP
 
 import DOM (DOM)
 import DOM.HTML (window)
+import DOM.HTML.Types (HTMLElement)
 import DOM.HTML.Window (scrollX, scrollY)
 import DOM.HTML.HTMLElement (getBoundingClientRect)
 import DOM.Event.Types (MouseEvent)
@@ -42,7 +43,7 @@ import App.Helpers
 import Example.IntermissionA
 
 type State = { time :: Int
-             , refs :: { ctx :: Maybe Context2D, el :: Maybe HTMLElement }
+             , ctx :: Maybe Context2D
              , color :: { r :: Int, g :: Int, b :: Int }
              , statics :: Array S.Static
              , elements :: Array ( Array E.Element )
@@ -51,7 +52,6 @@ type State = { time :: Int
              
 data Query a 
   = Initialize a
-  | SetRef (Maybe HTMLElement) a
   | Tick a
   | SetTime Int a
   | ModTarget (Maybe E.Element) a
@@ -61,17 +61,6 @@ type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
 type ChildSlot = Either3 Unit Unit Unit
 
 type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE, dom :: DOM | eff)
-
-advanceFrame :: State -> State
-advanceFrame st = st { elements = map E.advanceFrame st.elements, time=st.time+1 }
-  
-drawGraphics st = case st.refs.ctx of
-  Just ctx -> runGraphics ctx $ do
-                setFillStyle $ E.colorToStr st.color
-                fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
-                traverse_ S.renderStatic st.statics
-                traverse_ E.renderEl st.elements
-  Nothing  -> pure unit
     
 diaComp :: forall eff. Component HH.HTML Query Unit Void (UIEff eff)
 diaComp = lifecycleParentComponent
@@ -85,13 +74,13 @@ diaComp = lifecycleParentComponent
   where
   
   render :: State -> ParentHTML Query ChildQuery ChildSlot (UIEff eff)
-  render st =
+  render st = let loc = st.targetIndex in
     HH.div_
       [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
       , HH.canvas [ HP.id_ "canvas"
-                  , HP.ref \el -> action (SetRef el)
+                  , HP.ref (RefLabel "cvs")
                   , HE.onClick $ HE.input (\e -> ClickCanvas {x: pageX e, y: pageY e}) ]
-      , case st.elements !! st.targetIndex of
+      , case (\l -> l !! loc.idx) =<< (st.elements !! loc.layer) of
           Just el -> HH.slot' cp1 unit ElEdit.component el (HE.input ModTarget)
           Nothing -> HH.div_ []
       , HH.slot' cp3 unit TControls.controls st.time (tcListener st.time)
@@ -108,7 +97,7 @@ diaComp = lifecycleParentComponent
     pure next
     
   eval (SetTime t next) = do
-    modify (\st -> st {elements = map (\e -> E.setTime e t) st.elements, time=t})
+    modify (\st -> st {elements = map (map (\e -> E.setTime e t)) st.elements, time=t})
     pure next
     
   eval (Initialize next) = do
@@ -118,53 +107,63 @@ diaComp = lifecycleParentComponent
       Just canvas -> do
           liftEff $ setCanvasDimensions {width: 800.0, height: 800.0} canvas
           context <- liftEff $ getContext2D canvas
-          modify (\state -> state {refs = state.refs {ctx = Just context}})
+          modify (\state -> state { ctx = Just context })
           pure next
-   
-  eval (SetRef el next) = do
-    modify (\st -> st { refs = st.refs { el = el }})
+    
   --this isn't ideal, but we can't look at the toolbar's state outside of eval
   --so the other option is replicating the state on the diagram, which I like less
-  --TODO: check the offset of the canvas
-  eval (ClickCanvas p next) = do
+  eval (ClickCanvas pos next) = do
     t <- gets _.time
-    e <- gets _.refs.el
-    case el of
-      Just el -> pos <- getOffset p el
-      Nothing -> pos <- (pure p) --If we clicked on the element, but it somehow doesn't exist...
+    e <- getHTMLElementRef (RefLabel "cvs")
     mode <- query' cp2 unit (request Toolbar.CheckClick)
     case fromMaybe Nothing mode of
-      Nothing -> modify (\st -> st {targetIndex = resolveTarget st.elements} )
+      Nothing -> modify (\st -> st {targetIndex = resolveTarget st.elements pos } )
       Just Toolbar.CircB -> addElement $ circBase t pos
       Just Toolbar.RectB -> addElement $ rectBase t pos
       Just Toolbar.DnutB -> addElement $ dnutBase t pos
     pure next
-    where resolveTarget els = fromMaybe def $ last $ filter isJust overlaps --We don't get early termination for free with strict eval, so this could be faster if necessary.
-          overlaps          = mapWithIndex (\i -> (\v ->{layer:i, idx:v}) <$> (findLastIndex (E.overlap e pos) els))
+    --This is probably WAY slower than it would be with lazy eval, so potentially revisit if it's an issue.
+    where resolveTarget els pos = fromMaybe def $ last =<< (sequence $ filter isJust 
+            $ mapWithIndex (\i l -> map (\v ->{layer:i, idx:v}) (findLastIndex (\element -> E.overlap element pos) l)) els)
           def = { layer: -1, idx: -1 }
-          addElement e = modify (\st ->
-            case findLastIndex (\d -> d.layer < e.layer) st.elements of
-              Just i  -> st {elements = fromMaybe st.elements $ insertAt i e st.elements, targetIndex = i}
-              Nothing -> st {elements = cons e st.elements, targetIndex = 0})
+          addElement e = do
+            modify (\st -> st { elements = fromMaybe st.elements $ (\l -> updateAt e.layer l st.elements) =<< ( (\l -> snoc l e) <$> (st.elements !! e.layer) ) } )
      
   eval (ModTarget Nothing next) = do
     pure next
     
+  --TODO: Move the target if layer has changed.
   eval (ModTarget (Just e) next) = do
     st <- get
-    case updateAt (st.targetIndex) e (st.elements) of
+    let loc = st.targetIndex
+    case (\l -> updateAt loc.layer l st.elements) =<< (updateAt loc.idx e) =<< (st.elements !! loc.layer) of
       Just es -> modify (\st -> st {elements=es})
       Nothing -> pure unit
     pure next 
     
-  getOffset {x, y} el = do
-    rect <- getClientBoundingRect el
-    scX  <- scrollX window
-    scY  <- scrollY window
-    pure {x: round $ x - rect.left - scX , y: round $ y - rect.top - scY }
+  getOffset p Nothing = do
+    pure p
+    
+  getOffset {x, y} (Just el) = do
+    w    <- window
+    rect <- getBoundingClientRect el
+    scX  <- scrollX w
+    scY  <- scrollY w
+    pure {x: x - (round rect.left) - scX , y: y - (round rect.top) - scY }
     
     
   tcListener :: Int -> Int -> Maybe (Query Unit)
   tcListener t t' = if t == t'
                       then Nothing
                       else Just $ action $ SetTime t'
+                      
+  advanceFrame :: State -> State
+  advanceFrame st = st { elements = map (map E.advanceFrame) st.elements, time=st.time+1 }
+    
+  drawGraphics st = case st.ctx of
+    Just ctx -> runGraphics ctx $ do
+                  setFillStyle $ E.colorToStr st.color
+                  fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
+                  traverse_ S.renderStatic st.statics
+                  traverse_ (traverse_ E.renderEl) st.elements
+    Nothing  -> pure unit
