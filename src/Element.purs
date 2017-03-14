@@ -30,8 +30,6 @@ setR c v = c {r=v}
 setG c v = c {g=v}
 setB c v = c {b=v}
 
---a perhaps more practical way of abstracting this would be how Halogen HTML does components
---but I don't quite get how to fit together row-types to do that
 --also, we could perhaps make keys be a list of diffs, rather than whole states?
 data Property = Enabled  Boolean
               | Bordered Boolean
