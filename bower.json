@@ -16,7 +16,8 @@
     "purescript-st": "^2.0.0",
     "purescript-foldable-traversable": "^2.2.0",
     "purescript-halogen": "^1.0.0",
-    "purescript-dom": "^3.5.1"
+    "purescript-dom": "^3.5.1",
+    "purescript-routing": "^4.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^2.0.0",
