@@ -11,14 +11,19 @@ data Locations
   = Home
   | Look String
   
+  
+oneSlash :: Match Unit
+oneSlash = lit "/"
+
+
 homeSlash :: Match Unit
-homeslash = lit ""
+homeSlash = lit ""
 
 home :: Match Locations
 home = Home <$ oneSlash
 
 look :: Match Locations
-look = Look <$ (homeSlash *> str)
+look = Look <$> (homeSlash *> str)
 
 routing :: Match Locations
 routing = 

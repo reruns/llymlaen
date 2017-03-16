@@ -56,6 +56,7 @@ data Query a
   | SetTime Int a
   | ModTarget (Maybe E.Element) a
   | ClickCanvas E.Point a
+  | FetchState String a
   
 type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
 type ChildSlot = Either3 Unit Unit Unit
@@ -140,6 +141,10 @@ diaComp = lifecycleParentComponent
       Just es -> modify (\st -> st {elements=es})
       Nothing -> pure unit
     pure next 
+    
+  eval (FetchState id next) = do
+    liftEff $ log id
+    pure next
     
   getOffset p Nothing = do
     pure p
