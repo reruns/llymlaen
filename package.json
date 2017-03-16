@@ -7,7 +7,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "pulp test --src-path scripts/src -o scripts/output --test-path scripts/test",
+    "bundle": "pulp browserify --to bundle.js --src-path scripts/src -o scripts/output",
+    "finalize": "pulp browserify --to bundle.js --src-path scripts/src -o scripts/output -O"
   },
   "author": "",
   "license": "ISC",
