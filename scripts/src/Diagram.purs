@@ -113,9 +113,10 @@ diaComp = lifecycleParentComponent
     
   --this isn't ideal, but we can't look at the toolbar's state outside of eval
   --so the other option is replicating the state on the diagram, which I like less
-  eval (ClickCanvas pos next) = do
+  eval (ClickCanvas p next) = do
     t <- gets _.time
     e <- getHTMLElementRef (RefLabel "cvs")
+    pos <- liftEff $ getOffset p e
     mode <- query' cp2 unit (request Toolbar.CheckClick)
     case fromMaybe Nothing mode of
       Nothing -> modify (\st -> st {targetIndex = resolveTarget st.elements pos } )
