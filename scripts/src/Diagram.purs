@@ -29,14 +29,13 @@ import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDim
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
 import App.Element as E
-import App.Element.Presets
+import App.Element.Presets (circBase, dnutBase, rectBase)
 import App.ElementEditor as ElEdit
 import App.Toolbar as Toolbar
 import App.TimeControls as TControls
 import App.Static as S
-import App.Property
-import App.Helpers
-import Example.IntermissionA (interA)
+import App.Property (Point, colorToStr)
+import App.Helpers (pageX, pageY)
 
 type State = { time :: Int
              , ctx :: Maybe Context2D
@@ -46,6 +45,15 @@ type State = { time :: Int
              , targetIndex :: { layer :: Int, idx :: Int }
              }
              
+defaultState :: State
+defaultState = { time: 0
+               , ctx: Nothing
+               , color: {r:175, g: 143, b:90}
+               , statics: []
+               , elements: [[]]
+               , targetIndex: {layer: -1, idx: -1}
+               }
+         
 data Query a 
   = Initialize a
   | Tick a
@@ -65,7 +73,7 @@ diaComp = lifecycleParentComponent
   , eval
   , initializer: Just (action Initialize)
   , finalizer: Nothing
-  , initialState: const interA
+  , initialState: const defaultState
   , receiver: const Nothing
   } 
   where
@@ -138,7 +146,7 @@ diaComp = lifecycleParentComponent
     st <- get
     let loc = st.targetIndex
     case (\l -> updateAt loc.layer l st.elements) =<< (updateAt loc.idx e) =<< (st.elements !! loc.layer) of
-      Just es -> modify (\st -> st {elements=es})
+      Just es -> modify (\state -> state {elements=es})
       Nothing -> pure unit
     pure next 
     
