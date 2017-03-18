@@ -87,13 +87,13 @@ findMoment keys t = go 0 where
            
 --functions for Form elements
 checkBox props b h = 
-  HH.input ([ HP.prop (HH.PropName "InputType") HP.InputCheckbox
+  HH.input ([ HP.type_ HP.InputCheckbox
             , HP.checked b
             , HE.onChecked $ HE.input h
             ] <> props)
           
 slider props min max v h =
-  HH.input ([ HP.prop (HH.PropName "InputType") HP.InputRange
+  HH.input ([ HP.type_ HP.InputRange
             , HP.value (show v)
             , HP.prop (HH.PropName "min") min
             , HP.prop (HH.PropName "max") max
