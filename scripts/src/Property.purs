@@ -22,6 +22,9 @@ type Point = { x :: Int, y :: Int }
 setX p v = p {x=v}
 setY p v = p {y=v}
 
+showPoint :: Point -> String
+showPoint {x,y} = "(" <> (show x) <> "," <> (show y) <> ")"
+
 type RGB   = { r :: Int, g :: Int, b :: Int }
 setR c v = c {r=v}
 setG c v = c {g=v}

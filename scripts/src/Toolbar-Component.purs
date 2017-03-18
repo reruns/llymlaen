@@ -38,11 +38,12 @@ toolbar = H.component
   eval :: forall m. Query ~> H.ComponentDSL State Query Void m
   eval (Press b next) = do
     st <- H.get
-    case st of
-      Just b -> H.put Nothing
-      _      -> H.put (Just b)
+    case ((==) b) <$> st of
+      Just true -> H.put Nothing
+      _         -> H.put (Just b)
     pure next
     
   eval (CheckClick reply) = do
     state <- H.get
+    H.put Nothing
     pure (reply state)

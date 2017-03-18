@@ -14,7 +14,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 type State = Maybe Element
-data Query a = FormChange Int Property a | HandleInput Element a | AddMoment a
+data Query a = FormChange Int Property a | HandleInput (Maybe Element) a | AddMoment a
 
 renderProp i (Enabled b)   = [checkBox [HP.title "enabled"]  b (FormChange i <<< Enabled)]
 renderProp i (Bordered b)  = [checkBox [HP.title "bordered"] b (FormChange i <<< Bordered)]
@@ -26,9 +26,9 @@ renderProp i (Circle r)    = [ number [] r (FormChange i <<< Circle) ]
 renderProp i (Rect w h)    = [ number [] w (FormChange i <<< (flip Rect) h)
                              , number [] h (FormChange i <<< Rect w) ]
 renderProp i (Donut r1 r2) = [ number [] r1 (FormChange i <<< (flip Donut) r2)
-                             , number [] r2 (FormChange i <<< Rect r1) ]
+                             , number [] r2 (FormChange i <<< Donut r1) ]
   
-component :: forall m. H.Component HH.HTML Query Element State m
+component :: forall m. H.Component HH.HTML Query State State m
 component =
   H.component
     { initialState: const Nothing
@@ -40,7 +40,7 @@ component =
   render :: State -> H.ComponentHTML Query
   render Nothing = HH.div_ []
   render (Just state) 
-    = HH.form_ $ 
+    = HH.div [HP.id_ "el-editor"] $ 
       ( concat $ mapWithIndex renderProp state.current.props) 
       <> [ HH.button 
             [ HE.onClick $ HE.input_ AddMoment ] 
@@ -48,11 +48,9 @@ component =
          ]
     
   eval :: forall m. Query ~> H.ComponentDSL State Query State m
-  eval (HandleInput el next) = do
+  eval (HandleInput mel next) = do
     st <- H.get
-    case st of
-      Just el' -> when (not $ matchEl el el') (H.put (Just el))
-      _      -> H.put (Just el)
+    when (not $ fromMaybe false $ matchEl <$> mel <*> st) $ H.put mel
     pure next
     
   eval (FormChange i prop next) = do

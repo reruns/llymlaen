@@ -76,16 +76,19 @@ diaComp = lifecycleParentComponent
   where
   
   render :: State -> ParentHTML Query ChildQuery ChildSlot (UIEff eff)
-  render st = let loc = st.targetIndex in
+  render st = let 
+    loc = st.targetIndex 
+    target = (\l -> l !! loc.idx) =<< (st.elements !! loc.layer) in
     HH.div_
       [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
-      , HH.canvas [ HP.id_ "canvas"
-                  , HP.ref (RefLabel "cvs")
-                  , HE.onClick $ HE.input (\e -> ClickCanvas {x: pageX e, y: pageY e}) ]
-      , case (\l -> l !! loc.idx) =<< (st.elements !! loc.layer) of
-          Just el -> HH.slot' cp1 unit ElEdit.component el (HE.input ModTarget)
-          Nothing -> HH.div_ []
-      , HH.slot' cp3 unit TControls.controls st.time (tcListener st.time)
+      , HH.span [ HP.id_ "center-col" ]
+                [ HH.canvas [ HP.id_ "canvas"
+                            , HP.ref (RefLabel "cvs")
+                            , HE.onClick $ HE.input (\e -> ClickCanvas {x: pageX e, y: pageY e}) 
+                            ]
+                , HH.slot' cp3 unit TControls.controls st.time (tcListener st.time)
+                ]
+      , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget) 
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
@@ -120,7 +123,7 @@ diaComp = lifecycleParentComponent
     pos <- liftEff $ getOffset p e
     mode <- query' cp2 unit (request Toolbar.CheckClick)
     case fromMaybe Nothing mode of
-      Nothing -> modify (\st -> st {targetIndex = resolveTarget st.elements pos } )
+      Nothing -> modify (\st -> st {time = t, targetIndex = resolveTarget st.elements pos } ) 
       Just Toolbar.CircB -> addElement $ circBase t pos
       Just Toolbar.RectB -> addElement $ rectBase t pos
       Just Toolbar.DnutB -> addElement $ dnutBase t pos

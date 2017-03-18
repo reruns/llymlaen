@@ -2,13 +2,19 @@ canvas {
   display: inline-block;
 }
 
-form {
+
+span {
+  display: inline-block;
+  vertical-align: top;
+}
+
+#el-editor {
   display: inline-block;
   margin-left: 10px;
   vertical-align: top;
   width: 250px;
 }
 
-form > * {
+#el-editor > * {
   display: block;
 }
