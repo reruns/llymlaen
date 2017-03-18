@@ -1,6 +1,7 @@
 module App.ElementEditor where
 
 import App.Element
+import App.Property
 
 import Prelude
 import Data.Maybe (Maybe(..), isJust, fromMaybe)

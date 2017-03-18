@@ -11,15 +11,13 @@ import Data.Array (length, (!!))
 import Data.Foldable (and)
 
 import Test.Unit
-import Test.Unit.Main (runTest)
-import Test.Unit.Assert as Assert
 import Test.Unit.QuickCheck (quickCheck)
 
 import Test.QuickCheck (Result(), class Arbitrary, arbitrary, (<?>))
 import Test.QuickCheck.Gen
  
  
-propSpec = 
+tests = 
   suite "Property" do
    test "reconciling" do
      quickCheck sameSucceeds

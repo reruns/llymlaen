@@ -16,5 +16,8 @@
   "dependencies": {
     "express": "^4.15.2",
     "virtual-dom": "^2.1.1"
+  },
+  "devDependencies": {
+    "selenium-webdriver": "^3.3.0"
   }
 }

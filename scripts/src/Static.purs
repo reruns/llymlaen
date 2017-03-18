@@ -1,7 +1,7 @@
 module App.Static where
 
 import Graphics.Canvas.Free
-import App.Element (renderCanvas, Property)
+import App.Property
 import Prelude (Unit)
 
 type Static = { props :: Array Property }

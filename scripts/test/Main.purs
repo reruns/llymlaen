@@ -4,7 +4,7 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 
-import Test.Property
+import Test.Property as Property
 import Test.Element
 import Test.Diagram
 import Test.TimeControls
@@ -15,7 +15,7 @@ import Test.Unit.Main (runTest)
 
 main = runTest do
   suite "Main" do
-    propSpec
+    Property.tests
 
     
 --and then also however we use selenium here.

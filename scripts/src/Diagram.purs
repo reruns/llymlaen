@@ -39,6 +39,7 @@ import App.ElementEditor as ElEdit
 import App.Toolbar as Toolbar
 import App.TimeControls as TControls
 import App.Static as S
+import App.Property
 import App.Helpers
 import Example.IntermissionA
 
@@ -55,7 +56,7 @@ data Query a
   | Tick a
   | SetTime Int a
   | ModTarget (Maybe E.Element) a
-  | ClickCanvas E.Point a
+  | ClickCanvas Point a
   | FetchState String a
   
 type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
@@ -168,7 +169,7 @@ diaComp = lifecycleParentComponent
     
   drawGraphics st = case st.ctx of
     Just ctx -> runGraphics ctx $ do
-                  setFillStyle $ E.colorToStr st.color
+                  setFillStyle $ colorToStr st.color
                   fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
                   traverse_ S.renderStatic st.statics
                   traverse_ (traverse_ E.renderEl) st.elements
