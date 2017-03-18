@@ -106,12 +106,15 @@ renderCanvas props = do save
     closePath
     stroke
     fill
+    
   renderProp (Rect w h)       = Just $ do
     fillRect {x: 0.0, y:0.0, w: toNumber w, h: toNumber h}
     strokeRect {x: 0.0, y:0.0, w: toNumber w, h: toNumber h}
+    
   renderProp (Donut r1 r2)    = Just $ do
-    setLineWidth (toNumber (r2 - r1))
+    let width = toNumber (r2-r1)
+    setLineWidth width
     beginPath
-    arc {x: 0.0, y:0.0, r: toNumber r1, start: 0.0, end: 2.0*pi}
+    arc {x: 0.0, y:0.0, r: (toNumber r1) + (width / 2.0), start: 0.0, end: 2.0*pi}
     closePath
     stroke

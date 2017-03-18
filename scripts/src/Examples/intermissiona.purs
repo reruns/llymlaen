@@ -6,7 +6,7 @@ import App.Static
 import Prelude
 import Data.Maybe (Maybe(Just,Nothing))
 
-interA = { time: -1
+interA = { time: 0
          , ctx: Nothing
          , color: {r:175, g: 143, b:90}
          , statics: []

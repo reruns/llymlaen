@@ -1,9 +1,9 @@
 module App.Diagram where
 
-import Prelude
+import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, ($), (+), (-), (<$>), (=<<), (==))
 
-import Data.Foldable
-import Data.Array (insertBy, (!!), length, updateAt, modifyAt, findLastIndex, insertAt, cons, last, filter, mapWithIndex, snoc)
+import Data.Foldable (traverse_)
+import Data.Array ((!!), updateAt, findLastIndex, last, filter, mapWithIndex, snoc)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe, isJust)
 import Data.Int (round)
 import Data.Traversable (sequence)
@@ -12,12 +12,9 @@ import Data.Either.Nested (Either3)
 import Data.Functor.Coproduct.Nested (Coproduct3)
 
 import Control.Monad.Aff (Aff)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class
 import Control.Monad.Eff.Console (log, CONSOLE) --currently unused, but useful for debug potentially
-import Control.Apply ((*>))
 
-import Halogen
+import Halogen (Component, ParentDSL, ParentHTML, RefLabel(..), action, get, getHTMLElementRef, gets, lifecycleParentComponent, liftEff, modify, query', request)
 import Halogen.Component.ChildPath (cp1, cp2, cp3)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -25,10 +22,8 @@ import Halogen.HTML.Properties as HP
 
 import DOM (DOM)
 import DOM.HTML (window)
-import DOM.HTML.Types (HTMLElement)
 import DOM.HTML.Window (scrollX, scrollY)
 import DOM.HTML.HTMLElement (getBoundingClientRect)
-import DOM.Event.Types (MouseEvent)
 
 import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDimensions, Context2D)
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
@@ -41,7 +36,7 @@ import App.TimeControls as TControls
 import App.Static as S
 import App.Property
 import App.Helpers
-import Example.IntermissionA
+import Example.IntermissionA (interA)
 
 type State = { time :: Int
              , ctx :: Maybe Context2D
