@@ -1,6 +1,6 @@
 module App.Diagram where
 
-import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, ($), (+), (-), (<$>), (=<<), (==))
+import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, discard, ($), (+), (-), (<$>), (=<<), (==))
 
 import Data.Foldable (traverse_)
 import Data.Array ((!!), updateAt, findLastIndex, last, filter, mapWithIndex, snoc)
@@ -113,7 +113,7 @@ diaComp = lifecycleParentComponent
     case cv of
       Nothing -> pure next
       Just canvas -> do
-          liftEff $ setCanvasDimensions {width: 800.0, height: 800.0} canvas
+          _ <- liftEff $ setCanvasDimensions {width: 800.0, height: 800.0} canvas
           context <- liftEff $ getContext2D canvas
           modify (\state -> state { ctx = Just context })
           pure next

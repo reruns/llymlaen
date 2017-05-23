@@ -7,8 +7,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "pulp test --src-path scripts/src -o scripts/output --test-path scripts/test",
-    "bundle": "pulp browserify --to bundle.js --src-path scripts/src -o scripts/output",
+    "test": "purs test --src-path scripts/src -o scripts/output --test-path scripts/test",
+    "bundle": "purs bundle scripts/src -o scripts/output/bundle.js",
+    "compile": "purs compile scripts/src/*.purs -o scripts/output/bundle.js",
     "finalize": "pulp browserify --to bundle.js --src-path scripts/src -o scripts/output -O"
   },
   "author": "",
@@ -18,6 +19,8 @@
     "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
-    "selenium-webdriver": "^3.3.0"
+    "gulp": "^3.9.1",
+    "gulp-purescript": "^2.0.0",
+    "purescript": "^0.11.4"
   }
 }

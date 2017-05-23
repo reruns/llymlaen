@@ -6,6 +6,7 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Data.Traversable (sequence, sequence_)
 import Data.Int (toNumber, toStringAs, hexadecimal)
 import Data.String (joinWith)
+import Data.NonEmpty (NonEmpty(..))
 import Math (pi, sqrt, pow, sin, cos)
 
 import Graphics.Canvas.Free
@@ -31,7 +32,10 @@ setG c v = c {g=v}
 setB c v = c {b=v}
 
 colorToStr :: RGB -> String
-colorToStr {r,g,b} = "#" <> (joinWith "" $ map (\x -> (if x < 16 then "0" else "") <> (toStringAs hexadecimal x)) [r,g,b])
+colorToStr {r,g,b} = 
+  "#" <> 
+  (joinWith "" $ map (\x -> (if x < 16 then "0" else "") 
+  <> (toStringAs hexadecimal x)) [r,g,b])
 
 data Property = Enabled  Boolean
               | Bordered Boolean
@@ -57,7 +61,7 @@ propGens = [ Enabled <$> arbitrary
            ]
 
 instance arbProp :: Arbitrary Property where
-  arbitrary = oneOf (pure $ Enabled false) propGens
+  arbitrary = oneOf $ NonEmpty (pure $ Enabled false) propGens
   
 instance showProp :: Show Property where
   show  (Enabled b)      = "Enabled: " <> (show b)
@@ -94,6 +98,7 @@ renderCanvas props = do save
                           Nothing -> pure unit
                           Just es -> sequence_ es
                         restore where
+                        
   renderProp (Enabled b)      = if b then Just (pure unit) else Nothing
   renderProp (Bordered b)     = if b then Just (setStrokeStyle "#000000") else Just (pure unit)
   renderProp (Color c)        = Just $ (setFillStyle (colorToStr c)) *> (setStrokeStyle (colorToStr c))

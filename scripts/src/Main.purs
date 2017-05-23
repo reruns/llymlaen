@@ -27,7 +27,7 @@ import Graphics.Canvas (CANVAS)
 
 main :: forall e. Eff ( "avar" :: AVAR
                       , "ref" :: REF
-                      , "err" :: EXCEPTION
+                      , "exception" :: EXCEPTION
                       , "dom" :: DOM
                       , "canvas" :: CANVAS
                       , "console" :: CONSOLE
@@ -36,7 +36,7 @@ main :: forall e. Eff ( "avar" :: AVAR
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   driver <- runUI diaComp unit body
-  forkAff $ do
+  _ <- forkAff $ do
     Tuple old new <- matchesAff routing  
     case new of
       (Look id) -> driver.query $ action (FetchState id)
