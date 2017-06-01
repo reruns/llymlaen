@@ -1,10 +1,12 @@
 module App.Diagram where
 
-import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, discard, ($), (+), (-), (<$>), (=<<), (==))
+import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, discard, show, ($), (+), (-), (<$>), (=<<), (==))
 
+import Data.Argonaut (Json, encodeJson, decodeJson, jsonEmptyObject, (~>), (:=), (.?))
 import Data.Foldable (traverse_)
-import Data.Array ((!!), updateAt, findLastIndex, last, filter, mapWithIndex, snoc)
+import Data.Array ((!!), updateAt, findLastIndex, last, filter, mapWithIndex, snoc, unsafeIndex)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe, isJust)
+import Data.Either (Either(..))
 import Data.Int (round)
 import Data.Traversable (sequence)
 
@@ -34,7 +36,7 @@ import App.ElementEditor as ElEdit
 import App.Toolbar as Toolbar
 import App.TimeControls as TControls
 import App.Static as S
-import App.Property (Point, colorToStr)
+import App.Property (Point, colorToStr, encodeRGB)
 import App.Helpers (pageX, pageY)
 
 type State = { time :: Int
@@ -44,6 +46,28 @@ type State = { time :: Int
              , elements :: Array ( Array E.Element )
              , targetIndex :: { layer :: Int, idx :: Int }
              }
+             
+encodeState :: State -> Json
+encodeState {color,statics,elements}
+  =  "color"    := (encodeRGB color)
+  ~> "statics"  := map S.encodeStatic statics
+  ~> "elements" := map E.encodeLayer elements
+  ~> jsonEmptyObject
+  
+decodeState :: Json -> Either String State
+decodeState json = do
+  obj <- decodeJson json
+  color <- do --TODO: dedupe this
+            rgb <- obj .? "Color"
+            r <- rgb .? "r"
+            g <- rgb .? "g"
+            b <- rgb .? "b"
+            pure $ {r,g,b}
+  statics' <- obj .? "statics"
+  statics <- sequence $ map S.decodeStatic statics'
+  elements' <- obj .? "elements"
+  elements <- sequence $ map E.decodeLayer elements'
+  pure $ defaultState {color=color, statics=statics, elements=elements}
              
 defaultState :: State
 defaultState = { time: 0
@@ -61,7 +85,7 @@ data Query a
   | ModTarget (Maybe E.Element) a
   | ClickCanvas Point a
   | FetchState String a
-  
+ 
 type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
 type ChildSlot = Either3 Unit Unit Unit
 
@@ -180,3 +204,4 @@ diaComp = lifecycleParentComponent
                   traverse_ S.renderStatic st.statics
                   traverse_ (traverse_ E.renderEl) st.elements
     Nothing  -> pure unit
+    

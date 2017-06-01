@@ -1,10 +1,13 @@
 /bower_components/
 /node_modules/
 /.pulp-cache/
+/.psci_modules/
 /output/
+/client/output/
 /scripts/output
 /.psc*
 /.psa*
 *.txt
 /src/examples/
 bundle.js
+.stack-work/

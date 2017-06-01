@@ -5,12 +5,15 @@ import Prelude
 import App.Validators
 import App.Property
 
+import Data.Argonaut (Json, encodeJson, decodeJson, jsonEmptyObject, (~>), (:=), (.?))
+
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 import Data.Array (insertBy, (!!), updateAt, findIndex, concat, zipWith, mapWithIndex)
 import Data.Traversable (sequence, sequence_)
 import Data.Foldable (foldl, and)
 import Data.Int (toNumber, round, toStringAs, hexadecimal)
 import Data.String (joinWith)
+import Data.Either(Either(..))
 import Math (pi, sqrt, pow, sin, cos)
 
 import Graphics.Canvas.Free
@@ -22,6 +25,43 @@ import Halogen.HTML.Properties as HP
 
 type Moment = { time :: Int, props :: Array Property }
 type Element = { current :: Moment, layer :: Int, keys :: Array Moment } 
+
+encodeMoment :: Moment -> Json
+encodeMoment m 
+  =  "time"  := m.time
+  ~> "props" := m.props
+  ~> jsonEmptyObject
+  
+decodeMoment :: Json -> Either String Moment
+decodeMoment json = do
+  obj <- decodeJson json
+  time <- obj .? "time"
+  props <- obj .? "props"
+  pure {time,props}
+  
+encodeElement :: Element -> Json
+encodeElement el
+  =  "layer" := el.layer
+  ~> "keys"  := (map encodeMoment el.keys)
+  ~> jsonEmptyObject
+  
+decodeElement :: Json -> Either String Element
+decodeElement json = do
+  obj <- decodeJson json
+  layer <- obj .? "layer"
+  keys'  <- (obj .? "keys")
+  keys <- sequence $ map decodeMoment keys'
+  let current = {time: -1, props: []}
+  pure {current,layer,keys}
+  
+encodeLayer :: Array Element -> Json
+encodeLayer layer = encodeJson $ map encodeElement layer
+
+decodeLayer :: Json -> Either String (Array Element)
+decodeLayer json = do
+  arr <- decodeJson json
+  sequence $ map decodeElement arr
+  
 
 --a substitute for being able to have an Eq instance.
 --if doing this all the time ends up being slow we could revisit it, though.

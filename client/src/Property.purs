@@ -2,11 +2,17 @@ module App.Property where
 
 import Prelude
 
-import Data.Maybe (Maybe(Just, Nothing))
+import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 import Data.Traversable (sequence, sequence_)
 import Data.Int (toNumber, toStringAs, hexadecimal)
 import Data.String (joinWith)
+import Data.Array ((!!))
 import Data.NonEmpty (NonEmpty(..))
+import Data.Either (Either(..))
+
+import Data.Argonaut (class EncodeJson, class DecodeJson, encodeJson, jsonEmptyObject, (~>), (:=), (.?), decodeJson)
+import Data.StrMap as SM
+
 import Math (pi, sqrt, pow, sin, cos)
 
 import Graphics.Canvas.Free
@@ -23,6 +29,11 @@ type Point = { x :: Int, y :: Int }
 setX p v = p {x=v}
 setY p v = p {y=v}
 
+encodePoint {x,y}
+  =  "x" := encodeJson x
+  ~> "y" := encodeJson y
+  ~> jsonEmptyObject
+
 showPoint :: Point -> String
 showPoint {x,y} = "(" <> (show x) <> "," <> (show y) <> ")"
 
@@ -30,6 +41,12 @@ type RGB   = { r :: Int, g :: Int, b :: Int }
 setR c v = c {r=v}
 setG c v = c {g=v}
 setB c v = c {b=v}
+
+encodeRGB {r,g,b}
+  =  "r" := encodeJson r
+  ~> "g" := encodeJson g
+  ~> "b" := encodeJson b
+  ~> jsonEmptyObject
 
 colorToStr :: RGB -> String
 colorToStr {r,g,b} = 
@@ -49,6 +66,52 @@ data Property = Enabled  Boolean
 
 derive instance eqProp :: Eq Property
 
+instance encodeProp :: EncodeJson Property where
+  encodeJson  (Enabled b)      = "Enabled"  := b ~> jsonEmptyObject
+  encodeJson  (Bordered b)     = "Bordered" := b ~> jsonEmptyObject
+  encodeJson  (Color c)        = "Color" := (encodeRGB c) ~> jsonEmptyObject
+  encodeJson  (Position p)     = "Position" := (encodePoint p) ~> jsonEmptyObject
+  encodeJson  (Angle a)        = "Angle" := a ~> jsonEmptyObject
+  encodeJson  (Opacity o)      = "Opacity" := o ~> jsonEmptyObject
+  encodeJson  (Circle r)       = "Circle" := r ~> jsonEmptyObject
+  encodeJson  (Rect w h)       = "Rect" := ("w" := w ~> "h" := h) ~> jsonEmptyObject
+  encodeJson  (Donut r1 r2)    = "Donut" := ("r1" := r1 ~> "r2" := r2) ~> jsonEmptyObject
+  
+instance decodeProp :: DecodeJson Property where
+    decodeJson json = do
+      obj <- decodeJson json
+      if SM.size obj /= 1
+        then Left "Wrong size. Not a prop."
+        else case fromMaybe "" ((SM.keys obj) !! 0) of
+          "Enabled" -> Enabled <$> obj .? "Enabled"
+          "Bordered"-> Bordered <$> obj .? "Bordered"
+          "Color"   -> do
+                        rgb <- obj .? "Color"
+                        r <- rgb .? "r"
+                        g <- rgb .? "g"
+                        b <- rgb .? "b"
+                        pure $ Color {r,g,b}
+          "Position"-> do
+                        xy <- obj .? "Position"
+                        x  <- xy .? "x"
+                        y  <- xy .? "y"
+                        pure $ Position {x,y}
+          "Angle"   -> Angle <$> obj .? "Angle"
+          "Opacity" -> Opacity <$> obj .? "Opacity"
+          "Circle"  -> Circle <$> obj .? "Circle"
+          "Rect"    -> do
+                        wh <- obj .? "Rect"
+                        w  <- wh .? "w"
+                        h  <- wh .? "h"
+                        pure $ Rect w h
+          "Donut"   -> do
+                        rr <- obj .? "Donut"
+                        r1 <- rr .? "r1"
+                        r2 <- rr .? "r2"
+                        pure $ Donut r1 r2
+          _         -> Left "Unrecognized key"
+      
+      
 propGens :: Array (Gen Property)
 propGens = [ Enabled <$> arbitrary
            , Bordered <$> arbitrary

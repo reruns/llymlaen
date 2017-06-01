@@ -4,12 +4,12 @@ var gulp = require("gulp");
 var purescript = require("gulp-purescript");
 
 var sources = [
-  "scripts/src/*.purs",
+  "client/src/*.purs",
   "bower_components/purescript-*/src/**/*.purs"
 ];
 
 var foreigns = [
-  "scripts/src/*.js",
+  "client/src/*.js",
   "bower_components/purescript-*/src/**/*.js"
 ];
 
@@ -17,13 +17,13 @@ gulp.task("purs",function() {
   return purescript.compile({
       src: sources,
       ffi: foreigns,
-      output: "scripts/output"
+      output: "client/output"
     });
 });
 
 gulp.task("bundle", ["purs"], function() {
   return purescript.bundle({
-      src: "scripts/output/**/*.js",
+      src: "client/output/**/*.js",
       output: "bundle.js",
       module: "Main",
       main: "Main"
