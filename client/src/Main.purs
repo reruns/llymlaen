@@ -22,6 +22,7 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Ref (REF)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Console (CONSOLE)
+import Network.HTTP.Affjax (AJAX)
 import DOM(DOM)
 import Graphics.Canvas (CANVAS)
 
@@ -32,6 +33,7 @@ main :: forall e. Eff ( "avar" :: AVAR
                       , "canvas" :: CANVAS
                       , "console" :: CONSOLE
                       , "timer" :: TIMER
+                      , "ajax"  :: AJAX
                       | e ) Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody

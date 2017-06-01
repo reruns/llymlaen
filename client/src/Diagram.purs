@@ -1,6 +1,6 @@
 module App.Diagram where
 
-import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, discard, show, ($), (+), (-), (<$>), (=<<), (==))
+import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, discard, show, ($), (+), (-), (<$>), (=<<), (==), (<>))
 
 import Data.Argonaut (Json, encodeJson, decodeJson, jsonEmptyObject, (~>), (:=), (.?))
 import Data.Foldable (traverse_)
@@ -16,11 +16,12 @@ import Data.Functor.Coproduct.Nested (Coproduct3)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (log, CONSOLE) --currently unused, but useful for debug potentially
 
-import Halogen (Component, ParentDSL, ParentHTML, RefLabel(..), action, get, getHTMLElementRef, gets, lifecycleParentComponent, liftEff, modify, query', request)
+import Halogen (Component, ParentDSL, ParentHTML, RefLabel(..), action, get, put, getHTMLElementRef, gets, lifecycleParentComponent, liftEff, modify, query', request, liftAff)
 import Halogen.Component.ChildPath (cp1, cp2, cp3)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Network.HTTP.Affjax as AX
 
 import DOM (DOM)
 import DOM.HTML (window)
@@ -57,7 +58,7 @@ encodeState {color,statics,elements}
 decodeState :: Json -> Either String State
 decodeState json = do
   obj <- decodeJson json
-  color <- do --TODO: dedupe this
+  color <- do
             rgb <- obj .? "Color"
             r <- rgb .? "r"
             g <- rgb .? "g"
@@ -80,6 +81,8 @@ defaultState = { time: 0
          
 data Query a 
   = Initialize a
+  | Save a
+  | Load String a
   | Tick a
   | SetTime Int a
   | ModTarget (Maybe E.Element) a
@@ -89,7 +92,7 @@ data Query a
 type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
 type ChildSlot = Either3 Unit Unit Unit
 
-type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE, dom :: DOM | eff)
+type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE, dom :: DOM, ajax :: AX.AJAX | eff)
     
 diaComp :: forall eff. Component HH.HTML Query Unit Void (UIEff eff)
 diaComp = lifecycleParentComponent
@@ -127,6 +130,19 @@ diaComp = lifecycleParentComponent
     st <- get
     liftEff $ drawGraphics st
     pure next
+    
+  eval (Save next) = do
+    st <- get
+    response <- liftAff $ (AX.post "/api/diagrams/" (encodeState st) :: AX.Affjax _ Json)
+    pure next
+    
+  eval (Load id next) = do
+    response <- liftAff $ (AX.get ("/api/diagrams/" <> id) :: AX.Affjax _ Json)
+    case decodeState response.response of
+      Right st -> do
+                    put st
+                    eval (Initialize next)
+      Left  s  -> pure next
     
   eval (SetTime t next) = do
     modify (\st -> st {elements = map (map (\e -> E.setTime e t)) st.elements, time=t})
