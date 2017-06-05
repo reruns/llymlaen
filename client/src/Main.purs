@@ -41,7 +41,7 @@ main = HA.runHalogenAff do
   _ <- forkAff $ do
     Tuple old new <- matchesAff routing  
     case new of
-      (Look id) -> driver.query $ action (FetchState id)
+      (Look id) -> driver.query $ action (Load id)
       _         -> pure unit
   liftEff $ setInterval 16 $ do
     HA.runHalogenAff (driver.query $ action Tick) --what.

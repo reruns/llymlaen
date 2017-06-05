@@ -87,7 +87,6 @@ data Query a
   | SetTime Int a
   | ModTarget (Maybe E.Element) a
   | ClickCanvas Point a
-  | FetchState String a
  
 type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
 type ChildSlot = Either3 Unit Unit Unit
@@ -141,7 +140,7 @@ diaComp = lifecycleParentComponent
     case decodeState response.response of
       Right st -> do
                     put st
-                    eval (Initialize next)
+                    eval (Initialize next) --there is likely a better way, here
       Left  s  -> pure next
     
   eval (SetTime t next) = do

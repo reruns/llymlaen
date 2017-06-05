@@ -12,6 +12,7 @@ import Control.Monad.Logger (runStderrLoggingT)
 
 import Data.String.Conversions
 import Data.Int
+import qualified Data.ByteString.Lazy as BS
 
 import Database.Persist
 import Database.Persist.Sql
@@ -28,8 +29,9 @@ import Api
 import Models
 
 server :: ConnectionPool -> Server Api
-server pool =
-  saveDiagH :<|> findDiagH
+server pool = serveRootH
+  :<|> saveDiagH 
+  :<|> findDiagH
   where
     saveDiagH newDiag   = liftIO $ saveDiag newDiag
     findDiagH idStr     = liftIO $ findDiag idStr
@@ -42,6 +44,8 @@ server pool =
     findDiag id = flip runSqlPersistMPool pool $ do
       mDiag <- get id
       return $ mDiag
+    
+    serveRootH = fmap RawHtml (liftIO $ BS.readFile "index.html")
 
 app :: ConnectionPool -> Application
 app pool = serve api $ server pool
@@ -56,5 +60,3 @@ mkApp pgFile = do
   
 run :: FilePath -> IO ()
 run pgFile = Warp.run 3000 =<< mkApp pgFile
-    
-   

@@ -14,12 +14,14 @@ executable server
                      , persistent-postgresql
                      , servant
                      , servant-server
+                     , servant-blaze
                      , string-conversions
                      , text
                      , transformers
                      , wai
                      , warp
                      , containers
+                     , bytestring
   other-modules:       Api
                      , App
                      , Models
