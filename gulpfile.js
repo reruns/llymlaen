@@ -24,7 +24,7 @@ gulp.task("purs",function() {
 gulp.task("bundle", ["purs"], function() {
   return purescript.bundle({
       src: "client/output/**/*.js",
-      output: "bundle.js",
+      output: "assets/bundle.js",
       module: "Main",
       main: "Main"
     });

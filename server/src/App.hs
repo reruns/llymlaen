@@ -22,6 +22,7 @@ import Network.Wai
 import Network.Wai.Handler.Warp as Warp
 
 import Servant
+import Servant.Utils.StaticFiles
 
 import Data.Text
 
@@ -30,6 +31,8 @@ import Models
 
 server :: ConnectionPool -> Server Api
 server pool = serveRootH
+  :<|> serveRootH'
+  :<|> serveAssetH
   :<|> saveDiagH 
   :<|> findDiagH
   where
@@ -46,6 +49,8 @@ server pool = serveRootH
       return $ mDiag
     
     serveRootH = fmap RawHtml (liftIO $ BS.readFile "index.html")
+    serveRootH' _ = serveRootH
+    serveAssetH = serveDirectory "assets"
 
 app :: ConnectionPool -> Application
 app pool = serve api $ server pool

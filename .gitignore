@@ -9,5 +9,5 @@
 /.psa*
 *.txt
 /src/examples/
-bundle.js
+assets/bundle.js
 .stack-work/

@@ -2,7 +2,7 @@ module App.Diagram where
 
 import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, discard, show, ($), (+), (-), (<$>), (=<<), (==), (<>))
 
-import Data.Argonaut (Json, encodeJson, decodeJson, jsonEmptyObject, (~>), (:=), (.?))
+import Data.Argonaut (Json, jsonParser, encodeJson, decodeJson, jsonEmptyObject, (~>), (:=), (.?))
 import Data.Foldable (traverse_)
 import Data.Array ((!!), updateAt, findLastIndex, last, filter, mapWithIndex, snoc, unsafeIndex)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe, isJust)
@@ -50,9 +50,9 @@ type State = { time :: Int
              
 encodeState :: State -> Json
 encodeState {color,statics,elements}
-  =  "color"    := (encodeRGB color)
-  ~> "statics"  := map S.encodeStatic statics
-  ~> "elements" := map E.encodeLayer elements
+  =  "Color"    := (encodeRGB color)
+  ~> "Statics"  := map S.encodeStatic statics
+  ~> "Elements" := map E.encodeLayer elements
   ~> jsonEmptyObject
   
 decodeState :: Json -> Either String State
@@ -64,12 +64,21 @@ decodeState json = do
             g <- rgb .? "g"
             b <- rgb .? "b"
             pure $ {r,g,b}
-  statics' <- obj .? "statics"
+  statics' <- obj .? "Statics"
   statics <- sequence $ map S.decodeStatic statics'
-  elements' <- obj .? "elements"
+  elements' <- obj .? "Elements"
   elements <- sequence $ map E.decodeLayer elements'
   pure $ defaultState {color=color, statics=statics, elements=elements}
-             
+   
+   
+decodeResponse :: Json -> Either String State
+decodeResponse response = do
+  obj <- decodeJson response
+  str <- obj .? "body"
+  state <- jsonParser str
+  decodeState state
+  
+  
 defaultState :: State
 defaultState = { time: 0
                , ctx: Nothing
@@ -110,6 +119,7 @@ diaComp = lifecycleParentComponent
     target = (\l -> l !! loc.idx) =<< (st.elements !! loc.layer) in
     HH.div_
       [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
+      , HH.button [HE.onClick $ HE.input_ Save] [HH.text "Save"]
       , HH.span [ HP.id_ "center-col" ]
                 [ HH.canvas [ HP.id_ "canvas"
                             , HP.ref (RefLabel "cvs")
@@ -131,17 +141,20 @@ diaComp = lifecycleParentComponent
     pure next
     
   eval (Save next) = do
-    st <- get
-    response <- liftAff $ (AX.post "/api/diagrams/" (encodeState st) :: AX.Affjax _ Json)
+    st <- gets encodeState
+    let pl = "body" := (show st) ~> jsonEmptyObject
+    response <- liftAff $ (AX.post "/api/diagrams/" pl :: AX.Affjax _ Json)
     pure next
     
   eval (Load id next) = do
     response <- liftAff $ (AX.get ("/api/diagrams/" <> id) :: AX.Affjax _ Json)
-    case decodeState response.response of
+    case decodeResponse response.response of
       Right st -> do
                     put st
                     eval (Initialize next) --there is likely a better way, here
-      Left  s  -> pure next
+      Left  s  -> do
+                    liftEff $ log s
+                    pure next
     
   eval (SetTime t next) = do
     modify (\st -> st {elements = map (map (\e -> E.setTime e t)) st.elements, time=t})
@@ -188,10 +201,6 @@ diaComp = lifecycleParentComponent
       Just es -> modify (\state -> state {elements=es})
       Nothing -> pure unit
     pure next 
-    
-  eval (FetchState id next) = do
-    liftEff $ log id
-    pure next
     
   getOffset p Nothing = do
     pure p

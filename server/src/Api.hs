@@ -24,6 +24,8 @@ instance MimeRender HTML RawHtml where
 
 type Api =
   Get '[HTML] RawHtml :<|>
+  Capture "id" String :> Get '[HTML] RawHtml :<|>
+  "assets" :> Raw :<|>
   "api" :>
     ( "diagrams" :> ReqBody '[JSON] Diag :> Post '[JSON] (Maybe (Key Diag)) :<|>
       "diagrams" :> Capture "diagId" (Key Diag) :> Get '[JSON] (Maybe Diag) 

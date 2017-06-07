@@ -74,8 +74,8 @@ instance encodeProp :: EncodeJson Property where
   encodeJson  (Angle a)        = "Angle" := a ~> jsonEmptyObject
   encodeJson  (Opacity o)      = "Opacity" := o ~> jsonEmptyObject
   encodeJson  (Circle r)       = "Circle" := r ~> jsonEmptyObject
-  encodeJson  (Rect w h)       = "Rect" := ("w" := w ~> "h" := h) ~> jsonEmptyObject
-  encodeJson  (Donut r1 r2)    = "Donut" := ("r1" := r1 ~> "r2" := r2) ~> jsonEmptyObject
+  encodeJson  (Rect w h)       = "Rect" := ("w" := encodeJson w ~> "h" := encodeJson h ~> jsonEmptyObject) ~> jsonEmptyObject
+  encodeJson  (Donut r1 r2)    = "Donut" := ("r1" := encodeJson r1 ~> "r2" := encodeJson r2 ~> jsonEmptyObject) ~> jsonEmptyObject
   
 instance decodeProp :: DecodeJson Property where
     decodeJson json = do
