@@ -23,21 +23,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
-type Moment = { time :: Int, props :: Array Property }
 type Element = { current :: Moment, layer :: Int, keys :: Array Moment } 
-
-encodeMoment :: Moment -> Json
-encodeMoment m 
-  =  "time"  := m.time
-  ~> "props" := m.props
-  ~> jsonEmptyObject
-  
-decodeMoment :: Json -> Either String Moment
-decodeMoment json = do
-  obj <- decodeJson json
-  time <- obj .? "time"
-  props <- obj .? "props"
-  pure {time,props}
   
 encodeElement :: Element -> Json
 encodeElement el
@@ -68,23 +54,13 @@ decodeLayer json = do
 matchEl :: Element -> Element -> Boolean
 matchEl a b =  ( matchMoment a.current b.current )
             && ( a.layer == b.layer )
-            && ( and $ zipWith matchMoment a.keys b.keys )
-
-matchMoment :: Moment -> Moment -> Boolean
-matchMoment a b =  ( a.time == b.time )
-                && ( a.props == b.props )  
+            && ( and $ zipWith matchMoment a.keys b.keys ) 
               
 renderEl :: Element -> Graphics Unit
 renderEl el = renderCanvas el.current.props
-  
-reconcile :: Moment -> Moment -> Int -> Moment
-reconcile {time:tl, props: left} {time: tr, props: right} t =
-  let p = (toNumber (t-tl)) / (toNumber (tr-tl))
-      f a b = a + (round $ p * (toNumber (b-a)))  
-  in {time: t, props: fromMaybe left $ sequence $ zipWith (recProp f) left right}
  
-  
 --note: this will compile but not work correctly if Position comes after the Shape property
+--TODO: factor f into a function in Types.Property
 overlap :: Element -> Point -> Boolean
 overlap {current:{props}} p = _.b $ foldl f {d:p, a: 0.0 , b:false} props where
   f s@{d}     (Position {x,y}) = s { d= {x: p.x - x , y: p.y - y} }
@@ -97,11 +73,11 @@ overlap {current:{props}} p = _.b $ foldl f {d:p, a: 0.0 , b:false} props where
                                  in s { b = b || (dist >= (toNumber r1) && dist <= (toNumber r2))}
   f res _                      = res
 
-insertKey :: Element -> Moment -> Element
+insertKey :: Element -> Keyframe -> Element
 insertKey el k = 
-  case findIndex (\a -> a.time == k.time) el.keys of
+  case findIndex (\a -> time a == time k) el.keys of
     Just i  -> (el {keys = fromMaybe el.keys $ updateAt i k el.keys})
-    Nothing -> (el {keys = insertBy (comparing _.time) k el.keys})
+    Nothing -> (el {keys = insertBy (comparing time) k el.keys})
 
     
 advanceFrame :: Element -> Element
@@ -116,14 +92,6 @@ setTime el t =
     Nothing    -> el {current = l' {time=t}}
     Just false -> el {current = reconcile l' r' t}
     Just true  -> el {current = r'}    
-    
-
-findMoment :: Array Moment -> Int -> { l :: Maybe Moment, r :: Maybe Moment }
-findMoment keys t = go 0 where
-  go x = case ((<) t) <$> _.time <$> (keys !! x) of
-           Just true  -> {l: (keys !! (x-1)), r: (keys !! x)}
-           Just false -> go (x+1)
-           Nothing    -> {l: (keys !! (x-1)), r: Nothing}  
            
 --functions for Form elements
 checkBox props b h = 

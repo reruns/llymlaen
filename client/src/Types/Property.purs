@@ -4,8 +4,7 @@ import Prelude
 
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 import Data.Traversable (sequence, sequence_)
-import Data.Int (toNumber, toStringAs, hexadecimal)
-import Data.String (joinWith)
+import Data.Int (toNumber)
 import Data.Array ((!!))
 import Data.NonEmpty (NonEmpty(..))
 import Data.Either (Either(..))
@@ -24,35 +23,6 @@ import Halogen.HTML.Properties as HP
 
 import Test.QuickCheck (class Arbitrary, arbitrary)
 import Test.QuickCheck.Gen
-
-type Point = { x :: Int, y :: Int }
-setX p v = p {x=v}
-setY p v = p {y=v}
-
-encodePoint {x,y}
-  =  "x" := encodeJson x
-  ~> "y" := encodeJson y
-  ~> jsonEmptyObject
-
-showPoint :: Point -> String
-showPoint {x,y} = "(" <> (show x) <> "," <> (show y) <> ")"
-
-type RGB   = { r :: Int, g :: Int, b :: Int }
-setR c v = c {r=v}
-setG c v = c {g=v}
-setB c v = c {b=v}
-
-encodeRGB {r,g,b}
-  =  "r" := encodeJson r
-  ~> "g" := encodeJson g
-  ~> "b" := encodeJson b
-  ~> jsonEmptyObject
-
-colorToStr :: RGB -> String
-colorToStr {r,g,b} = 
-  "#" <> 
-  (joinWith "" $ map (\x -> (if x < 16 then "0" else "") 
-  <> (toStringAs hexadecimal x)) [r,g,b])
 
 data Property = Enabled  Boolean
               | Bordered Boolean
@@ -77,6 +47,7 @@ instance encodeProp :: EncodeJson Property where
   encodeJson  (Rect w h)       = "Rect" := ("w" := encodeJson w ~> "h" := encodeJson h ~> jsonEmptyObject) ~> jsonEmptyObject
   encodeJson  (Donut r1 r2)    = "Donut" := ("r1" := encodeJson r1 ~> "r2" := encodeJson r2 ~> jsonEmptyObject) ~> jsonEmptyObject
   
+--TODO: Clean this up
 instance decodeProp :: DecodeJson Property where
     decodeJson json = do
       obj <- decodeJson json
@@ -137,6 +108,7 @@ instance showProp :: Show Property where
   show  (Rect w h)       = "Rectangle: " <> (show w) <> "x" <> (show h)
   show  (Donut r1 r2)    = "Donut: " <> (show r1) <> "-" <> (show r2)
 
+--does this property wrap a boolean value?
 boolProp :: Property -> Boolean
 boolProp (Enabled _)  = true
 boolProp (Bordered _) = true
