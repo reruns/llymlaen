@@ -91,25 +91,4 @@ setTime el t =
   case ((==) t) <$> _.time <$> ms.r of
     Nothing    -> el {current = l' {time=t}}
     Just false -> el {current = reconcile l' r' t}
-    Just true  -> el {current = r'}    
-           
---functions for Form elements
-checkBox props b h = 
-  HH.input ([ HP.type_ HP.InputCheckbox
-            , HP.checked b
-            , HE.onChecked $ HE.input h
-            ] <> props)
-          
-slider props min max v h =
-  HH.input ([ HP.type_ HP.InputRange
-            , HP.value (show v)
-            , HP.prop (HH.PropName "min") min
-            , HP.prop (HH.PropName "max") max
-            , HE.onValueChange (\s -> (action <<< h) <$> (validateRange s min max))
-            ] <> props) 
-          
-number props v h =
-  HH.input ([ HP.prop (HH.PropName "InputType") HP.InputNumber
-            , HP.value (show v)
-            , HE.onValueChange (\s -> (action <<< h) <$> (validateNonNeg s))
-            ] <> props)
+    Just true  -> el {current = r'}

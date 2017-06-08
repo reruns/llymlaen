@@ -3,6 +3,8 @@ module App.Types.Keyframe where
 import Prelude
 import App.Types.Property
 
+import Data.Argonaut
+
 newtype Keyframe = Keyframe { time :: Int, props :: Array Property }
 
 time :: Keyframe -> Int
