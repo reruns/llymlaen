@@ -8,6 +8,15 @@ import Data.String (joinWith)
 import Data.Argonaut
 
 newtype RGB = RGB { r :: Int, g :: Int, b :: Int }
+--getters
+getR (RGB {r}) = r
+getG (RGB {g}) = g
+getB (RGB {b}) = b
+
+--setters
+setR (RGB c) v = RGB $ c {r=v}
+setG (RGB c) v = RGB $ c {g=v}
+setB (RGB c) v = RGB $ c {b=v}
 
 instance showRgb :: Show RGB where
 show (RGB {r,g,b}) = 
@@ -15,14 +24,17 @@ show (RGB {r,g,b}) =
   (joinWith "" $ map (\x -> (if x < 16 then "0" else "") 
   <> (toStringAs hexadecimal x)) [r,g,b])
 
-encodeRGB {r,g,b}
-  =  "r" := encodeJson r
-  ~> "g" := encodeJson g
-  ~> "b" := encodeJson b
-  ~> jsonEmptyObject
-
-
---same as point
-setR c v = c {r=v}
-setG c v = c {g=v}
-setB c v = c {b=v}
+instance encodeRGB :: EncodeJson RGB where
+encodeJson (RGB {r,g,b}) = 
+  "r" := r ~> 
+  "g" := g ~>
+  "b" := b ~> 
+  jsonEmptyObject
+  
+instance decodeRGB :: DecodeJson RGB where
+decodeJson json = do
+  obj <- decodeJson json
+  r <- obj .? "r"
+  g <- obj .? "g"
+  b <- obj .? "b"
+  pure $ RGB {r,g,b}

@@ -1,8 +1,6 @@
-module App.TimeControls where
+module App.Components.TimeControls where
 
 import Prelude
-
-import App.Element
 
 import Halogen as H
 import Halogen.HTML as HH

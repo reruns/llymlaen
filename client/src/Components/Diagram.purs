@@ -2,7 +2,8 @@ module App.Components.Diagram where
 
 import Prelude
 
-import Data.Argonaut (Json, jsonParser, encodeJson, decodeJson, jsonEmptyObject, (~>), (:=), (.?))
+import Data.Argonaut
+
 import Data.Foldable (traverse_)
 import Data.Array ((!!), updateAt, findLastIndex, last, filter, mapWithIndex, snoc, unsafeIndex)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe, isJust)
@@ -45,13 +46,17 @@ type State = { time :: Int
              , targetIndex :: { layer :: Int, idx :: Int }
              }
    
-   
 decodeResponse :: Json -> Either String Diag
 decodeResponse response = do
   obj <- decodeJson response
   str <- obj .? "body"
   bodyStr <- jsonParser str
   decodeJson bodyStr
+  
+encodeMessage :: State -> Json
+encodeState st =
+  "body" := st.body ~>
+  jsonEmptyObject
          
 data Query a 
   = Initialize a

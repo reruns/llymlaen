@@ -1,9 +1,8 @@
-module App.Toolbar where
+module App.Components.Toolbar where
 
 import Prelude
-import Data.Maybe (Maybe(..), isJust)
 
-import App.Element
+import Data.Maybe (Maybe(..), isJust)
 
 import Halogen as H
 import Halogen.HTML as HH
