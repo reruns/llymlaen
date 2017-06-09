@@ -5,7 +5,7 @@ import Prelude
 import App.Validators
 import App.Types.Keyframe
 
-import Data.Argonaut (Json, encodeJson, decodeJson, jsonEmptyObject, (~>), (:=), (.?))
+import Data.Argonaut
 
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 import Data.Array (insertBy, (!!), updateAt, findIndex, concat, zipWith, mapWithIndex)
@@ -62,15 +62,9 @@ insertKey (Element el) k =
 
     
 
---To be reworked    
-renderEl :: Element -> Graphics Unit
-renderEl (Element el) = renderCanvas el.current.props
-
-advanceFrame :: Element -> Element
-advanceFrame el = setTime el (el.current.time + 1)
-
-setTime :: Element -> Int -> Element
-setTime el t =
+--To be reworked
+getFrame :: Element -> Int -> Keyframe
+getFrame (Element el) t =
   let ms = findMoment el.keys t
       l' = fromMaybe (el.current) ms.l
       r' = fromMaybe (el.current) ms.r in
