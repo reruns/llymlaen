@@ -1,5 +1,11 @@
 module App.Components.Diagram where
 
+
+import App.Element.Presets (circBase, dnutBase, rectBase)
+import App.Components.ElementEditor as ElEdit
+import App.Components.Toolbar as Toolbar
+import App.Components.TimeControls as TControls
+
 import Prelude
 
 import Data.Argonaut
@@ -32,11 +38,6 @@ import DOM.HTML.HTMLElement (getBoundingClientRect)
 import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDimensions, Context2D)
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
-
-import App.Element.Presets (circBase, dnutBase, rectBase)
-import App.ElementEditor as ElEdit
-import App.Toolbar as Toolbar
-import App.TimeControls as TControls
 
 import App.Helpers (pageX, pageY)
 

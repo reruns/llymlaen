@@ -8,11 +8,11 @@ import Prelude
 import Data.Maybe (Maybe(..), isJust, fromMaybe)
 import Data.Array (concat, mapWithIndex, updateAt, (!!))
 
-
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+
 
 type State = Maybe Keyframe
 data Query a 
@@ -40,17 +40,15 @@ component =
          ]
     
   eval :: forall m. Query ~> H.ComponentDSL State Query State m
-  eval (HandleInput mel next) = do
+  eval (HandleInput mbFrame next) = do
     st <- H.get
-    when (not $ fromMaybe false $ matchEl <$> mel <*> st) $ H.put mel
+    when (not $ fromMaybe false $ (==) <$> mbFrame <*> st) $ H.put mbFrame
     pure next
     
   eval (FormChange i prop next) = do
     props <- H.gets (fromMaybe [])
     if isJust $ (recProp const prop) <$> (props !! i) 
-      then do 
-        H.modify $ map (\st -> st {current = st.current {props = fromMaybe props $ updateAt i prop props}})
-        H.raise =<< H.get
+      then do H.modify $ map (\st -> st {props = fromMaybe props $ updateAt i prop props})
       else pure unit
     pure next
   
