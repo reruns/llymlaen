@@ -1,6 +1,6 @@
-module App.Diagram where
+module App.Components.Diagram where
 
-import Prelude (type (~>), Unit, Void, absurd, bind, const, map, negate, pure, unit, discard, show, ($), (+), (-), (<$>), (=<<), (==), (<>))
+import Prelude
 
 import Data.Argonaut (Json, jsonParser, encodeJson, decodeJson, jsonEmptyObject, (~>), (:=), (.?))
 import Data.Foldable (traverse_)
@@ -14,9 +14,9 @@ import Data.Either.Nested (Either3)
 import Data.Functor.Coproduct.Nested (Coproduct3)
 
 import Control.Monad.Aff (Aff)
-import Control.Monad.Eff.Console (log, CONSOLE) --currently unused, but useful for debug potentially
+import Control.Monad.Eff.Console (log, CONSOLE)
 
-import Halogen (Component, ParentDSL, ParentHTML, RefLabel(..), action, get, put, getHTMLElementRef, gets, lifecycleParentComponent, liftEff, modify, query', request, liftAff)
+import Halogen
 import Halogen.Component.ChildPath (cp1, cp2, cp3)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -31,40 +31,27 @@ import DOM.HTML.HTMLElement (getBoundingClientRect)
 import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDimensions, Context2D)
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
-import App.Element as E
+
 import App.Element.Presets (circBase, dnutBase, rectBase)
 import App.ElementEditor as ElEdit
 import App.Toolbar as Toolbar
 import App.TimeControls as TControls
-import App.Static as S
-import App.Property (Point, colorToStr, encodeRGB)
+
 import App.Helpers (pageX, pageY)
 
 type State = { time :: Int
              , ctx :: Maybe Context2D
-             , color :: { r :: Int, g :: Int, b :: Int }
-             , statics :: Array S.Static
-             , elements :: Array ( Array E.Element )
+             , body :: Diag
              , targetIndex :: { layer :: Int, idx :: Int }
              }
    
    
-decodeResponse :: Json -> Either String State
+decodeResponse :: Json -> Either String Diag
 decodeResponse response = do
   obj <- decodeJson response
   str <- obj .? "body"
-  state <- jsonParser str
-  decodeState state
-  
-  
-defaultState :: State
-defaultState = { time: 0
-               , ctx: Nothing
-               , color: {r:175, g: 143, b:90}
-               , statics: []
-               , elements: [[]]
-               , targetIndex: {layer: -1, idx: -1}
-               }
+  bodyStr <- jsonParser str
+  decodeJson bodyStr
          
 data Query a 
   = Initialize a
@@ -127,12 +114,9 @@ diaComp = lifecycleParentComponent
   eval (Load id next) = do
     response <- liftAff $ (AX.get ("/api/diagrams/" <> id) :: AX.Affjax _ Json)
     case decodeResponse response.response of
-      Right st -> do
-                    put st
-                    eval (Initialize next) --there is likely a better way, here
-      Left  s  -> do
-                    liftEff $ log s
-                    pure next
+      Right b -> modify (_ {body=b})
+      Left  s -> liftEff $ log s
+    pure next
     
   eval (SetTime t next) = do
     modify (\st -> st {elements = map (map (\e -> E.setTime e t)) st.elements, time=t})
