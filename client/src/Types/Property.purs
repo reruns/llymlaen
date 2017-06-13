@@ -126,35 +126,29 @@ recProp f (Donut r1 r2) (Donut r1' r2') = Just $ Donut (f r1 r1') (f r2 r2')
 recProp f _             _               = Nothing --Mismatch! TODO: Add some kind of fail representation here.
 
 
-renderCanvas :: Array Property -> Graphics Unit
-renderCanvas props = do save 
-                        let gfx = sequence $ map renderProp props
-                        case gfx of
-                          Nothing -> pure unit
-                          Just es -> sequence_ es
-                        restore where
-                        
-  renderProp (Enabled b)      = if b then Just (pure unit) else Nothing
-  renderProp (Bordered b)     = if b then Just (setStrokeStyle "#000000") else Just (pure unit)
-  renderProp (Color c)        = Just $ (setFillStyle (colorToStr c)) *> (setStrokeStyle (colorToStr c))
-  renderProp (Position {x,y}) = Just $ translate (toNumber x) (toNumber y)
-  renderProp (Angle a)        = Just $ rotate ((toNumber a) * pi / 180.0)
-  renderProp (Opacity o)      = Just $ setAlpha ((toNumber o) / 100.0)
-  renderProp (Circle r)       = Just $ do
-    beginPath
-    arc {x: 0.0,y: 0.0,r: toNumber r, start: 0.0, end: 2.0*pi}
-    closePath
-    stroke
-    fill
-    
-  renderProp (Rect w h)       = Just $ do
-    fillRect {x: 0.0, y:0.0, w: toNumber w, h: toNumber h}
-    strokeRect {x: 0.0, y:0.0, w: toNumber w, h: toNumber h}
-    
-  renderProp (Donut r1 r2)    = Just $ do
-    let width = toNumber (r2-r1)
-    setLineWidth width
-    beginPath
-    arc {x: 0.0, y:0.0, r: (toNumber r1) + (width / 2.0), start: 0.0, end: 2.0*pi}
-    closePath
-    stroke
+
+renderProp :: Property -> Graphics Unit
+renderProp (Enabled b)      = if b then Just (pure unit) else Nothing
+renderProp (Bordered b)     = if b then Just (setStrokeStyle "#000000") else Just (pure unit)
+renderProp (Color c)        = Just $ (setFillStyle (colorToStr c)) *> (setStrokeStyle (colorToStr c))
+renderProp (Position {x,y}) = Just $ translate (toNumber x) (toNumber y)
+renderProp (Angle a)        = Just $ rotate ((toNumber a) * pi / 180.0)
+renderProp (Opacity o)      = Just $ setAlpha ((toNumber o) / 100.0)
+renderProp (Circle r)       = Just $ do
+  beginPath
+  arc {x: 0.0,y: 0.0,r: toNumber r, start: 0.0, end: 2.0*pi}
+  closePath
+  stroke
+  fill
+  
+renderProp (Rect w h)       = Just $ do
+  fillRect {x: 0.0, y:0.0, w: toNumber w, h: toNumber h}
+  strokeRect {x: 0.0, y:0.0, w: toNumber w, h: toNumber h}
+  
+renderProp (Donut r1 r2)    = Just $ do
+  let width = toNumber (r2-r1)
+  setLineWidth width
+  beginPath
+  arc {x: 0.0, y:0.0, r: (toNumber r1) + (width / 2.0), start: 0.0, end: 2.0*pi}
+  closePath
+  stroke

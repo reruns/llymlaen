@@ -19,6 +19,7 @@ data Query a
   = FormChange Int Property a 
   | HandleInput (Maybe Keyframe) a 
   | AddFrame a
+  | GetState (State -> a)
   
 component :: forall m. H.Component HH.HTML Query State State m
 component =
@@ -55,7 +56,10 @@ component =
   eval (AddMoment next) = do
     H.raise =<< H.get
     pure next
-    
+  
+  eval (GetState reply) = do
+    state <- H.get
+    pure (reply state)
     
 
 renderProp i (Enabled b)   = [checkBox [HP.title "enabled"]  b (FormChange i <<< Enabled)]

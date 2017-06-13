@@ -1,23 +1,21 @@
 module App.Components.Diagram where
 
---TODO: update our queries to match the changes to the state type
---Change the interactions with the element editor
-
 import App.Element.Presets (circBase, dnutBase, rectBase)
 import App.Components.ElementEditor as ElEdit
 import App.Components.Toolbar as Toolbar
 import App.Components.TimeControls as TControls
+
+import App.Helpers (pageX, pageY)
 
 import Prelude
 
 import Data.Argonaut
 
 import Data.Foldable (traverse_)
-import Data.Array ((!!), updateAt, findLastIndex, last, filter, mapWithIndex, snoc, unsafeIndex)
+import Data.Array ((!!), updateAt, modifyAt, findIndex, findLastIndex)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe, isJust)
 import Data.Either (Either(..))
 import Data.Int (round)
-import Data.Traversable (sequence)
 
 import Data.Either.Nested (Either3)
 import Data.Functor.Coproduct.Nested (Coproduct3)
@@ -40,13 +38,10 @@ import DOM.HTML.HTMLElement (getBoundingClientRect)
 import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDimensions, Context2D)
 import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
-
-import App.Helpers (pageX, pageY)
-
 type State = { time :: Int
              , ctx :: Maybe Context2D
              , body :: Diag
-             , targetIndex :: { layer :: Int, idx :: Int }
+             , targetIndex :: Int
              }
    
 decodeResponse :: Json -> Either String Diag
@@ -154,16 +149,15 @@ diaComp = lifecycleParentComponent
       Just Toolbar.DnutB -> insertElem $ dnutBase t pos
     pure next
     where insertElem el = modify (\st -> st {body = addElement st.body el})
+          resolveTarget (Diag d) pos = fromMaybe -1 $ findIndex (flip overlap pos) d.elements
      
   eval (ModTarget Nothing next) = do
     pure next
     
-  --TODO: Move the target if layer has changed.
-  eval (ModTarget (Just e) next) = do
+  eval (ModTarget (Just f) next) = do
     st <- get
-    let loc = st.targetIndex
-    case (\l -> updateAt loc.layer l st.elements) =<< (updateAt loc.idx e) =<< (st.elements !! loc.layer) of
-      Just es -> modify (\state -> state {elements=es})
+    case modifyAt st.targetIndex (flip insertKey f) (getElements st.body) of
+      Just es -> modify $ _ {body=setElements body es}
       Nothing -> pure unit
     pure next 
     
@@ -177,20 +171,16 @@ diaComp = lifecycleParentComponent
     scY  <- scrollY w
     pure {x: x - (round rect.left) - scX , y: y - (round rect.top) - scY }
     
-    
   tcListener :: Int -> Int -> Maybe (Query Unit)
   tcListener t t' = if t == t'
                       then Nothing
                       else Just $ action $ SetTime t'
-                      
-  advanceFrame :: State -> State
-  advanceFrame st = st { elements = map (map E.advanceFrame) st.elements, time=st.time+1 }
     
   drawGraphics st = case st.ctx of
     Just ctx -> runGraphics ctx $ do
-                  setFillStyle $ colorToStr st.color
+                  setFillStyle $ show st.color
                   fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
                   traverse_ S.renderStatic st.statics
-                  traverse_ (traverse_ (renderTime st.time)) st.elements
+                  traverse_ (renderTime st.time) st.elements
     Nothing  -> pure unit
     

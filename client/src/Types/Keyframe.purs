@@ -37,3 +37,13 @@ reconcile (Keyframe {time:tl, props: left}) (Keyframe {time: tr, props: right}) 
       f a b = a + (round $ p * (toNumber (b-a)))  
   in Keyframe { time: t
      , props: fromMaybe left $ sequence $ zipWith (recProp f) left right}
+
+     
+renderFrame :: Keyframe -> Graphics Unit
+renderCanvas (Keyframe {props}) = 
+  do save 
+    let gfx = sequence $ map renderProp props
+    case gfx of
+      Nothing -> pure unit
+      Just es -> sequence_ es
+    restore where

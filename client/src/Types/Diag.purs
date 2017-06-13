@@ -8,8 +8,12 @@ newtype Diag = Diag { color :: RGB
                     , statics :: Array Static
                     , elements :: Array Element
                     }
-         
-type Location = {layer :: Int, idx :: Int}
+                    
+getElements :: Diag -> Array Element
+getElements (Diag d) = d.elements
+
+setElements :: Diag -> Array Element -> Diag
+setElements (Diag d) es = Diag $ d {elements = es}
                     
 instance encodeDiag :: EncodeJson Diag where
 encodeJson (Diag {color,statics,elements}) = 
@@ -28,12 +32,5 @@ decodeJson json = do
   
   
 addElement :: Diag -> Element -> Diag
-addElement (Diag d) (Element e) = 
-  Diag (d { elements = fromMaybe st.elements $ 
-                       (\l -> updateAt e.layer l d.elements) =<< 
-                       ( (\l -> snoc l e) <$> (d.elements !! e.layer) ) } ))
-
-resolveTarget Diag -> Point -> Location
-resolveTarget (Diag {elements}) (Point {x,y}) = 
-  fromMaybe {layer:-1, idx:-1} $ last =<< (sequence $ filter isJust $ 
-  mapWithIndex (\i l -> map (\v ->{layer:i, idx:v}) (findLastIndex (\el -> overlap el pos) l)) elements)
+addElement (Diag d) el = 
+  Diag (d {elements = insertBy (comparing _.layer) el elements})
