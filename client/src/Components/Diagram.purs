@@ -54,8 +54,8 @@ decodeResponse response = do
   bodyStr <- jsonParser str
   decodeJson bodyStr
   
-encodeMessage :: State -> Json
-encodeState st =
+encodeBody :: State -> Json
+encodeBody st =
   "body" := st.body ~>
   jsonEmptyObject
          
@@ -119,7 +119,7 @@ diaComp = lifecycleParentComponent
     pure next
     
   eval (Save next) = do
-    st <- gets encodeState
+    st <- gets encodeBody
     let pl = "body" := (show st) ~> jsonEmptyObject
     response <- liftAff $ (AX.post "/api/diagrams/" pl :: AX.Affjax _ Json)
     pure next
@@ -159,7 +159,7 @@ diaComp = lifecycleParentComponent
       Just Toolbar.DnutB -> insertElem $ dnutBase t pos
     pure next
     where insertElem el = modify (\st -> st {body = addElement st.body el})
-          resolveTarget (Diag d) pos = fromMaybe -1 $ findIndex (flip overlap pos) d.elements
+          resolveTarget (Diag d) pos = fromMaybe -1 $ findIndex (flip overlap pos) $ map (flip getFrame t) d.elements
      
   eval (ModTarget Nothing next) = do
     pure next

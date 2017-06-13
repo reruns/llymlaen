@@ -10,8 +10,8 @@ getX (Point {x}) = x
 getY (Point {y}) = y
 
 --setters
-setX p v = p {x=v}
-setY p v = p {y=v}
+setX (Point p) v = Point $ p {x=v}
+setY (Point p) v = Point $ p {y=v}
 
 instance showPoint :: Show Point where
   show (Point {x,y}) = "(" <> (show x) <> "," <> (show y) <> ")"

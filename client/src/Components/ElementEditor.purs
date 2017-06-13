@@ -1,10 +1,13 @@
 module App.Components.ElementEditor where
 
+import Prelude
+
 import App.Types.Keyframe
 import App.Types.Property
+import App.Types.RGB
+import App.Types.Point
 import App.Helpers.Forms
 
-import Prelude
 import Data.Maybe (Maybe(..), isJust, fromMaybe)
 import Data.Array (concat, mapWithIndex, updateAt, (!!))
 
@@ -34,9 +37,9 @@ component =
   render Nothing = HH.div_ []
   render (Just state) 
     = HH.div [HP.id_ "el-editor"] $ 
-      ( concat $ mapWithIndex renderProp state.current.props) 
+      ( concat $ mapWithIndex renderProp (props state)) 
       <> [ HH.button 
-            [ HE.onClick $ HE.input_ AddMoment ] 
+            [ HE.onClick $ HE.input_ AddFrame ] 
             [ HH.text "Apply"]
          ]
     
@@ -47,13 +50,14 @@ component =
     pure next
     
   eval (FormChange i prop next) = do
-    props <- H.gets (fromMaybe [])
-    if isJust $ (recProp const prop) <$> (props !! i) 
-      then do H.modify $ map (\st -> st {props = fromMaybe props $ updateAt i prop props})
+    st <- H.get
+    let ps = fromMaybe [] $ props <$> st
+    if isJust $ (recProp const prop) <$> (ps !! i) 
+      then do H.modify $ map (\(Keyframe f) -> Keyframe $ f {props = fromMaybe ps $ updateAt i prop ps})
       else pure unit
     pure next
   
-  eval (AddMoment next) = do
+  eval (AddFrame next) = do
     H.raise =<< H.get
     pure next
   
