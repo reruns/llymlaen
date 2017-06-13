@@ -40,7 +40,7 @@ reconcile (Keyframe {time:tl, props: left}) (Keyframe {time: tr, props: right}) 
 
      
 renderFrame :: Keyframe -> Graphics Unit
-renderCanvas (Keyframe {props}) = 
+renderFrame (Keyframe {props}) = 
   do save 
     let gfx = sequence $ map renderProp props
     case gfx of

@@ -12,6 +12,12 @@ newtype Diag = Diag { color :: RGB
 getElements :: Diag -> Array Element
 getElements (Diag d) = d.elements
 
+getStatics :: Diag -> Array Static
+getStatics (Diag d) = d.statics
+
+getColor :: Diag -> RGB
+getColor (Diag d) = d.color
+
 setElements :: Diag -> Array Element -> Diag
 setElements (Diag d) es = Diag $ d {elements = es}
                     

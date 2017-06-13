@@ -9,7 +9,10 @@ import App.Types.Property
 newtype Static = Static { props :: Array Property }
 
 renderStatic :: Static -> Graphics Unit
-renderStatic (static st) = renderCanvas st.props
+renderStatic (static st) = renderFrame $ Keyframe {time:-1, props:st.props}
+--TODO: this pattern implies that renderFrame should be shared logic, like it was before
+--just not in Types.Property
+--or, perhaps, this shouldn't be its own type at all?
 
 instance encodeStatic :: EncodeJson Static where
 encodeJson (Static s) =

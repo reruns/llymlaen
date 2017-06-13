@@ -1,5 +1,7 @@
 module App.Components.Diagram where
 
+import Prelude
+
 import App.Element.Presets (circBase, dnutBase, rectBase)
 import App.Components.ElementEditor as ElEdit
 import App.Components.Toolbar as Toolbar
@@ -7,12 +9,10 @@ import App.Components.TimeControls as TControls
 
 import App.Helpers (pageX, pageY)
 
-import Prelude
-
 import Data.Argonaut
 
 import Data.Foldable (traverse_)
-import Data.Array ((!!), updateAt, modifyAt, findIndex, findLastIndex)
+import Data.Array ((!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex)
 import Data.Maybe (Maybe(Just,Nothing), fromMaybe, isJust)
 import Data.Either (Either(..))
 import Data.Int (round)
@@ -101,11 +101,19 @@ diaComp = lifecycleParentComponent
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
   eval (Tick next) = do
     pause <- query' cp3 unit (request TControls.Paused)
+    editorFrame <- query' cp1 unit (request ElEdit.GetState)
     if pause == Just false
       then modify (\st -> st {time=st.time+1})
       else pure unit
     st <- get
-    liftEff $ drawGraphics st
+    let frames = mapWithIndex (\i e -> if i == st.targetIndex then editorFrame else getFrame st.time ) getElements st.body
+    case st.ctx of
+      Just ctx -> liftEff $ runGraphics ctx $ do
+                    setFillStyle $ show $ getColor st.body
+                    fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
+                    traverse_ S.renderStatic (getStatics st.body)
+                    traverse_ (renderFrame <<< fromMaybe blankFrame) frames
+      Nothing  -> pure unit
     pure next
     
   eval (Save next) = do
@@ -175,12 +183,3 @@ diaComp = lifecycleParentComponent
   tcListener t t' = if t == t'
                       then Nothing
                       else Just $ action $ SetTime t'
-    
-  drawGraphics st = case st.ctx of
-    Just ctx -> runGraphics ctx $ do
-                  setFillStyle $ show st.color
-                  fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
-                  traverse_ S.renderStatic st.statics
-                  traverse_ (renderTime st.time) st.elements
-    Nothing  -> pure unit
-    
