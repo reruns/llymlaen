@@ -60,15 +60,10 @@ insertKey (Element el) k =
     Just i  -> Element (el {keys = fromMaybe el.keys $ updateAt i k el.keys})
     Nothing -> Element (el {keys = insertBy (comparing time) k el.keys})
 
-    
-
---To be reworked
-getFrame :: Element -> Int -> Keyframe
-getFrame (Element el) t =
-  let ms = findMoment el.keys t
-      l' = fromMaybe (el.current) ms.l
-      r' = fromMaybe (el.current) ms.r in
-  case ((==) t) <$> _.time <$> ms.r of
-    Nothing    -> el {current = l' {time=t}}
-    Just false -> el {current = reconcile l' r' t}
-    Just true  -> el {current = r'}
+getFrame :: Element -> Int -> Maybe Keyframe
+getFrame (Element {keys}) t = 
+  case findLastIndex (\f -> (time f) <= t) keys of
+    Just t' -> if t' == t
+               then keys !! t'
+               else reconcile <$> (keys !! t') <*> (keys !! (t'+1))
+    Nothing -> Nothing

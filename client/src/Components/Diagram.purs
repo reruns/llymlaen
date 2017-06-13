@@ -1,5 +1,7 @@
 module App.Components.Diagram where
 
+--TODO: update our queries to match the changes to the state type
+--Change the interactions with the element editor
 
 import App.Element.Presets (circBase, dnutBase, rectBase)
 import App.Components.ElementEditor as ElEdit
