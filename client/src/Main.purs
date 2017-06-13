@@ -12,7 +12,7 @@ import Halogen (action)
 import Halogen.VDom.Driver (runUI)
 import Halogen.Aff as HA
 
-import App.Diagram (Query(..), diaComp)
+import App.Components.Diagram (Query(..), diaComp)
 import App.Routes (Locations(..), routing)
 import Routing (matchesAff)
 

@@ -1,4 +1,4 @@
-module App.Types.Point
+module App.Types.Point where
 
 import Prelude
 
@@ -17,14 +17,14 @@ instance showPoint :: Show Point where
   show (Point {x,y}) = "(" <> (show x) <> "," <> (show y) <> ")"
 
 instance encodePoint :: EncodeJson Point where 
-encodeJson (Point {x,y}) = 
-  "x" := x ~> 
-  "y" := y ~> 
-  jsonEmptyObject
+  encodeJson (Point {x,y}) = 
+    "x" := x ~> 
+    "y" := y ~> 
+    jsonEmptyObject
   
 instance decodePoint :: DecodeJson Point where
-decodeJson json = do
-  obj <- decodeJson json
-  x <- obj .? "x"
-  y <- obj .? "y"
-  pure $ Point {x,y}
+  decodeJson json = do
+    obj <- decodeJson json
+    x <- obj .? "x"
+    y <- obj .? "y"
+    pure $ Point {x,y}

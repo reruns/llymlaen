@@ -4,7 +4,7 @@ var gulp = require("gulp");
 var purescript = require("gulp-purescript");
 
 var sources = [
-  "client/src/*.purs",
+  "client/src/**/*.purs",
   "bower_components/purescript-*/src/**/*.purs"
 ];
 

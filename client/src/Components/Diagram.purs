@@ -8,7 +8,6 @@ import App.Components.Toolbar as Toolbar
 import App.Components.TimeControls as TControls
 
 import App.Types.Element
-import App.Types.Static
 import App.Types.Keyframe
 
 import App.Helpers (pageX, pageY)
@@ -115,7 +114,6 @@ diaComp = lifecycleParentComponent
       Just ctx -> liftEff $ runGraphics ctx $ do
                     setFillStyle $ show $ getColor st.body
                     fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
-                    traverse_ renderStatic (getStatics st.body)
                     traverse_ (renderFrame <<< fromMaybe blankFrame) frames
       Nothing  -> pure unit
     pure next

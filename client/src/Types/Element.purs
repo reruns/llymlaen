@@ -4,6 +4,7 @@ import Prelude
 
 import App.Validators
 import App.Types.Keyframe
+import App.Types.Point
 
 import Data.Argonaut
 
@@ -19,24 +20,24 @@ import Graphics.Canvas.Free
 newtype Element = Element { current :: Keyframe, layer :: Int, keys :: Array Keyframe }
 
 instance encodeElement :: EncodeJson Element where
-encodeJson (Element el) =
-  "layer" := el.layer ~> 
-  "keys"  := el.keys ~> 
-  jsonEmptyObject
+  encodeJson (Element el) =
+    "layer" := el.layer ~> 
+    "keys"  := el.keys ~> 
+    jsonEmptyObject
   
 instance decodeElement :: DecodeJson Element where
-decodeJson json = do
-  obj <- decodeJson json
-  layer <- obj .? "layer"
-  keys  <- obj .? "keys"
-  let current = {time: -1, props: []}
-  pure $ Element {current,layer,keys}
+  decodeJson json = do
+    obj <- decodeJson json
+    layer <- obj .? "layer"
+    keys  <- obj .? "keys"
+    let current = {time: -1, props: []}
+    pure $ Element {current,layer,keys}
 
 instance eqElement :: Eq Element where
-(==) (Element a) (Element b) = 
-  a.current == b.current &&
-  a.layer == b.layer     &&
-  (and zipWith (==) a.keys b.keys)
+  eq (Element a) (Element b) = 
+    (a.current == b.current) && 
+    (a.layer == b.layer) && 
+    (and zipWith (==) a.keys b.keys)
  
 --note: this will compile but not work correctly if Position comes after the Shape property
 overlap :: Element -> Point -> Boolean

@@ -1,4 +1,4 @@
-module App.Helpers.Forms
+module App.Helpers.Forms where
 
 --functions for Form elements
 checkBox props b h = 
