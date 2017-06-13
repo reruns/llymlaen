@@ -1,11 +1,16 @@
 module App.Types.Keyframe where
 
 import Prelude
+
 import App.Types.Property
 
-import Data.Int (toNumber)
-
+import Data.Int (toNumber, round)
+import Data.Maybe (fromMaybe, Maybe(..))
+import Data.Array (zipWith)
+import Data.Traversable (sequence, sequence_)
 import Data.Argonaut
+
+import Graphics.Canvas.Free
 
 newtype Keyframe = Keyframe { time :: Int, props :: Array Property }
 
