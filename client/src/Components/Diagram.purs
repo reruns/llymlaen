@@ -107,7 +107,7 @@ diaComp = lifecycleParentComponent
   eval (Tick next) = do
     pause <- query' cp3 unit (request TControls.Paused)
     if pause == Just false
-      then modify advanceFrame
+      then modify (\st -> st {time=st.time+1})
       else pure unit
     st <- get
     liftEff $ drawGraphics st
@@ -127,7 +127,7 @@ diaComp = lifecycleParentComponent
     pure next
     
   eval (SetTime t next) = do
-    modify (\st -> st {elements = map (map (\e -> E.setTime e t)) st.elements, time=t})
+    modify (\st -> st {time=t})
     pure next
     
   eval (Initialize next) = do
@@ -148,17 +148,12 @@ diaComp = lifecycleParentComponent
     pos <- liftEff $ getOffset p e
     mode <- query' cp2 unit (request Toolbar.CheckClick)
     case fromMaybe Nothing mode of
-      Nothing -> modify (\st -> st {time = t, targetIndex = resolveTarget st.elements pos } ) 
-      Just Toolbar.CircB -> addElement $ circBase t pos
-      Just Toolbar.RectB -> addElement $ rectBase t pos
-      Just Toolbar.DnutB -> addElement $ dnutBase t pos
+      Nothing -> modify (\st -> st {time = t, targetIndex = resolveTarget st.body pos } ) 
+      Just Toolbar.CircB -> insertElem $ circBase t pos
+      Just Toolbar.RectB -> insertElem $ rectBase t pos
+      Just Toolbar.DnutB -> insertElem $ dnutBase t pos
     pure next
-    --This is probably WAY slower than it would be with lazy eval, so potentially revisit if it's an issue.
-    where resolveTarget els pos = fromMaybe def $ last =<< (sequence $ filter isJust 
-            $ mapWithIndex (\i l -> map (\v ->{layer:i, idx:v}) (findLastIndex (\element -> E.overlap element pos) l)) els)
-          def = { layer: -1, idx: -1 }
-          addElement e = do
-            modify (\st -> st { elements = fromMaybe st.elements $ (\l -> updateAt e.layer l st.elements) =<< ( (\l -> snoc l e) <$> (st.elements !! e.layer) ) } )
+    where insertElem el = modify (\st -> st {body = addElement st.body el})
      
   eval (ModTarget Nothing next) = do
     pure next
@@ -196,6 +191,6 @@ diaComp = lifecycleParentComponent
                   setFillStyle $ colorToStr st.color
                   fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
                   traverse_ S.renderStatic st.statics
-                  traverse_ (traverse_ E.renderEl) st.elements
+                  traverse_ (traverse_ (renderTime st.time)) st.elements
     Nothing  -> pure unit
     

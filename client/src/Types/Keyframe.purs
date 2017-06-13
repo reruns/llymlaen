@@ -10,6 +10,9 @@ newtype Keyframe = Keyframe { time :: Int, props :: Array Property }
 time :: Keyframe -> Int
 time (Keyframe k) = k.time
 
+props :: Keyframe -> Array Property
+props (Keyframe k) = k.props
+
 instance encodeFrame :: EncodeJson Keyframe where
 encodeJson (Keyframe f)
   =  "time"  := f.time

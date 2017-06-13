@@ -67,3 +67,8 @@ getFrame (Element {keys}) t =
                then keys !! t'
                else reconcile <$> (keys !! t') <*> (keys !! (t'+1))
     Nothing -> Nothing
+    
+renderTime :: Int -> Element -> Graphics Unit
+renderTime t el = case getFrame el t of
+                    Just f  -> renderCanvas $ props f
+                    Nothing -> pure unit
