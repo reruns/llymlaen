@@ -28,3 +28,6 @@ instance decodePoint :: DecodeJson Point where
     x <- obj .? "x"
     y <- obj .? "y"
     pure $ Point {x,y}
+    
+instance eqPoint :: Eq Point where
+  eq (Point a) (Point b) = a.x == b.x && a.y == b.y

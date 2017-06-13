@@ -38,3 +38,6 @@ decodeJson json = do
   g <- obj .? "g"
   b <- obj .? "b"
   pure $ RGB {r,g,b}
+  
+instance eqRGB :: Eq RGB where
+  eq (RGB c1) (RGB c2) = c1.r == c2.r && c1.g == c2.g && c1.b == c2.b

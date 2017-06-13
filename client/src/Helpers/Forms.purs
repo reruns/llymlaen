@@ -1,5 +1,14 @@
 module App.Helpers.Forms where
 
+import Prelude
+
+import App.Validators
+
+import Halogen
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
+
 --functions for Form elements
 checkBox props b h = 
   HH.input ([ HP.type_ HP.InputCheckbox

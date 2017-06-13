@@ -1,6 +1,9 @@
-module App.Property where
+module App.Types.Property where
 
 import Prelude
+
+import App.Types.RGB
+import App.Types.Point
 
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 import Data.Int (toNumber)
@@ -33,13 +36,13 @@ derive instance eqProp :: Eq Property
 instance encodeProp :: EncodeJson Property where
   encodeJson  (Enabled b)      = "Enabled"  := b ~> jsonEmptyObject
   encodeJson  (Bordered b)     = "Bordered" := b ~> jsonEmptyObject
-  encodeJson  (Color c)        = "Color" := (encodeRGB c) ~> jsonEmptyObject
-  encodeJson  (Position p)     = "Position" := (encodePoint p) ~> jsonEmptyObject
+  encodeJson  (Color c)        = "Color" := c ~> jsonEmptyObject
+  encodeJson  (Position p)     = "Position" := p ~> jsonEmptyObject
   encodeJson  (Angle a)        = "Angle" := a ~> jsonEmptyObject
   encodeJson  (Opacity o)      = "Opacity" := o ~> jsonEmptyObject
   encodeJson  (Circle r)       = "Circle" := r ~> jsonEmptyObject
-  encodeJson  (Rect w h)       = "Rect" := ("w" := encodeJson w ~> "h" := encodeJson h ~> jsonEmptyObject) ~> jsonEmptyObject
-  encodeJson  (Donut r1 r2)    = "Donut" := ("r1" := encodeJson r1 ~> "r2" := encodeJson r2 ~> jsonEmptyObject) ~> jsonEmptyObject
+  encodeJson  (Rect w h)       = "Rect" := ("w" := w ~> "h" := h ~> jsonEmptyObject) ~> jsonEmptyObject
+  encodeJson  (Donut r1 r2)    = "Donut" := ("r1" := r1 ~> "r2" := r2 ~> jsonEmptyObject) ~> jsonEmptyObject
   
 instance decodeProp :: DecodeJson Property where
     decodeJson json = do
@@ -59,7 +62,7 @@ instance decodeProp :: DecodeJson Property where
                         xy <- obj .? "Position"
                         x  <- xy .? "x"
                         y  <- xy .? "y"
-                        pure $ Position {x,y}
+                        pure $ Position $ Point {x,y}
           "Angle"   -> Angle <$> obj .? "Angle"
           "Opacity" -> Opacity <$> obj .? "Opacity"
           "Circle"  -> Circle <$> obj .? "Circle"
@@ -79,8 +82,8 @@ instance decodeProp :: DecodeJson Property where
 propGens :: Array (Gen Property)
 propGens = [ Enabled <$> arbitrary
            , Bordered <$> arbitrary
-           , Color <$> ((\r g b -> {r,g,b}) <$> arbitrary <*> arbitrary <*> arbitrary)
-           , Position <$> ((\x y -> {x,y}) <$> arbitrary <*> arbitrary)
+           , Color <$> ((\r g b -> RGB {r,g,b}) <$> arbitrary <*> arbitrary <*> arbitrary)
+           , Position <$> ((\x y -> Point {x,y}) <$> arbitrary <*> arbitrary)
            , Angle <$> arbitrary
            , Circle <$> arbitrary
            , Rect <$> arbitrary <*> arbitrary
@@ -93,8 +96,8 @@ instance arbProp :: Arbitrary Property where
 instance showProp :: Show Property where
   show  (Enabled b)      = "Enabled: " <> (show b)
   show  (Bordered b)     = "Bordered: " <> (show b)
-  show  (Color c)        = "Color: " <> colorToStr c
-  show  (Position {x,y}) = "Position: (" <> (show x) <> "," <> (show y) <> ")"
+  show  (Color c)        = "Color: " <> show c
+  show  (Position p)     = "Position: " <> show p
   show  (Angle a)        = "Angle: " <> (show a)
   show  (Opacity o)      = "Opacity: " <> (show o)
   show  (Circle r)       = "Circle: " <> (show r)
@@ -109,8 +112,8 @@ boolProp _            = false
            
 recProp f (Enabled b1)  (Enabled b2)    = Just $ Enabled b1
 recProp f (Bordered b1) (Bordered b2)   = Just $ Bordered b1
-recProp f (Color c1)    (Color c2)      = Just $ Color {r: f c1.r c2.r, g: f c1.g c2.g, b: f c1.b c2.b}
-recProp f (Position p1) (Position p2)   = Just $ Position {x: f p1.x p2.x, y: f p1.y p2.y}
+recProp f (Color (RGB c1)) (Color (RGB c2)) = Just $ Color $ RGB {r: f c1.r c2.r, g: f c1.g c2.g, b: f c1.b c2.b}
+recProp f (Position (Point p1)) (Position (Point p2)) = Just $ Position $ Point {x: f p1.x p2.x, y: f p1.y p2.y}
 recProp f (Angle a1)    (Angle a2)      = Just $ Angle (f a1 a2)
 recProp f (Opacity o1)  (Opacity o2)    = Just $ Opacity (f o1 o2)
 recProp f (Circle r1)   (Circle r2)     = Just $ Circle (f r1 r2)
@@ -119,11 +122,11 @@ recProp f (Donut r1 r2) (Donut r1' r2') = Just $ Donut (f r1 r1') (f r2 r2')
 recProp f _             _               = Nothing --Mismatch!
 
 
-renderProp :: Property -> Graphics Unit
+renderProp :: Property -> Maybe (Graphics Unit)
 renderProp (Enabled b)      = if b then Just (pure unit) else Nothing
 renderProp (Bordered b)     = if b then Just (setStrokeStyle "#000000") else Just (pure unit)
-renderProp (Color c)        = Just $ (setFillStyle (colorToStr c)) *> (setStrokeStyle (colorToStr c))
-renderProp (Position {x,y}) = Just $ translate (toNumber x) (toNumber y)
+renderProp (Color c)        = Just $ (setFillStyle (show c)) *> (setStrokeStyle (show c))
+renderProp (Position p)     = (\(Point {x,y}) -> Just $ translate (toNumber x) (toNumber y)) p
 renderProp (Angle a)        = Just $ rotate ((toNumber a) * pi / 180.0)
 renderProp (Opacity o)      = Just $ setAlpha ((toNumber o) / 100.0)
 renderProp (Circle r)       = Just $ do

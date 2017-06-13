@@ -2,6 +2,8 @@ module App.Components.TimeControls where
 
 import Prelude
 
+import App.Helpers.Forms
+
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
