@@ -104,9 +104,9 @@ diaComp = lifecycleParentComponent
                             , HP.ref (RefLabel "cvs")
                             , HE.onClick $ HE.input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
                             ]
-                , HH.slot' cp3 unit TControls.controls st.time (tcListener st.time)
+                , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
                 ]
-      , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget) 
+      , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget)
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
@@ -162,7 +162,7 @@ diaComp = lifecycleParentComponent
     pos <- liftEff $ getOffset p e
     mode <- query' cp2 unit (request Toolbar.CheckClick)
     case fromMaybe Nothing mode of
-      Nothing -> modify (\st -> st {time = t, targetIndex = resolveTarget st.body pos t} ) 
+      Nothing -> modify (\st -> st {targetIndex = resolveTarget st.body pos t} ) 
       Just Toolbar.CircB -> insertElem $ circBase t pos
       Just Toolbar.RectB -> insertElem $ rectBase t pos
       Just Toolbar.DnutB -> insertElem $ dnutBase t pos
@@ -191,8 +191,3 @@ diaComp = lifecycleParentComponent
     scX  <- scrollX w
     scY  <- scrollY w
     pure $ Point {x: x - (round rect.left) - scX , y: y - (round rect.top) - scY }
-    
-  tcListener :: Int -> Int -> Maybe (Query Unit)
-  tcListener t t' = if t == t'
-                      then Nothing
-                      else Just $ action $ SetTime t'

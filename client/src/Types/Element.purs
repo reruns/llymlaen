@@ -9,7 +9,7 @@ import App.Types.Point
 import Data.Argonaut
 
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
-import Data.Array (insertBy, (!!), updateAt, findIndex, findLastIndex, zipWith)
+import Data.Array (insertBy, (!!), updateAt, findIndex, findLastIndex, zipWith, length)
 import Data.Foldable (and)
 import Data.Int (toNumber)
 import Data.Ord (comparing)
@@ -48,7 +48,7 @@ insertKey (Element el) k =
 getFrame :: Element -> Int -> Maybe Keyframe
 getFrame (Element {keys}) t = 
   case findLastIndex (\f -> (time f) <= t) keys of
-    Just t' -> if t' == t
-               then keys !! t'
-               else reconcile <$> (keys !! t') <*> (keys !! (t'+1)) <*> (Just t)
+    Just i -> if length keys == (i+1) || (fromMaybe false $ eq <$> (time <$> keys !! i) <*> (Just t))
+               then (\(Keyframe f) -> Keyframe $ f {time=t}) <$> keys !! i
+               else reconcile <$> (keys !! i) <*> (keys !! (i+1)) <*> (Just t)
     Nothing -> Nothing
