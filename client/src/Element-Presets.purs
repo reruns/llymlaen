@@ -1,7 +1,7 @@
 module App.Element.Presets where
 
-import App.Element
-import App.Property
+import App.Types.Element
+import App.Types.Property
 
 circBase :: Int -> Point -> Element
 circBase t p = { layer: 0

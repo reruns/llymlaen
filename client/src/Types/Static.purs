@@ -5,6 +5,7 @@ import Graphics.Canvas.Free
 import Data.Argonaut
 
 import App.Types.Property
+import App.Types.Keyframe
 
 newtype Static = Static { props :: Array Property }
 

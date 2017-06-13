@@ -8,12 +8,10 @@ import App.Types.Keyframe
 import Data.Argonaut
 
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
-import Data.Array (insertBy, (!!), updateAt, findIndex, concat, zipWith, mapWithIndex)
-import Data.Traversable (sequence, sequence_)
+import Data.Array (insertBy, (!!), updateAt, findIndex, zipWith)
 import Data.Foldable (foldl, and)
-import Data.Int (toNumber, round, toStringAs, hexadecimal)
-import Data.String (joinWith)
-import Data.Either(Either(..))
+import Data.Int (toNumber)
+import Data.Ord (comparing)
 import Math (pi, sqrt, pow, sin, cos)
 
 import Graphics.Canvas.Free

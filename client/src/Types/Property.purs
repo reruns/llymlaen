@@ -3,23 +3,17 @@ module App.Property where
 import Prelude
 
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
-import Data.Traversable (sequence, sequence_)
 import Data.Int (toNumber)
 import Data.Array ((!!))
 import Data.NonEmpty (NonEmpty(..))
 import Data.Either (Either(..))
 
-import Data.Argonaut (class EncodeJson, class DecodeJson, encodeJson, jsonEmptyObject, (~>), (:=), (.?), decodeJson)
+import Data.Argonaut
 import Data.StrMap as SM
 
 import Math (pi, sqrt, pow, sin, cos)
 
 import Graphics.Canvas.Free
-
-import Halogen (Action, action)
-import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 
 import Test.QuickCheck (class Arbitrary, arbitrary)
 import Test.QuickCheck.Gen
@@ -47,7 +41,6 @@ instance encodeProp :: EncodeJson Property where
   encodeJson  (Rect w h)       = "Rect" := ("w" := encodeJson w ~> "h" := encodeJson h ~> jsonEmptyObject) ~> jsonEmptyObject
   encodeJson  (Donut r1 r2)    = "Donut" := ("r1" := encodeJson r1 ~> "r2" := encodeJson r2 ~> jsonEmptyObject) ~> jsonEmptyObject
   
---TODO: Clean this up
 instance decodeProp :: DecodeJson Property where
     decodeJson json = do
       obj <- decodeJson json
@@ -61,7 +54,7 @@ instance decodeProp :: DecodeJson Property where
                         r <- rgb .? "r"
                         g <- rgb .? "g"
                         b <- rgb .? "b"
-                        pure $ Color {r,g,b}
+                        pure $ Color $ RGB {r,g,b}
           "Position"-> do
                         xy <- obj .? "Position"
                         x  <- xy .? "x"
@@ -123,8 +116,7 @@ recProp f (Opacity o1)  (Opacity o2)    = Just $ Opacity (f o1 o2)
 recProp f (Circle r1)   (Circle r2)     = Just $ Circle (f r1 r2)
 recProp f (Rect w1 h1)  (Rect w2 h2)    = Just $ Rect (f w1 w2) (f h1 h2)
 recProp f (Donut r1 r2) (Donut r1' r2') = Just $ Donut (f r1 r1') (f r2 r2')
-recProp f _             _               = Nothing --Mismatch! TODO: Add some kind of fail representation here.
-
+recProp f _             _               = Nothing --Mismatch!
 
 
 renderProp :: Property -> Graphics Unit
@@ -140,11 +132,9 @@ renderProp (Circle r)       = Just $ do
   closePath
   stroke
   fill
-  
 renderProp (Rect w h)       = Just $ do
   fillRect {x: 0.0, y:0.0, w: toNumber w, h: toNumber h}
   strokeRect {x: 0.0, y:0.0, w: toNumber w, h: toNumber h}
-  
 renderProp (Donut r1 r2)    = Just $ do
   let width = toNumber (r2-r1)
   setLineWidth width

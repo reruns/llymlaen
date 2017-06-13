@@ -7,13 +7,17 @@ import App.Components.ElementEditor as ElEdit
 import App.Components.Toolbar as Toolbar
 import App.Components.TimeControls as TControls
 
+import App.Types.Element
+import App.Types.Static
+import App.Types.Keyframe
+
 import App.Helpers (pageX, pageY)
 
 import Data.Argonaut
 
 import Data.Foldable (traverse_)
 import Data.Array ((!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex)
-import Data.Maybe (Maybe(Just,Nothing), fromMaybe, isJust)
+import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 import Data.Either (Either(..))
 import Data.Int (round)
 
@@ -62,7 +66,7 @@ data Query a
   | Load String a
   | Tick a
   | SetTime Int a
-  | ModTarget (Maybe E.Element) a
+  | ModTarget (Maybe Element) a
   | ClickCanvas Point a
  
 type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
@@ -111,7 +115,7 @@ diaComp = lifecycleParentComponent
       Just ctx -> liftEff $ runGraphics ctx $ do
                     setFillStyle $ show $ getColor st.body
                     fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
-                    traverse_ S.renderStatic (getStatics st.body)
+                    traverse_ renderStatic (getStatics st.body)
                     traverse_ (renderFrame <<< fromMaybe blankFrame) frames
       Nothing  -> pure unit
     pure next
