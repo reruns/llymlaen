@@ -51,7 +51,7 @@ type State = { time :: Int
              }
              
 defaultState = { time: 0
-               , ctw: Nothing
+               , ctx: Nothing
                , body: Diag {color: RGB {r:15,g:15,b:15}, elements: []}
                , targetIndex: -1
                }
@@ -168,7 +168,9 @@ diaComp = lifecycleParentComponent
       Just Toolbar.DnutB -> insertElem $ dnutBase t pos
     pure next
     where insertElem el = modify (\st -> st {body = addElement st.body el})
-          resolveTarget (Diag d) pos t = fromMaybe -1 $ findIndex (flip overlap pos) $ map (flip getFrame t) d.elements
+          resolveTarget (Diag d) pos t = fromMaybe (-1) $ 
+            findIndex (\mf -> fromMaybe false $ flip overlap pos <$> mf) $ 
+            map (flip getFrame t) d.elements
      
   eval (ModTarget Nothing next) = do
     pure next
@@ -183,12 +185,12 @@ diaComp = lifecycleParentComponent
   getOffset p Nothing = do
     pure p
     
-  getOffset {x, y} (Just el) = do
+  getOffset (Point {x, y}) (Just el) = do
     w    <- window
     rect <- getBoundingClientRect el
     scX  <- scrollX w
     scY  <- scrollY w
-    pure {x: x - (round rect.left) - scX , y: y - (round rect.top) - scY }
+    pure $ Point {x: x - (round rect.left) - scX , y: y - (round rect.top) - scY }
     
   tcListener :: Int -> Int -> Maybe (Query Unit)
   tcListener t t' = if t == t'
