@@ -161,8 +161,9 @@ diaComp = lifecycleParentComponent
     e <- getHTMLElementRef (RefLabel "cvs")
     pos <- liftEff $ getOffset p e
     mode <- query' cp2 unit (request Toolbar.CheckClick)
+    locked <- query' cp1 unit (request ElEdit.IsLocked)
     case fromMaybe Nothing mode of
-      Nothing -> modify (\st -> st {targetIndex = resolveTarget st.body pos t} ) 
+      Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t} ) 
       Just Toolbar.CircB -> insertElem $ circBase t pos
       Just Toolbar.RectB -> insertElem $ rectBase t pos
       Just Toolbar.DnutB -> insertElem $ dnutBase t pos

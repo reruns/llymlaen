@@ -20,6 +20,7 @@ import Halogen.HTML.Properties as HP
 
 type State = { frame  :: Maybe Keyframe
              , locked :: Boolean
+             , heldFrame :: Maybe Keyframe
              }
              
 data Query a 
@@ -28,11 +29,12 @@ data Query a
   | AddFrame a
   | LockFrame a
   | GetFrame (Maybe Keyframe -> a)
+  | IsLocked (Boolean -> a)
   
 component :: forall m. H.Component HH.HTML Query (Maybe Keyframe) (Maybe Keyframe) m
 component =
   H.component
-    { initialState: const {locked: false, frame: Nothing}
+    { initialState: const {locked: false, frame: Nothing, heldFrame: Nothing}
     , render
     , eval
     , receiver: HE.input HandleInput
@@ -56,7 +58,7 @@ component =
   eval (HandleInput mbFrame next) = do
     locked <- H.gets _.locked
     if locked
-      then H.modify (\st -> st {frame = setTime <$> (time <$> mbFrame) <*> st.frame})
+      then H.modify (\st -> st {heldFrame = mbFrame, frame = setTime <$> (time <$> mbFrame) <*> st.frame})
       else H.modify (_ {frame = mbFrame})
     pure next
     
@@ -77,8 +79,15 @@ component =
     pure (reply frame)
     
   eval (LockFrame next) = do
-    H.modify (\st -> st {locked= not st.locked})
+    locked <- H.gets _.locked
+    if locked
+      then H.modify (\st -> st {locked=false,frame=st.heldFrame})
+      else H.modify (_ {locked=true})
     pure next
+    
+  eval (IsLocked reply) = do
+    locked <- H.gets _.locked
+    pure (reply locked)
 
 renderProp i (Enabled b)   = [checkBox [HP.title "enabled"]  b (FormChange i <<< Enabled)]
 renderProp i (Bordered b)  = [checkBox [HP.title "bordered"] b (FormChange i <<< Bordered)]
