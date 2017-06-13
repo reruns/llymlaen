@@ -112,7 +112,7 @@ diaComp = lifecycleParentComponent
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
   eval (Tick next) = do
     pause <- query' cp3 unit (request TControls.Paused)
-    editorFrame' <- query' cp1 unit (request ElEdit.GetState)
+    editorFrame' <- query' cp1 unit (request ElEdit.GetFrame)
     let editorFrame = fromMaybe Nothing editorFrame'
     if pause == Just false
       then modify (\st -> st {time=st.time+1})

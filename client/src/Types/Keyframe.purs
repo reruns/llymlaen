@@ -21,6 +21,9 @@ newtype Keyframe = Keyframe { time :: Int, props :: Array Property }
 time :: Keyframe -> Int
 time (Keyframe k) = k.time
 
+setTime :: Int -> Keyframe -> Keyframe
+setTime t (Keyframe k) = Keyframe $ k {time=t}
+
 props :: Keyframe -> Array Property
 props (Keyframe k) = k.props
 

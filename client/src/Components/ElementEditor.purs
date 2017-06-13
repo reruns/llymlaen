@@ -10,6 +10,7 @@ import App.Helpers.Forms
 
 import Data.Maybe (Maybe(..), isJust, fromMaybe)
 import Data.Array (concat, mapWithIndex, updateAt, (!!))
+import Data.Either (Either(..))
 
 import Halogen as H
 import Halogen.HTML as HH
@@ -17,54 +18,67 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 
-type State = Maybe Keyframe
+type State = { frame  :: Maybe Keyframe
+             , locked :: Boolean
+             }
+             
 data Query a 
   = FormChange Int Property a 
   | HandleInput (Maybe Keyframe) a 
   | AddFrame a
-  | GetState (State -> a)
+  | LockFrame a
+  | GetFrame (Maybe Keyframe -> a)
   
-component :: forall m. H.Component HH.HTML Query State State m
+component :: forall m. H.Component HH.HTML Query (Maybe Keyframe) (Maybe Keyframe) m
 component =
   H.component
-    { initialState: const Nothing
+    { initialState: const {locked: false, frame: Nothing}
     , render
     , eval
     , receiver: HE.input HandleInput
     } where
   
   render :: State -> H.ComponentHTML Query
-  render Nothing = HH.div_ []
-  render (Just state) 
+  render {frame: Nothing} = HH.div_ []
+  render {frame: Just fr} 
     = HH.div [HP.id_ "el-editor"] $ 
-      ( concat $ mapWithIndex renderProp (props state)) 
+      ( concat $ mapWithIndex renderProp (props fr)) 
+      <> [ HH.button
+            [ HE.onClick $ HE.input_ LockFrame ]
+            [ HH.text "Lock" ]
+         ]
       <> [ HH.button 
             [ HE.onClick $ HE.input_ AddFrame ] 
             [ HH.text "Apply"]
          ]
     
-  eval :: forall m. Query ~> H.ComponentDSL State Query State m
+  eval :: forall m. Query ~> H.ComponentDSL State Query (Maybe Keyframe) m
   eval (HandleInput mbFrame next) = do
-    st <- H.get
-    when (not $ fromMaybe false $ (==) <$> mbFrame <*> st) $ H.put mbFrame
+    locked <- H.gets _.locked
+    if locked
+      then H.modify (\st -> st {frame = setTime <$> (time <$> mbFrame) <*> st.frame})
+      else H.modify (_ {frame = mbFrame})
     pure next
     
   eval (FormChange i prop next) = do
-    st <- H.get
-    let ps = fromMaybe [] $ props <$> st
+    fr <- H.gets _.frame
+    let ps = fromMaybe [] $ props <$> fr
     if isJust $ (recProp const prop) <$> (ps !! i) 
-      then do H.modify $ map (\(Keyframe f) -> Keyframe $ f {props = fromMaybe ps $ updateAt i prop ps})
+      then do H.modify $ (\st -> st {frame = map (\(Keyframe f) -> Keyframe $ f {props = fromMaybe ps $ updateAt i prop ps}) st.frame})
       else pure unit
     pure next
   
   eval (AddFrame next) = do
-    H.raise =<< H.get
+    H.raise =<< H.gets _.frame
     pure next
   
-  eval (GetState reply) = do
-    state <- H.get
-    pure (reply state)
+  eval (GetFrame reply) = do
+    frame <- H.gets _.frame
+    pure (reply frame)
     
+  eval (LockFrame next) = do
+    H.modify (\st -> st {locked= not st.locked})
+    pure next
 
 renderProp i (Enabled b)   = [checkBox [HP.title "enabled"]  b (FormChange i <<< Enabled)]
 renderProp i (Bordered b)  = [checkBox [HP.title "bordered"] b (FormChange i <<< Bordered)]
