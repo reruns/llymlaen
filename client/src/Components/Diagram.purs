@@ -9,6 +9,9 @@ import App.Components.TimeControls as TControls
 
 import App.Types.Element
 import App.Types.Keyframe
+import App.Types.Diag
+import App.Types.Point
+import App.Types.RGB
 
 import App.Helpers (pageX, pageY)
 
@@ -46,6 +49,12 @@ type State = { time :: Int
              , body :: Diag
              , targetIndex :: Int
              }
+             
+defaultState = { time: 0
+               , ctw: Nothing
+               , body: Diag {color: RGB {r:15,g:15,b:15}, elements: []}
+               , targetIndex: -1
+               }
    
 decodeResponse :: Json -> Either String Diag
 decodeResponse response = do
@@ -65,7 +74,7 @@ data Query a
   | Load String a
   | Tick a
   | SetTime Int a
-  | ModTarget (Maybe Element) a
+  | ModTarget (Maybe Keyframe) a
   | ClickCanvas Point a
  
 type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
@@ -86,15 +95,14 @@ diaComp = lifecycleParentComponent
   
   render :: State -> ParentHTML Query ChildQuery ChildSlot (UIEff eff)
   render st = let 
-    loc = st.targetIndex 
-    target = (\l -> l !! loc.idx) =<< (st.elements !! loc.layer) in
+    target = fromMaybe Nothing $ getFrame <$> ((getElements st.body) !! st.targetIndex) <*> (Just st.time) in
     HH.div_
       [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
       , HH.button [HE.onClick $ HE.input_ Save] [HH.text "Save"]
       , HH.span [ HP.id_ "center-col" ]
                 [ HH.canvas [ HP.id_ "canvas"
                             , HP.ref (RefLabel "cvs")
-                            , HE.onClick $ HE.input (\e -> ClickCanvas {x: pageX e, y: pageY e}) 
+                            , HE.onClick $ HE.input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
                             ]
                 , HH.slot' cp3 unit TControls.controls st.time (tcListener st.time)
                 ]
@@ -104,12 +112,13 @@ diaComp = lifecycleParentComponent
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
   eval (Tick next) = do
     pause <- query' cp3 unit (request TControls.Paused)
-    editorFrame <- query' cp1 unit (request ElEdit.GetState)
+    editorFrame' <- query' cp1 unit (request ElEdit.GetState)
+    let editorFrame = fromMaybe Nothing editorFrame'
     if pause == Just false
       then modify (\st -> st {time=st.time+1})
       else pure unit
     st <- get
-    let frames = mapWithIndex (\i e -> if i == st.targetIndex then editorFrame else getFrame st.time ) getElements st.body
+    let frames = mapWithIndex (\i e -> if i == st.targetIndex then editorFrame else getFrame e st.time ) $ getElements st.body
     case st.ctx of
       Just ctx -> liftEff $ runGraphics ctx $ do
                     setFillStyle $ show $ getColor st.body
@@ -153,13 +162,13 @@ diaComp = lifecycleParentComponent
     pos <- liftEff $ getOffset p e
     mode <- query' cp2 unit (request Toolbar.CheckClick)
     case fromMaybe Nothing mode of
-      Nothing -> modify (\st -> st {time = t, targetIndex = resolveTarget st.body pos } ) 
+      Nothing -> modify (\st -> st {time = t, targetIndex = resolveTarget st.body pos t} ) 
       Just Toolbar.CircB -> insertElem $ circBase t pos
       Just Toolbar.RectB -> insertElem $ rectBase t pos
       Just Toolbar.DnutB -> insertElem $ dnutBase t pos
     pure next
     where insertElem el = modify (\st -> st {body = addElement st.body el})
-          resolveTarget (Diag d) pos = fromMaybe -1 $ findIndex (flip overlap pos) $ map (flip getFrame t) d.elements
+          resolveTarget (Diag d) pos t = fromMaybe -1 $ findIndex (flip overlap pos) $ map (flip getFrame t) d.elements
      
   eval (ModTarget Nothing next) = do
     pure next
@@ -167,7 +176,7 @@ diaComp = lifecycleParentComponent
   eval (ModTarget (Just f) next) = do
     st <- get
     case modifyAt st.targetIndex (flip insertKey f) (getElements st.body) of
-      Just es -> modify $ _ {body=setElements body es}
+      Just es -> modify $ (\st -> st {body=setElements st.body es})
       Nothing -> pure unit
     pure next 
     

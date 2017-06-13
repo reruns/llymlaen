@@ -70,3 +70,6 @@ renderFrame (Keyframe {props}) =
       Nothing -> pure unit
       Just es -> sequence_ es
     restore
+    
+blankFrame :: Keyframe
+blankFrame = Keyframe { time: -1, props: [] }
