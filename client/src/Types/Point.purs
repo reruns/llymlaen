@@ -5,11 +5,9 @@ import Prelude
 import Data.Argonaut
 
 newtype Point = Point { x :: Int, y :: Int }
---getters
 getX (Point {x}) = x
 getY (Point {y}) = y
 
---setters
 setX (Point p) v = Point $ p {x=v}
 setY (Point p) v = Point $ p {y=v}
 

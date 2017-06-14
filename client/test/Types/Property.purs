@@ -1,14 +1,17 @@
-module Test.Property where
+module Test.Types.Property where
 
 import Prelude
 
-import App.Property
+import App.Types.Property
 import Test.Helpers
 
 import Data.Tuple
+import Data.Either (Either(..))
 import Data.Maybe (isJust, fromMaybe, Maybe(..))
 import Data.Array (length, (!!))
 import Data.Foldable (and)
+import Data.NonEmpty (NonEmpty(..))
+import Data.Argonaut (encodeJson, decodeJson)
 
 import Test.Unit
 import Test.Unit.QuickCheck (quickCheck)
@@ -19,15 +22,17 @@ import Test.QuickCheck.Gen
  
 tests = 
   suite "Property" do
-   test "reconciling" do
-     quickCheck sameSucceeds
-     quickCheck mismatchFails
-     quickCheck fIsApplied
+    test "reconciling" do
+      quickCheck sameSucceeds
+      quickCheck mismatchFails
+      quickCheck fIsApplied
+    test "JSON Instances" do
+      quickCheck jsonMatches
       
 
 data MatchProps = Match Property Property
 instance arbMatch :: Arbitrary MatchProps where
-  arbitrary = (\(Tuple a b) -> Match a b) <$> (oneOf (pairOf $ (pure $ Enabled false)) $ map pairOf propGens)
+  arbitrary = (\(Tuple a b) -> Match a b) <$> (oneOf $ NonEmpty (pairOf $ (pure $ Enabled false)) $ map pairOf propGens)
   
 sameSucceeds :: MatchProps -> Result
 sameSucceeds (Match a b) = (isJust $ recProp const a b)
@@ -39,7 +44,11 @@ fIsApplied (Match a b) = (and [ (Just a) == (recProp const a b)
                              ])
  <?> ("Reconciled properties don't look right.")
   
+jsonMatches :: Property -> Result
+jsonMatches p = ((Right p) == (decodeJson $ encodeJson p)) 
+  <?> "Encoded Json didn't appear to match original data"
   
+
 data MismatchProps = Mismatch Property Property
 instance arbMismatch :: Arbitrary MismatchProps where
   arbitrary = do 

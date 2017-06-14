@@ -1,10 +1,10 @@
-module Test.TimeControls where
+module Test.Components.TimeControls where
 
 import Prelude
 import Test.Unit
 import Test.Helpers
 
-controlsSpec =
+tests =
   suite "Time Controls" do
     test "Set Time" do
       notWritten
