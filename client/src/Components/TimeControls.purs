@@ -9,8 +9,8 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
-type State = { paused :: Boolean, time :: Int}
-initState = {paused: true, time: 0}
+type State = { paused :: Boolean, time :: Int, max :: Int}
+initState = {paused: true, time: 0, max: 1000}
 
 data Query a = SetTime Int a
              | TogglePlay a
@@ -29,7 +29,7 @@ controls = H.component
   render :: State -> H.ComponentHTML Query
   render st = 
     HH.div_ [ HH.button [HE.onClick $ HE.input_ TogglePlay ] [HH.text "Play"]
-            , slider [HP.title "time"] 0 1000 st.time SetTime
+            , slider [HP.title "time"] 0 st.max st.time SetTime
             , HH.h1_ [HH.text (show st.time)]
             ]
   
@@ -40,7 +40,10 @@ controls = H.component
     pure next
   
   eval (HandleInput t next) = do
-    H.modify ( _ {time = t} )
+    max <- H.gets _.max
+    if t <= max
+      then H.modify ( _ {time = t} )
+      else H.modify (_ {paused = true, time = max})
     pure next
     
   eval (TogglePlay next) = do

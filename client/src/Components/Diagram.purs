@@ -62,11 +62,6 @@ decodeResponse response = do
   str <- obj .? "body"
   bodyStr <- jsonParser str
   decodeJson bodyStr
-  
-encodeBody :: State -> Json
-encodeBody st =
-  "body" := st.body ~>
-  jsonEmptyObject
          
 data Query a 
   = Initialize a
@@ -128,7 +123,7 @@ diaComp = lifecycleParentComponent
     pure next
     
   eval (Save next) = do
-    st <- gets encodeBody
+    st <- gets (encodeJson <<< _.body)
     let pl = "body" := (show st) ~> jsonEmptyObject
     response <- liftAff $ (AX.post "/api/diagrams/" pl :: AX.Affjax _ Json)
     pure next

@@ -31,7 +31,7 @@ instance encodeDiag :: EncodeJson Diag where
 instance decodeDiag :: DecodeJson Diag where
   decodeJson json = do
     obj <- decodeJson json
-    color <- obj .? "color"
+    color <- obj .? "Color"
     elements <- obj .? "Elements"
     pure $ Diag {color,elements}
   
