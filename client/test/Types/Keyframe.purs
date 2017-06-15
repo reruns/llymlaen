@@ -8,16 +8,13 @@ import Test.Unit
 import Test.Unit.QuickCheck
 import Test.Helpers
 import Test.QuickCheck (Result(), (<?>))
+import Test.QuickCheck.Gen (suchThat)
 
 import Data.Either(Either(..))
 import Data.Argonaut(decodeJson, encodeJson)
 
 tests = 
   suite "Keyframe" do
-    test "Reconciling" do
-      notWritten
-    test "Overlap" do
-      notWritten
     test "Json Instances" do
       quickCheck jsonMatches
       

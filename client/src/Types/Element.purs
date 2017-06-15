@@ -8,8 +8,8 @@ import App.Types.Point
 
 import Data.Argonaut
 
-import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
-import Data.Array (insertBy, (!!), updateAt, findIndex, findLastIndex, zipWith, length)
+import Data.Maybe (Maybe(Just, Nothing), fromMaybe, isJust)
+import Data.Array (insertBy, (!!), updateAt, findIndex, findLastIndex, zipWith, length, sort)
 import Data.Foldable (and)
 import Data.Int (toNumber)
 import Data.Ord (comparing)
@@ -17,11 +17,15 @@ import Data.Ord (comparing)
 import Graphics.Canvas.Free
 
 import Test.QuickCheck(class Arbitrary, arbitrary)
+import Test.QuickCheck.Gen
 
 newtype Element = Element { layer :: Int, keys :: Array Keyframe }
 
 getLayer :: Element -> Int
 getLayer (Element e) = e.layer
+
+getKeys :: Element -> Array Keyframe
+getKeys (Element e) = e.keys
 
 instance encodeElement :: EncodeJson Element where
   encodeJson (Element el) =
@@ -43,7 +47,8 @@ instance eqElement :: Eq Element where
 
 instance arbElement :: Arbitrary Element where
   arbitrary = (\layer keys -> Element {layer,keys}) <$> arbitrary <*> arbitrary
-
+  
+  
 insertKey :: Element -> Keyframe -> Element
 insertKey (Element el) k = 
   case findIndex (\a -> time a == time k) el.keys of

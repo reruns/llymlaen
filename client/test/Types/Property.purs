@@ -8,8 +8,8 @@ import Test.Helpers
 import Data.Tuple
 import Data.Either (Either(..))
 import Data.Maybe (isJust, fromMaybe, Maybe(..))
-import Data.Array (length, (!!))
-import Data.Foldable (and)
+import Data.Array (length, (!!), head, tail)
+import Data.Foldable (and, foldr)
 import Data.NonEmpty (NonEmpty(..))
 import Data.Argonaut (encodeJson, decodeJson)
 
