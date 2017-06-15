@@ -16,6 +16,8 @@ import Data.Ord (comparing)
 
 import Graphics.Canvas.Free
 
+import Test.QuickCheck(class Arbitrary, arbitrary)
+
 newtype Element = Element { layer :: Int, keys :: Array Keyframe }
 
 getLayer :: Element -> Int
@@ -38,6 +40,9 @@ instance eqElement :: Eq Element where
   eq (Element a) (Element b) = 
     (a.layer == b.layer) && 
     (and $ zipWith eq a.keys b.keys)
+
+instance arbElement :: Arbitrary Element where
+  arbitrary = (\layer keys -> Element {layer,keys}) <$> arbitrary <*> arbitrary
 
 insertKey :: Element -> Keyframe -> Element
 insertKey (Element el) k = 

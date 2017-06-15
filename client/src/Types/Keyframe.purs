@@ -11,8 +11,9 @@ import Data.Array (zipWith)
 import Data.Foldable (foldl)
 import Data.Traversable (sequence, sequence_)
 import Data.Argonaut
-
 import Math (pi, sqrt, pow, sin, cos)
+
+import Test.QuickCheck(class Arbitrary, arbitrary)
 
 import Graphics.Canvas.Free
 
@@ -42,6 +43,9 @@ instance decodeFrame :: DecodeJson Keyframe where
   
 instance eqFrame :: Eq Keyframe where
   eq (Keyframe a) (Keyframe b) = ( a.time == b.time ) && ( a.props == b.props ) 
+  
+instance arbFrame :: Arbitrary Keyframe where
+  arbitrary = (\t ps -> Keyframe {time:t,props:ps}) <$> arbitrary <*> arbitrary
   
 --consider name change: interpolate?
 reconcile :: Keyframe -> Keyframe -> Int -> Keyframe

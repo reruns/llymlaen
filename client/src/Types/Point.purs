@@ -3,6 +3,7 @@ module App.Types.Point where
 import Prelude
 
 import Data.Argonaut
+import Test.QuickCheck (class Arbitrary, arbitrary)
 
 newtype Point = Point { x :: Int, y :: Int }
 getX (Point {x}) = x
@@ -29,3 +30,6 @@ instance decodePoint :: DecodeJson Point where
     
 instance eqPoint :: Eq Point where
   eq (Point a) (Point b) = a.x == b.x && a.y == b.y
+  
+instance arbPoint :: Arbitrary Point where
+  arbitrary = (\x y -> Point {x,y}) <$> arbitrary <*> arbitrary

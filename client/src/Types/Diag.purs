@@ -6,8 +6,9 @@ import App.Types.RGB
 import App.Types.Element
 
 import Data.Array (insertBy)
-
 import Data.Argonaut
+
+import Test.QuickCheck(class Arbitrary, arbitrary)
 
 newtype Diag = Diag { color :: RGB
                     , elements :: Array Element
@@ -35,6 +36,10 @@ instance decodeDiag :: DecodeJson Diag where
     elements <- obj .? "Elements"
     pure $ Diag {color,elements}
   
+instance arbDiag :: Arbitrary Diag where
+  arbitrary = (\color elements -> Diag {color,elements}) <$> arbitrary <*> arbitrary
+  
+derive instance eqDiag :: Eq Diag
   
 addElement :: Diag -> Element -> Diag
 addElement (Diag d) el = Diag (d {elements = insertBy (comparing getLayer) el d.elements})

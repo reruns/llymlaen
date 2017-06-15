@@ -4,7 +4,8 @@ import Prelude
 
 import Data.Int (toStringAs, hexadecimal)
 import Data.String (joinWith)
-
+import Test.QuickCheck.Gen (chooseInt)
+import Test.QuickCheck(class Arbitrary)
 import Data.Argonaut
 
 newtype RGB = RGB { r :: Int, g :: Int, b :: Int }
@@ -41,3 +42,7 @@ decodeJson json = do
   
 instance eqRGB :: Eq RGB where
   eq (RGB c1) (RGB c2) = c1.r == c2.r && c1.g == c2.g && c1.b == c2.b
+  
+instance arbRGB :: Arbitrary RGB where
+  arbitrary = let range = chooseInt 0 255 in
+    (\r g b -> RGB {r,g,b}) <$> range <*> range <*> range
