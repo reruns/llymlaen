@@ -14,8 +14,6 @@ import Data.Argonaut(decodeJson, encodeJson)
 
 tests = 
   suite "Diagram" do
-    test "Add an Element" do
-      notWritten
     test "JSON Instances" do
       quickCheck jsonMatches
       
