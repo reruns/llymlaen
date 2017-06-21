@@ -140,7 +140,7 @@ diaComp = lifecycleParentComponent
   eval (Load id next) = do
     response <- liftAff $ (AX.get ("/api/diagrams/" <> id) :: AX.Affjax _ Json)
     case decodeResponse response.response of
-      Right b -> modify (_ {body=b})
+      Right b -> modify (_ {body=b, time=0})
       Left  s -> liftEff $ log s
     pure next
     

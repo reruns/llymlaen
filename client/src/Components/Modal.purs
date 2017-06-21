@@ -28,10 +28,11 @@ component = H.component
     let outerClasses = HH.ClassName <$> (if isJust st then ["modal"] else ["modal","off"])
         text  = fromMaybe "" st in
     HH.div [HP.classes outerClasses] 
-      [ HH.span [HP.class_ $ HH.ClassName "close"] 
-          [ HH.text "X"]
-      , HH.div [HP.class_ $ HH.ClassName "modal-content"] 
-          [ HH.text text]
+      [ HH.div [HP.class_ $ HH.ClassName "modal-content"] 
+          [ HH.div_ [ HH.text text ]
+          , HH.button [HE.onClick $ HE.input_ Close] 
+              [ HH.text "OK" ]
+          ]
       ]
   
   eval :: forall m. Query ~> H.ComponentDSL State Query Void m
