@@ -27,6 +27,10 @@ span {
   display: inline-block;
 }
 
+button.disabled {
+  color: #999;
+}
+
 .modal {
   position: fixed;
   z-index: 1;

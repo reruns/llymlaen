@@ -50,12 +50,14 @@ type State = { time :: Int
              , ctx :: Maybe Context2D
              , body :: Diag
              , targetIndex :: Int
+             , saving :: Boolean
              }
              
 defaultState = { time: 0
                , ctx: Nothing
                , body: Diag {color: RGB {r:15,g:15,b:15}, elements: []}
                , targetIndex: -1
+               , saving: false
                }
    
 decodeResponse :: Json -> Either String Diag
@@ -96,7 +98,9 @@ diaComp = lifecycleParentComponent
     HH.div_
       [ HH.div  [ HP.id_ "diag-editing"]
                 [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
-                , HH.button [HP.id_ "save-button", HE.onClick $ HE.input_ Save] [HH.text "Save"]
+                , if st.saving 
+                    then HH.button [HP.id_ "save-button", HP.class_ (HH.ClassName "disabled")] [HH.text "Saving..."]
+                    else HH.button [HP.id_ "save-button", HE.onClick $ HE.input_ Save] [HH.text "Save"]
                 ]
       , HH.span [ HP.id_ "center-col" ]
                 [ HH.canvas [ HP.id_ "canvas"
@@ -129,12 +133,14 @@ diaComp = lifecycleParentComponent
     
   eval (Save next) = do
     st <- gets (encodeJson <<< _.body)
+    modify $ _ {saving = true}
     let pl = "body" := (show st) ~> jsonEmptyObject
     response <- liftAff $ (AX.post "/api/diagrams/" pl :: AX.Affjax _ Json)
     when (response.status == StatusCode 200) $ do
       let idStr = "Saved! The ID for this diagram is " <> show response.response
       _ <- query' cp4 unit (request (Modal.SetString idStr))
       pure unit
+    modify $ _ { saving = false }
     pure next
     
   eval (Load id next) = do
