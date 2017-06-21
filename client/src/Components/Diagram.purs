@@ -24,8 +24,8 @@ import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 import Data.Either (Either(..))
 import Data.Int (round)
 
-import Data.Either.Nested (Either3)
-import Data.Functor.Coproduct.Nested (Coproduct3)
+import Data.Either.Nested (Either4)
+import Data.Functor.Coproduct.Nested (Coproduct4)
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (log, CONSOLE)
@@ -36,6 +36,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Network.HTTP.Affjax as AX
+import Network.HTTP.StatusCode
 
 import DOM (DOM)
 import DOM.HTML (window)
@@ -73,8 +74,8 @@ data Query a
   | ModTarget (Maybe Keyframe) a
   | ClickCanvas Point a
  
-type ChildQuery = Coproduct3 ElEdit.Query Toolbar.Query TControls.Query
-type ChildSlot = Either3 Unit Unit Unit
+type ChildQuery = Coproduct4 ElEdit.Query Toolbar.Query TControls.Query Modal.Query
+type ChildSlot = Either4 Unit Unit Unit Unit
 
 type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE, dom :: DOM, ajax :: AX.AJAX | eff)
     
@@ -105,7 +106,7 @@ diaComp = lifecycleParentComponent
                 , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
                 ]
       , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget)
-      , 
+      , HH.slot' cp4 unit Modal.component unit absurd
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
@@ -130,6 +131,10 @@ diaComp = lifecycleParentComponent
     st <- gets (encodeJson <<< _.body)
     let pl = "body" := (show st) ~> jsonEmptyObject
     response <- liftAff $ (AX.post "/api/diagrams/" pl :: AX.Affjax _ Json)
+    when (response.status == StatusCode 200) $ do
+      let idStr = "Saved! The ID for this diagram is " <> show response.response
+      _ <- query' cp4 unit (request (Modal.SetString idStr))
+      pure unit
     pure next
     
   eval (Load id next) = do
