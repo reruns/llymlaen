@@ -6,6 +6,7 @@ import App.Element.Presets (circBase, dnutBase, rectBase)
 import App.Components.ElementEditor as ElEdit
 import App.Components.Toolbar as Toolbar
 import App.Components.TimeControls as TControls
+import App.Components.Modal as Modal
 
 import App.Types.Element
 import App.Types.Keyframe
@@ -30,7 +31,7 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (log, CONSOLE)
 
 import Halogen
-import Halogen.Component.ChildPath (cp1, cp2, cp3)
+import Halogen.Component.ChildPath (cp1, cp2, cp3, cp4)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
@@ -92,8 +93,10 @@ diaComp = lifecycleParentComponent
   render st = let 
     target = fromMaybe Nothing $ getFrame <$> ((getElements st.body) !! st.targetIndex) <*> (Just st.time) in
     HH.div_
-      [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
-      , HH.button [HE.onClick $ HE.input_ Save] [HH.text "Save"]
+      [ HH.div  [ HP.id_ "diag-editing"]
+                [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
+                , HH.button [HP.id_ "save-button", HE.onClick $ HE.input_ Save] [HH.text "Save"]
+                ]
       , HH.span [ HP.id_ "center-col" ]
                 [ HH.canvas [ HP.id_ "canvas"
                             , HP.ref (RefLabel "cvs")
@@ -102,6 +105,7 @@ diaComp = lifecycleParentComponent
                 , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
                 ]
       , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget)
+      , 
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
@@ -144,7 +148,7 @@ diaComp = lifecycleParentComponent
     case cv of
       Nothing -> pure next
       Just canvas -> do
-          _ <- liftEff $ setCanvasDimensions {width: 800.0, height: 800.0} canvas
+          _ <- liftEff $ setCanvasDimensions {width: 600.0, height: 600.0} canvas
           context <- liftEff $ getContext2D canvas
           modify (\state -> state { ctx = Just context })
           pure next
