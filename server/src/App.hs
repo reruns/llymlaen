@@ -12,11 +12,15 @@ import Control.Monad.Logger (runStderrLoggingT)
 
 import Data.String.Conversions
 import Data.Int
+import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy as BS
+import Text.Read (readMaybe)
 
 import Database.Persist
 import Database.Persist.Sql
 import Database.Persist.Postgresql
+
+import System.Environment
 
 import Network.Wai
 import Network.Wai.Handler.Warp as Warp
@@ -64,4 +68,7 @@ mkApp pgFile = do
   return $ app pool
   
 run :: FilePath -> IO ()
-run pgFile = Warp.run 3000 =<< mkApp pgFile
+run pgFile = do 
+  portVar <- lookupEnv "PORT"
+  let port = fromMaybe 3000 $ readMaybe =<< portVar :: Int
+  Warp.run port =<< mkApp pgFile

@@ -1,1 +1,1 @@
-web: node node_modules/gulp/bin/gulp exec
+web: stack exec server
