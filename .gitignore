@@ -11,3 +11,4 @@
 /src/examples/
 assets/bundle.js
 .stack-work/
+.env

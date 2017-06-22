@@ -38,4 +38,8 @@ gulp.task("test", ["purs"], function() {
   
 });
 
+gulp.task("exec",["bundle"], function() {
+  return run("stack exec server")
+}
+
 gulp.task("default", ["bundle"]);
