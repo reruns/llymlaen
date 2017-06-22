@@ -1,1 +1,1 @@
-web: stack exec server
+web: server
