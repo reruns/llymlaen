@@ -6,6 +6,9 @@
   "directories": {
     "test": "test"
   },
+  "engines": {
+    "node": "6.9.4"
+  },
   "scripts": {
     "test": "purs test --src-path scripts/src -o scripts/output --test-path scripts/test",
     "bundle": "purs bundle scripts/src -o scripts/output/bundle.js",
