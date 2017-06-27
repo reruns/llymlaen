@@ -28,7 +28,12 @@ toolbar = H.component
   
   render :: State -> H.ComponentHTML Query
   render st =
-    HH.span_ $ [ HH.h2_ [ HH.text "Add an Element"] ] <> elemButtons 
+    HH.span [HP.id_ "toolbar"] $ 
+      [ HH.h2_ 
+        [ 
+          HH.text "Add an Element"
+        ] 
+      ] <> elemButtons 
     where
     active = map HH.ClassName ["a-button","active"]
     inactive = map HH.ClassName ["a-button"] 

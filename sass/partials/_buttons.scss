@@ -23,6 +23,6 @@ a.a-button:hover {
 }
 
 a.a-button.active {
-  background-color: lighten($primary,15%);
-  color: $accent
+  background-color: $accent;
+  color: $accent-text;
 }

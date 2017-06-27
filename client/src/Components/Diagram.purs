@@ -55,7 +55,7 @@ type State = { time :: Int
              
 defaultState = { time: 0
                , ctx: Nothing
-               , body: Diag {color: RGB {r:15,g:15,b:15}, elements: []}
+               , body: Diag {color: RGB {r:255,g:255,b:255}, elements: []}
                , targetIndex: -1
                , saving: false
                }
