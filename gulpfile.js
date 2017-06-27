@@ -4,7 +4,7 @@ var gulp = require("gulp");
 var purescript = require("gulp-purescript");
 var run = require("gulp-run");
 var sass = require('gulp-sass');
-var concat = require('gulp-concat');
+var rename = require('gulp-rename');
 var cleanCSS = require('gulp-clean-css');
 
 var sources = [
@@ -42,10 +42,10 @@ gulp.task("test", ["purs"], function() {
 });
 
 gulp.task('build-css', function() { 
-  return gulp.src('sass/**/*.scss')
-  .pipe(concat('app.css'))
+  return gulp.src('sass/main.scss')
   .pipe(sass({outputStyle: 'compressed'}).on('error',sass.logError))
   .pipe(cleanCSS())
+  .pipe(rename("app.css"))
   .pipe(gulp.dest('assets'));
 });
 
