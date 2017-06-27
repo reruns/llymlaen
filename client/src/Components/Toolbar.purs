@@ -28,10 +28,10 @@ toolbar = H.component
   
   render :: State -> H.ComponentHTML Query
   render st = 
-    HH.span_ [ HH.button [ HE.onClick $ HE.input_ $ Press CircB ] [ HH.text "Circle" ]
+    HH.span_ [ HH.h1_    [ HH.text "Add an Element"]
+             , HH.button [ HE.onClick $ HE.input_ $ Press CircB ] [ HH.text "Circle" ]
              , HH.button [ HE.onClick $ HE.input_ $ Press RectB ] [ HH.text "Rectangle" ]
              , HH.button [ HE.onClick $ HE.input_ $ Press DnutB ] [ HH.text "Donut" ]
-             , HH.h1_    [ HH.text $ if isJust st then "Add" else "Select"]
              ]
   
   eval :: forall m. Query ~> H.ComponentDSL State Query Void m

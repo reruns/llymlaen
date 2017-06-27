@@ -1,0 +1,10 @@
+#el-editor {
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: top;
+  width: 250px;
+}
+
+#el-editor > * {
+  display: block;
+}
