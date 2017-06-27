@@ -27,12 +27,16 @@ toolbar = H.component
   where
   
   render :: State -> H.ComponentHTML Query
-  render st = 
-    HH.span_ [ HH.h1_    [ HH.text "Add an Element"]
-             , HH.button [ HE.onClick $ HE.input_ $ Press CircB ] [ HH.text "Circle" ]
-             , HH.button [ HE.onClick $ HE.input_ $ Press RectB ] [ HH.text "Rectangle" ]
-             , HH.button [ HE.onClick $ HE.input_ $ Press DnutB ] [ HH.text "Donut" ]
-             ]
+  render st =
+    HH.span_ $ [ HH.h2_ [ HH.text "Add an Element"] ] <> elemButtons 
+    where
+    active = map HH.ClassName ["a-button","active"]
+    inactive = map HH.ClassName ["a-button"] 
+    elemButtons = map (\{b,t} -> 
+      HH.a [ HP.classes $ if st==Just b then active else inactive 
+           , HE.onClick $ HE.input_ $ Press b ] 
+           [ HH.text t ]) 
+      [{b:CircB,t:"Circle"},{b:RectB,t:"Rectangle"},{b:DnutB,t:"Donut"}]
   
   eval :: forall m. Query ~> H.ComponentDSL State Query Void m
   eval (Press b next) = do

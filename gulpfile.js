@@ -49,4 +49,4 @@ gulp.task('build-css', function() {
   .pipe(gulp.dest('assets'));
 });
 
-gulp.task("default", ["bundle","sass"]);
+gulp.task("default", ["bundle","build-css"]);

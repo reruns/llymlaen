@@ -45,12 +45,12 @@ component =
   render {frame: Just fr} 
     = HH.div [HP.id_ "el-editor"] $ 
       ( concat $ mapWithIndex renderProp (props fr)) 
-      <> [ HH.button
-            [ HE.onClick $ HE.input_ LockFrame ]
+      <> [ HH.a
+            [ HE.onClick $ HE.input_ LockFrame, HP.class_ $ HH.ClassName "a-button" ]
             [ HH.text "Lock" ]
          ]
-      <> [ HH.button 
-            [ HE.onClick $ HE.input_ AddFrame ] 
+      <> [ HH.a
+            [ HE.onClick $ HE.input_ AddFrame, HP.class_ $ HH.ClassName "a-button" ] 
             [ HH.text "Apply"]
          ]
     

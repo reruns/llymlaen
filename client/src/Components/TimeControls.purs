@@ -28,7 +28,7 @@ controls = H.component
   
   render :: State -> H.ComponentHTML Query
   render st = 
-    HH.div_ [ HH.button [HE.onClick $ HE.input_ TogglePlay ] [HH.text "Play"]
+    HH.div_ [ HH.a [HE.onClick $ HE.input_ TogglePlay, HP.class_ $ HH.ClassName "a-button" ] [HH.text "Play"]
             , slider [HP.title "time"] 0 st.max st.time SetTime
             , HH.h1_ [HH.text (show st.time)]
             ]

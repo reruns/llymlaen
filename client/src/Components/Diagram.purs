@@ -99,8 +99,8 @@ diaComp = lifecycleParentComponent
       [ HH.div  [ HP.id_ "diag-editing"]
                 [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
                 , if st.saving 
-                    then HH.button [HP.id_ "save-button", HP.class_ (HH.ClassName "disabled")] [HH.text "Saving..."]
-                    else HH.button [HP.id_ "save-button", HE.onClick $ HE.input_ Save] [HH.text "Save"]
+                    then HH.a [HP.id_ "save-button", HP.classes $ map HH.ClassName ["a-button","disabled", "active"]] [HH.text "Saving..."]
+                    else HH.a [HP.id_ "save-button", HP.classes $ map HH.ClassName ["a-button"], HE.onClick $ HE.input_ Save] [HH.text "Save"]
                 ]
       , HH.span [ HP.id_ "center-col" ]
                 [ HH.canvas [ HP.id_ "canvas"

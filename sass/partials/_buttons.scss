@@ -2,6 +2,27 @@
   display: block;
 }
 
-button.disabled {
-  color: #999;
+a.a-button {
+  background-color: $primary;
+  padding: 5px;
+  width: 60px;
+  user-select: none;
+  margin: 0 5px;
+  border-radius: 10%;
+  color: white;
+  text-align: center;
+  font: {
+    weight: bold;
+    family: sans-serif;
+  }
+}
+
+a.a-button:hover {
+  background-color: lighten($primary, 15%);
+  cursor: pointer;
+}
+
+a.a-button.active {
+  background-color: lighten($primary,15%);
+  color: $accent
 }

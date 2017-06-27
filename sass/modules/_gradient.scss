@@ -1,0 +1,7 @@
+@mixin udGradient($top, $bot) {
+    background: $top;
+    background: -webkit-linear-gradient($top, $bot);
+    background: -o-linear-gradient($top, $bot);
+    background: -moz-linear-gradient($top, $bot);
+    background: linear-gradient($top, $bot);
+}
