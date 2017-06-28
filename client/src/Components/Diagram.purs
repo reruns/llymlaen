@@ -2,7 +2,6 @@ module App.Components.Diagram where
 
 import Prelude
 
-import App.Element.Presets (circBase, dnutBase, rectBase)
 import App.Components.ElementEditor as ElEdit
 import App.Components.Toolbar as Toolbar
 import App.Components.TimeControls as TControls
@@ -50,14 +49,14 @@ type State = { time :: Int
              , ctx :: Maybe Context2D
              , body :: Diag
              , targetIndex :: Int
-             , saving :: Boolean
+             , stagedEl :: Maybe (Int -> Point -> Element)
              }
              
 defaultState = { time: 0
                , ctx: Nothing
                , body: Diag {color: RGB {r:255,g:255,b:255}, elements: []}
                , targetIndex: -1
-               , saving: false
+               , stagedEl: Nothing
                }
    
 decodeResponse :: Json -> Either String Diag
@@ -69,11 +68,11 @@ decodeResponse response = do
          
 data Query a 
   = Initialize a
-  | Save a
   | Load String a
   | Tick a
   | SetTime Int a
   | ModTarget (Maybe Keyframe) a
+  | HandleTB Toolbar.Message a
   | ClickCanvas Point a
  
 type ChildQuery = Coproduct4 ElEdit.Query Toolbar.Query TControls.Query Modal.Query
@@ -96,12 +95,7 @@ diaComp = lifecycleParentComponent
   render st = let 
     target = fromMaybe Nothing $ getFrame <$> ((getElements st.body) !! st.targetIndex) <*> (Just st.time) in
     HH.div_
-      [ HH.div  [ HP.id_ "diag-editing"]
-                [ HH.slot' cp2 unit Toolbar.toolbar unit absurd
-                , if st.saving 
-                    then HH.a [HP.id_ "save-button", HP.classes $ map HH.ClassName ["a-button","disabled", "active"]] [HH.text "Saving..."]
-                    else HH.a [HP.id_ "save-button", HP.classes $ map HH.ClassName ["a-button"], HE.onClick $ HE.input_ Save] [HH.text "Save"]
-                ]
+      [ HH.slot' cp2 unit Toolbar.toolbar unit (HE.input HandleTB)
       , HH.span [ HP.id_ "center-col" ]
                 [ HH.canvas [ HP.id_ "canvas"
                             , HP.ref (RefLabel "cvs")
@@ -130,17 +124,21 @@ diaComp = lifecycleParentComponent
                     traverse_ (renderFrame <<< fromMaybe blankFrame) frames
       Nothing  -> pure unit
     pure next
+  
+  eval (HandleTB (Toolbar.Insert el) next) = do
+    modify $ _ {stagedEl = Just el}
+    pure next
     
-  eval (Save next) = do
+  eval (HandleTB (Toolbar.Save) next) = do
     st <- gets (encodeJson <<< _.body)
-    modify $ _ {saving = true}
+    _ <- query' cp2 unit (request (Toolbar.SetState true))
     let pl = "body" := (show st) ~> jsonEmptyObject
     response <- liftAff $ (AX.post "/api/diagrams/" pl :: AX.Affjax _ Json)
     when (response.status == StatusCode 200) $ do
       let idStr = "Saved! The ID for this diagram is " <> show response.response
       _ <- query' cp4 unit (request (Modal.SetString idStr))
       pure unit
-    modify $ _ { saving = false }
+    _ <- query' cp2 unit (request (Toolbar.SetState false))
     pure next
     
   eval (Load id next) = do
@@ -163,23 +161,18 @@ diaComp = lifecycleParentComponent
           context <- liftEff $ getContext2D canvas
           modify (\state -> state { ctx = Just context })
           pure next
-    
-  --this isn't ideal, but we can't look at the toolbar's state outside of eval
-  --so the other option is replicating the state on the diagram, which I like less
+
   eval (ClickCanvas p next) = do
     t <- gets _.time
     e <- getHTMLElementRef (RefLabel "cvs")
     pos <- liftEff $ getOffset p e
-    mode <- query' cp2 unit (request Toolbar.CheckClick)
     locked <- query' cp1 unit (request ElEdit.IsLocked)
-    case fromMaybe Nothing mode of
-      Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t} ) 
-      Just Toolbar.CircB -> insertElem $ circBase t pos
-      Just Toolbar.RectB -> insertElem $ rectBase t pos
-      Just Toolbar.DnutB -> insertElem $ dnutBase t pos
+    stagedEl <- gets _.stagedEl
+    case stagedEl of
+      Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t} )
+      Just el -> modify (\st -> st {body = addElement st.body (el t pos)})
     pure next
-    where insertElem el = modify (\st -> st {body = addElement st.body el})
-          resolveTarget (Diag d) pos t = fromMaybe (-1) $ 
+    where resolveTarget (Diag d) pos t = fromMaybe (-1) $ 
             findIndex (\mf -> fromMaybe false $ flip overlap pos <$> mf) $ 
             map (flip getFrame t) d.elements
      
