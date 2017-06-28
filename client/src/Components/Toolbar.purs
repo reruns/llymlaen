@@ -43,7 +43,8 @@ toolbar = H.component
               , HH.a [HE.onClick $ HE.input_ InsertDnut] [HH.text "Donut"]
               ]            
           ]
-      , HH.a [HE.onClick $ HE.input_ ReqSave] [HH.text (if st then "Saving..." else "Share")]    
+      , HH.a [ HE.onClick $ HE.input_ ReqSave ] 
+             [ HH.text (if st then "Saving..." else "Share") ]    
       ] 
   
   eval :: forall m. Query ~> H.ComponentDSL State Query Message m

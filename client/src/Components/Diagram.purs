@@ -170,7 +170,7 @@ diaComp = lifecycleParentComponent
     stagedEl <- gets _.stagedEl
     case stagedEl of
       Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t} )
-      Just el -> modify (\st -> st {body = addElement st.body (el t pos)})
+      Just el -> modify (\st -> st {body = addElement st.body (el t pos), stagedEl = Nothing})
     pure next
     where resolveTarget (Diag d) pos t = fromMaybe (-1) $ 
             findIndex (\mf -> fromMaybe false $ flip overlap pos <$> mf) $ 
