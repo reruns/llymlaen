@@ -3,33 +3,51 @@
   background-color: black;
   font-family: sans-serif;
   color: white;
-  cursor: pointer;
-}
-
-#toolbar > a, #toolbar .dropbtn {
-  display: inline-flex;
-  border-left: 1px solid white;
-  padding: 10px;
-  
-  &:hover {
-    background-color: #ccc
+  #home-link { 
+    background: {
+      image: url("../assets/llym_logo.gif");
+      repeat: no-repeat;
+      size: 30px 30px;
+    }
+    padding: 0;
+    margin: 0;
+    min-width: 30px;
+    min-height: 30px;
   }
-}
-
-#toolbar > .dropdown, #toolbar > .dropdown * {
-}
-
-#toolbar .dropdown-content {
-  text-align: center;
-  min-width: 134px;
-  background-color: black;
-}
-
-#toolbar .dropdown-content a {
-  display: block;
-  padding: 10px 0;
   
-  &:hover {
-    background-color: #ccc;
+  #tools {
+    display: inline-block;
+    margin-left: 300px;
+    
+    &>a {
+      margin-left: 40px;
+    }
+  }
+  
+  
+  a, .dropbtn {
+    vertical-align: middle;
+    cursor: pointer;
+    display: inline-flex;
+    padding: 8px 10px 0;
+  
+    &:hover {
+      background-color: #ccc
+    }
+  }
+  
+  .dropdown-content {
+    text-align: center;
+    min-width: 134px;
+    background-color: black;
+    
+    a {
+      display: block;
+      padding: 10px 0;
+      
+      &:hover {
+        background-color: #ccc;
+      }
+    }
   }
 }

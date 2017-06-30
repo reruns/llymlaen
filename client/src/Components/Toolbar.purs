@@ -34,17 +34,19 @@ toolbar = H.component
   render :: State -> H.ComponentHTML Query
   render st =
     HH.span [HP.id_ "toolbar"] $ 
-      [ HH.a [] [HH.text "Llymlaen"]
-      , HH.div [HP.class_ $ HH.ClassName "dropdown"] 
+      [ HH.a [HP.id_ "home-link"] []
+      , HH.div [HP.id_ "tools"] 
+        [ HH.div [HP.class_ $ HH.ClassName "dropdown"] 
           [ HH.a [HP.class_ $ HH.ClassName "dropbtn"] [ HH.text "Add an Element" ]
           , HH.div [HP.class_ $ HH.ClassName "dropdown-content"] 
-              [ HH.a [HE.onClick $ HE.input_ InsertCirc] [HH.text "Circle"]
-              , HH.a [HE.onClick $ HE.input_ InsertRect] [HH.text "Rectangle"]
-              , HH.a [HE.onClick $ HE.input_ InsertDnut] [HH.text "Donut"]
-              ]            
+            [ HH.a [HE.onClick $ HE.input_ InsertCirc] [HH.text "Circle"]
+            , HH.a [HE.onClick $ HE.input_ InsertRect] [HH.text "Rectangle"]
+            , HH.a [HE.onClick $ HE.input_ InsertDnut] [HH.text "Donut"]
+            ]            
           ]
-      , HH.a [ HE.onClick $ HE.input_ ReqSave ] 
-             [ HH.text (if st then "Saving..." else "Share") ]    
+        , HH.a [ HE.onClick $ HE.input_ ReqSave ] 
+          [ HH.text (if st then "Saving..." else "Share") ]   
+        ] 
       ] 
   
   eval :: forall m. Query ~> H.ComponentDSL State Query Message m
