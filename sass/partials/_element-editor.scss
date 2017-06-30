@@ -5,6 +5,10 @@
   width: 250px;
 }
 
+#el-editor.off {
+  display: none;
+}
+
 #el-editor > * {
   display: block;
 }

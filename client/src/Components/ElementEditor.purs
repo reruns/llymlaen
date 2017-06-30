@@ -41,7 +41,7 @@ component =
     } where
   
   render :: State -> H.ComponentHTML Query
-  render {frame: Nothing} = HH.div_ []
+  render {frame: Nothing} = HH.div [ HP.id_ "el-editor", HP.class_ $ HH.ClassName "off" ] []
   render {frame: Just fr} 
     = HH.div [HP.id_ "el-editor"] $ 
       ( concat $ mapWithIndex renderProp (props fr)) 

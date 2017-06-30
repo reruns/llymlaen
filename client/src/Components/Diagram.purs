@@ -97,13 +97,13 @@ diaComp = lifecycleParentComponent
     HH.div_
       [ HH.slot' cp2 unit Toolbar.toolbar unit (HE.input HandleTB)
       , HH.span [ HP.id_ "center-col" ]
-                [ HH.canvas [ HP.id_ "canvas"
-                            , HP.ref (RefLabel "cvs")
-                            , HE.onClick $ HE.input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
-                            ]
-                , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
-                ]
-      , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget)
+        [ HH.canvas [ HP.id_ "canvas"
+                    , HP.ref (RefLabel "cvs")
+                    , HE.onClick $ HE.input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
+                    ]
+        , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget)
+        , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
+        ]
       , HH.slot' cp4 unit Modal.component unit absurd
       ]
       
