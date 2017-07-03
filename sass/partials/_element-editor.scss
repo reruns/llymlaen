@@ -3,12 +3,12 @@
   margin-left: 10px;
   vertical-align: top;
   width: 250px;
-}
-
-#el-editor.off {
-  display: none;
-}
-
-#el-editor > * {
-  display: block;
+  
+  &.off {
+    display: none;
+  }
+  
+  & > * {
+    display: block;
+  }
 }
