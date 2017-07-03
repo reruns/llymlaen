@@ -57,9 +57,12 @@ component =
   eval :: forall m. Query ~> H.ComponentDSL State Query (Maybe Keyframe) m
   eval (HandleInput mbFrame next) = do
     locked <- H.gets _.locked
-    if locked
-      then H.modify (\st -> st {heldFrame = mbFrame, frame = setTime <$> (time <$> mbFrame) <*> st.frame})
-      else H.modify (_ {frame = mbFrame})
+    t <- H.gets (\st -> time <$> st.frame)
+    if fromMaybe false $ eq <$> t <*> (time <$> mbFrame)
+      then pure unit
+      else if locked
+        then H.modify (\st -> st {heldFrame = mbFrame, frame = setTime <$> (time <$> mbFrame) <*> st.frame})
+        else H.modify (_ {frame = mbFrame})
     pure next
     
   eval (FormChange i prop next) = do

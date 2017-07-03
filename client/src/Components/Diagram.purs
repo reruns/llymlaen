@@ -50,6 +50,7 @@ type State = { time :: Int
              , body :: Diag
              , targetIndex :: Int
              , stagedEl :: Maybe (Int -> Point -> Element)
+             , mousePos :: Maybe Point
              }
              
 defaultState = { time: 0
@@ -57,6 +58,7 @@ defaultState = { time: 0
                , body: Diag {color: RGB {r:255,g:255,b:255}, elements: []}
                , targetIndex: -1
                , stagedEl: Nothing
+               , mousePos: Nothing
                }
    
 decodeResponse :: Json -> Either String Diag
@@ -74,6 +76,8 @@ data Query a
   | ModTarget (Maybe Keyframe) a
   | HandleTB Toolbar.Message a
   | ClickCanvas Point a
+  | ElShadow Point a
+  | ClearPos a
  
 type ChildQuery = Coproduct4 ElEdit.Query Toolbar.Query TControls.Query Modal.Query
 type ChildSlot = Either4 Unit Unit Unit Unit
@@ -100,6 +104,8 @@ diaComp = lifecycleParentComponent
         [ HH.canvas [ HP.id_ "canvas"
                     , HP.ref (RefLabel "cvs")
                     , HE.onClick $ HE.input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
+                    , HE.onMouseMove $ HE.input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
+                    , HE.onMouseLeave $ HE.input_ ClearPos
                     ]
         , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget)
         , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
@@ -117,11 +123,16 @@ diaComp = lifecycleParentComponent
       else pure unit
     st <- get
     let frames = mapWithIndex (\i e -> if i == st.targetIndex then editorFrame else getFrame e st.time ) $ getElements st.body
+        shadow = case st.stagedEl of
+          Nothing -> []
+          Just el -> case st.mousePos of
+            Nothing -> []
+            Just p  -> [getFrame (el st.time p) st.time]
     case st.ctx of
       Just ctx -> liftEff $ runGraphics ctx $ do
                     setFillStyle $ show $ getColor st.body
                     fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
-                    traverse_ (renderFrame <<< fromMaybe blankFrame) frames
+                    traverse_ (renderFrame <<< fromMaybe blankFrame) (frames <> shadow)
       Nothing  -> pure unit
     pure next
   
@@ -184,7 +195,17 @@ diaComp = lifecycleParentComponent
     case modifyAt st.targetIndex (flip insertKey f) (getElements st.body) of
       Just es -> modify $ (\st -> st {body=setElements st.body es})
       Nothing -> pure unit
-    pure next 
+    pure next
+
+  eval (ElShadow p next) = do
+    e <- getHTMLElementRef (RefLabel "cvs")
+    pos <- liftEff $ getOffset p e
+    modify $ _ {mousePos = Just pos}
+    pure next
+    
+  eval (ClearPos next) = do
+    modify $ _ {mousePos = Nothing}
+    pure next
     
   getOffset p Nothing = do
     pure p
