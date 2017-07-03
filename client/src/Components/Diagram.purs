@@ -96,8 +96,7 @@ diaComp = lifecycleParentComponent
   where
   
   render :: State -> ParentHTML Query ChildQuery ChildSlot (UIEff eff)
-  render st = let 
-    target = fromMaybe Nothing $ getFrame <$> ((getElements st.body) !! st.targetIndex) <*> (Just st.time) in
+  render st =
     HH.div_
       [ HH.slot' cp2 unit Toolbar.toolbar unit (HE.input HandleTB)
       , HH.span [ HP.id_ "center-col" ]
@@ -107,7 +106,7 @@ diaComp = lifecycleParentComponent
                     , HE.onMouseMove $ HE.input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
                     , HE.onMouseLeave $ HE.input_ ClearPos
                     ]
-        , HH.slot' cp1 unit ElEdit.component target (HE.input ModTarget)
+        , HH.slot' cp1 unit ElEdit.component unit (HE.input ModTarget)
         , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
         ]
       , HH.slot' cp4 unit Modal.component unit absurd
@@ -161,6 +160,7 @@ diaComp = lifecycleParentComponent
     
   eval (SetTime t next) = do
     modify (\st -> st {time=t})
+    refreshTarget
     pure next
     
   eval (Initialize next) = do
@@ -180,8 +180,9 @@ diaComp = lifecycleParentComponent
     locked <- query' cp1 unit (request ElEdit.IsLocked)
     stagedEl <- gets _.stagedEl
     case stagedEl of
-      Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t} )
-      Just el -> modify (\st -> st {body = addElement st.body (el t pos), stagedEl = Nothing})
+      Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t})
+      Just el -> modify (\st -> st {body = addElement st.body (el t pos), stagedEl = Nothing, targetIndex = st.targetIndex+1})
+    refreshTarget
     pure next
     where resolveTarget (Diag d) pos t = fromMaybe (-1) $ 
             findIndex (\mf -> fromMaybe false $ flip overlap pos <$> mf) $ 
@@ -206,6 +207,17 @@ diaComp = lifecycleParentComponent
   eval (ClearPos next) = do
     modify $ _ {mousePos = Nothing}
     pure next
+    
+  refreshTarget = do
+    target <- gets (\st -> (getElements st.body) !! st.targetIndex)
+    t <- gets _.time
+    case target of --this can be consolidated somehow
+      Nothing -> do
+        _ <- query' cp1 unit (request (ElEdit.SetFrame Nothing))
+        pure unit
+      Just el -> do
+        _ <- query' cp1 unit (request (ElEdit.SetFrame (getFrame el t)))
+        pure unit
     
   getOffset p Nothing = do
     pure p

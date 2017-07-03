@@ -25,19 +25,19 @@ type State = { frame  :: Maybe Keyframe
              
 data Query a 
   = FormChange Int Property a 
-  | HandleInput (Maybe Keyframe) a 
+  | SetFrame (Maybe Keyframe) (Unit -> a)
   | AddFrame a
   | LockFrame a
   | GetFrame (Maybe Keyframe -> a)
   | IsLocked (Boolean -> a)
   
-component :: forall m. H.Component HH.HTML Query (Maybe Keyframe) (Maybe Keyframe) m
+component :: forall m. H.Component HH.HTML Query Unit (Maybe Keyframe) m
 component =
   H.component
     { initialState: const {locked: false, frame: Nothing, heldFrame: Nothing}
     , render
     , eval
-    , receiver: HE.input HandleInput
+    , receiver: const Nothing
     } where
   
   render :: State -> H.ComponentHTML Query
@@ -57,16 +57,6 @@ component =
       ]
     
   eval :: forall m. Query ~> H.ComponentDSL State Query (Maybe Keyframe) m
-  eval (HandleInput mbFrame next) = do
-    locked <- H.gets _.locked
-    t <- H.gets (\st -> time <$> st.frame)
-    if fromMaybe false $ eq <$> t <*> (time <$> mbFrame)
-      then pure unit
-      else if locked
-        then H.modify (\st -> st {heldFrame = mbFrame, frame = setTime <$> (time <$> mbFrame) <*> st.frame})
-        else H.modify (_ {frame = mbFrame})
-    pure next
-    
   eval (FormChange i prop next) = do
     fr <- H.gets _.frame
     let ps = fromMaybe [] $ props <$> fr
@@ -93,6 +83,14 @@ component =
   eval (IsLocked reply) = do
     locked <- H.gets _.locked
     pure (reply locked)
+    
+  eval (SetFrame mbFrame reply) = do
+    locked <- H.gets _.locked
+    if locked
+      then H.modify (\st -> st {heldFrame = mbFrame, frame = setTime <$> (time <$> mbFrame) <*> st.frame})
+      else H.modify (_ {frame = mbFrame})
+    pure (reply unit)
+  
 
 fieldClass = HP.class_ $ HH.ClassName "editor-field"
 renderProp i (Enabled b)   = [ HH.label [fieldClass] 
