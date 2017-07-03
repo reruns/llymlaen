@@ -92,19 +92,55 @@ component =
     locked <- H.gets _.locked
     pure (reply locked)
 
-renderProp i (Enabled b)   = [HH.div_ [checkBox [HP.title "enabled"]  b (FormChange i <<< Enabled), HH.text "Visible"]]
-renderProp i (Bordered b)  = [HH.div_ [checkBox [HP.title "bordered"] b (FormChange i <<< Bordered), HH.text "Border"]]
-renderProp i (Color c)     = [ HH.div_ [color [HP.title "color"] c (FormChange i <<< Color),  HH.text "Color"]]
+fieldClass = HP.class_ $ HH.ClassName "editor-field"
+renderProp i (Enabled b)   = [ HH.label [fieldClass] 
+                               [ HH.text "Visible"
+                               , checkBox [HP.title "enabled"]  b (FormChange i <<< Enabled)] 
+                             ]
+renderProp i (Bordered b)  = [ HH.label [fieldClass] 
+                               [ HH.text "Border"
+                               , checkBox [HP.title "bordered"] b (FormChange i <<< Bordered)]
+                             ]
+renderProp i (Color c)     = [ HH.label [fieldClass] 
+                               [ HH.text "Color"
+                               , color [HP.title "color"] c (FormChange i <<< Color) ]
+                             ]
 renderProp i (Position p)  = 
-  map (\{v,h,l} -> HH.div_ [ number [] v (FormChange i <<< Position <<< h), HH.text l]) 
+  concat $ map (\{v,h,l} -> [ HH.label [fieldClass] 
+                              [ HH.text l 
+                              , number [] v (FormChange i <<< Position <<< h)]
+                            ]) 
   [{v:getX p,h:setX p,l:"X"}, {v: getY p, h: setY p,l:"Y"}]
-renderProp i (Opacity o)   = [HH.div_ [slider [HP.title "opacity"] 0 100 o (FormChange i <<< Opacity), HH.text "Opacity"]]
-renderProp i (Angle a)     = [HH.div_ [slider [HP.title "angle"] 0 360 a (FormChange i <<< Angle), HH.text "Rotation"]]
-renderProp i (Circle r)    = [HH.div_ [ number [] r (FormChange i <<< Circle), HH.text "Radius" ]]
-renderProp i (Rect w h)    = [ HH.div_ [ number [] w (FormChange i <<< (flip Rect) h), HH.text "Width"]
-                             , HH.div_ [ number [] h (FormChange i <<< Rect w), HH.text "Height" ]
+renderProp i (Opacity o)   = [ HH.label [fieldClass] 
+                               [ HH.text "Opacity"
+                               , slider [ HP.title "opacity" ] 0 100 o (FormChange i <<< Opacity) 
+                               ]
                              ]
-renderProp i (Donut r1 r2) = [ HH.div_ [ number [] r1 (FormChange i <<< (flip Donut) r2), HH.text "Inner Radius"]
-                             , HH.div_ [ number [] r2 (FormChange i <<< Donut r1), HH.text "Outer Radius" ]
+renderProp i (Angle a)     = [ HH.label [fieldClass] 
+                               [ HH.text "Rotation"
+                               , slider [ HP.title "angle"] 0 360 a (FormChange i <<< Angle)
+                               ]
                              ]
-    
+renderProp i (Circle r)    = [ HH.label [fieldClass] 
+                               [ HH.text "Radius" 
+                               , number [ HP.title "radius" ] r (FormChange i <<< Circle)
+                               ]
+                             ]
+renderProp i (Rect w h)    = [ HH.label [fieldClass] 
+                               [ HH.text "Width"
+                               , number [ HP.title "width" ] w (FormChange i <<< (flip Rect) h) 
+                               ]
+                             , HH.label [fieldClass] 
+                               [ HH.text "Height"
+                               , number [ HP.title "height" ] h (FormChange i <<< Rect w)
+                               ]
+                             ]
+renderProp i (Donut r1 r2) = [ HH.label [fieldClass] 
+                               [ HH.text "Inner Radius" 
+                               , number [ HP.title "inner radius" ] r1 (FormChange i <<< (flip Donut) r2)
+                               ]
+                             , HH.label [fieldClass] 
+                               [ HH.text "Outer Radius"
+                               , number [ HP.title "outer radius" ] r2 (FormChange i <<< Donut r1)
+                               ]
+                             ]
