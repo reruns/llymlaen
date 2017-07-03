@@ -43,16 +43,18 @@ component =
   render :: State -> H.ComponentHTML Query
   render {frame: Nothing} = HH.div [ HP.id_ "el-editor", HP.class_ $ HH.ClassName "off" ] []
   render {frame: Just fr} 
-    = HH.div [HP.id_ "el-editor"] $ 
-      ( concat $ mapWithIndex renderProp (props fr)) 
-      <> [ HH.a
-            [ HE.onClick $ HE.input_ LockFrame, HP.class_ $ HH.ClassName "a-button" ]
-            [ HH.text "Lock" ]
-         ]
-      <> [ HH.a
-            [ HE.onClick $ HE.input_ AddFrame, HP.class_ $ HH.ClassName "a-button" ] 
-            [ HH.text "Apply"]
-         ]
+    = HH.div [HP.id_ "el-editor"] $
+      [ HH.h2_ [HH.text "Edit Element"] ]
+      <> ( concat $ mapWithIndex renderProp (props fr)) 
+      <> [ HH.div_ 
+        [ HH.a
+          [ HE.onClick $ HE.input_ LockFrame, HP.class_ $ HH.ClassName "a-button" ]
+          [ HH.text "Lock" ]
+        , HH.a
+          [ HE.onClick $ HE.input_ AddFrame, HP.class_ $ HH.ClassName "a-button" ] 
+          [ HH.text "Apply"]
+        ]
+      ]
     
   eval :: forall m. Query ~> H.ComponentDSL State Query (Maybe Keyframe) m
   eval (HandleInput mbFrame next) = do
@@ -94,53 +96,53 @@ component =
 
 fieldClass = HP.class_ $ HH.ClassName "editor-field"
 renderProp i (Enabled b)   = [ HH.label [fieldClass] 
-                               [ HH.text "Visible"
+                               [ HH.div_ [HH.text "Visible"]
                                , checkBox [HP.title "enabled"]  b (FormChange i <<< Enabled)] 
                              ]
 renderProp i (Bordered b)  = [ HH.label [fieldClass] 
-                               [ HH.text "Border"
+                               [ HH.div_ [HH.text "Border"]
                                , checkBox [HP.title "bordered"] b (FormChange i <<< Bordered)]
                              ]
 renderProp i (Color c)     = [ HH.label [fieldClass] 
-                               [ HH.text "Color"
+                               [ HH.div_ [HH.text "Color"]
                                , color [HP.title "color"] c (FormChange i <<< Color) ]
                              ]
 renderProp i (Position p)  = 
   concat $ map (\{v,h,l} -> [ HH.label [fieldClass] 
-                              [ HH.text l 
+                              [ HH.div_ [HH.text l ]
                               , number [] v (FormChange i <<< Position <<< h)]
                             ]) 
   [{v:getX p,h:setX p,l:"X"}, {v: getY p, h: setY p,l:"Y"}]
 renderProp i (Opacity o)   = [ HH.label [fieldClass] 
-                               [ HH.text "Opacity"
+                               [ HH.div_ [HH.text "Opacity"]
                                , slider [ HP.title "opacity" ] 0 100 o (FormChange i <<< Opacity) 
                                ]
                              ]
 renderProp i (Angle a)     = [ HH.label [fieldClass] 
-                               [ HH.text "Rotation"
+                               [ HH.div_ [HH.text "Rotation"]
                                , slider [ HP.title "angle"] 0 360 a (FormChange i <<< Angle)
                                ]
                              ]
 renderProp i (Circle r)    = [ HH.label [fieldClass] 
-                               [ HH.text "Radius" 
+                               [ HH.div_ [HH.text "Radius" ]
                                , number [ HP.title "radius" ] r (FormChange i <<< Circle)
                                ]
                              ]
 renderProp i (Rect w h)    = [ HH.label [fieldClass] 
-                               [ HH.text "Width"
+                               [ HH.div_ [HH.text "Width"]
                                , number [ HP.title "width" ] w (FormChange i <<< (flip Rect) h) 
                                ]
                              , HH.label [fieldClass] 
-                               [ HH.text "Height"
+                               [ HH.div_ [HH.text "Height"]
                                , number [ HP.title "height" ] h (FormChange i <<< Rect w)
                                ]
                              ]
 renderProp i (Donut r1 r2) = [ HH.label [fieldClass] 
-                               [ HH.text "Inner Radius" 
+                               [ HH.div_ [HH.text "Inner Radius"]
                                , number [ HP.title "inner radius" ] r1 (FormChange i <<< (flip Donut) r2)
                                ]
                              , HH.label [fieldClass] 
-                               [ HH.text "Outer Radius"
+                               [ HH.div_ [HH.text "Outer Radius"]
                                , number [ HP.title "outer radius" ] r2 (FormChange i <<< Donut r1)
                                ]
                              ]

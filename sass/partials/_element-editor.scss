@@ -10,8 +10,32 @@
     display: none;
   }
   
+  h2 {
+    text-align:center;
+    font: {
+      family: sans-serif;
+      size: 1.5em;
+    }
+  }
+  
   .editor-field {
     display: block;
-    padding: 5px 0;
+    padding: 2px 0;
+    
+    div {
+      font-weight: bold;
+      display: inline-block;
+      width: 30px;
+    }
+    
+    input {
+      margin-left: 30px;
+      display: inline-block
+    }
+  }
+  
+  a {
+    margin-top: 15px;
+    display: inline-block;
   }
 }
