@@ -4,6 +4,9 @@ import Prelude
 
 import App.Helpers.Forms
 
+import Data.Int (floor, toNumber)
+import Data.Number.Format (toStringWith, fixed)
+
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -13,9 +16,18 @@ type State = { paused :: Boolean, time :: Int, max :: Int}
 initState = {paused: true, time: 0, max: 1000}
 
 data Query a = SetTime Int a
+             | SetMax Int a
              | TogglePlay a
              | HandleInput Int a
              | Paused (Boolean -> a)
+             
+formatTime :: Int -> String
+formatTime f = (show m) <> ":" <> (if s < 10.0 then "0" else "") <> sStr
+  where time = (toNumber f) / 62.5        
+        m = div (floor time) 60
+        s = (time - toNumber (60*m)) --it's legal to call mod on a Number, but it doesn't work.
+        sStr = toStringWith (fixed 2) s
+  
 
 controls :: forall m. H.Component HH.HTML Query Int Int m
 controls = H.component 
@@ -28,10 +40,15 @@ controls = H.component
   
   render :: State -> H.ComponentHTML Query
   render st = 
-    HH.div_ [ HH.a [HE.onClick $ HE.input_ TogglePlay, HP.class_ $ HH.ClassName "a-button" ] [HH.text "Play"]
-            , slider [HP.title "time"] 0 st.max st.time SetTime
-            , HH.h1_ [HH.text (show st.time)]
-            ]
+    HH.div [ HP.id_ "time-controls" ]
+    [ slider [HP.title "time"] 0 st.max st.time SetTime
+    , HH.a 
+      [ HE.onClick $ HE.input_ TogglePlay
+      , HP.class_ $ HH.ClassName "a-button" 
+      ] 
+      [ if st.paused then HH.text "Play" else HH.text "Pause"]
+    , HH.h3_ [HH.text (formatTime st.time)]
+    ]
   
   eval :: forall m. Query ~> H.ComponentDSL State Query Int m
   eval (SetTime t next) = do
@@ -44,6 +61,13 @@ controls = H.component
     if t <= max
       then H.modify ( _ {time = t} )
       else H.modify (_ {paused = true, time = max})
+    pure next
+    
+  eval (SetMax max next) = do
+    t <- H.gets _.time
+    if t <= max
+      then H.modify $ _ {max=max}
+      else H.modify $ _ {max=max, time=max}
     pure next
     
   eval (TogglePlay next) = do

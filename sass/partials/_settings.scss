@@ -1,0 +1,46 @@
+.settings {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 10px;
+  border: 1px solid #black;
+  width: 35%;
+  max-width: 250px;
+  
+  h2 {
+    text-align:center;
+    font: {
+      family: sans-serif;
+      size: 1.5em;
+    }
+    margin-bottom:15px;
+  }
+  
+  label {
+    display: block;
+    padding: 2px 0;
+    
+    * {
+      display: inline-block;
+    }
+    
+    div {
+      font-weight: bold;
+      width: 30px;
+    }
+    
+    input {
+      margin-left: 30px;
+    }
+  }
+  
+  .a-button {
+    margin-top: 20px;
+    display: inline-block;
+  }
+  
+  .buttons {
+    display: block;
+    margin: auto;
+    width: 65%;
+  }
+}

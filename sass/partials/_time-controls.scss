@@ -1,0 +1,21 @@
+#time-controls {
+  width: 600; //should be the same as canvas width
+  
+  input {
+    width: 100%;
+    display: block;
+  }
+  
+  a {
+    display: inline-block;
+  }
+  
+  h3 {
+    margin-left: 25%;
+    display: inline-block;
+    font: {
+      family: sans-serif;
+      size: 1.3em;
+    }
+  }
+}
