@@ -6,6 +6,7 @@ import App.Components.ElementEditor as ElEdit
 import App.Components.Toolbar as Toolbar
 import App.Components.TimeControls as TControls
 import App.Components.Modal as Modal
+import App.Components.Settings as Settings
 
 import App.Types.Element
 import App.Types.Keyframe
@@ -23,14 +24,14 @@ import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
 import Data.Either (Either(..))
 import Data.Int (round)
 
-import Data.Either.Nested (Either4)
-import Data.Functor.Coproduct.Nested (Coproduct4)
+import Data.Either.Nested (Either5)
+import Data.Functor.Coproduct.Nested (Coproduct5)
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (log, CONSOLE)
 
 import Halogen
-import Halogen.Component.ChildPath (cp1, cp2, cp3, cp4)
+import Halogen.Component.ChildPath (cp1, cp2, cp3, cp4, cp5)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
@@ -55,7 +56,7 @@ type State = { time :: Int
              
 defaultState = { time: 0
                , ctx: Nothing
-               , body: Diag {color: RGB {r:255,g:255,b:255}, elements: []}
+               , body: Diag {color: RGB {r:255,g:255,b:255}, length: 1000, elements: []}
                , targetIndex: -1
                , stagedEl: Nothing
                , mousePos: Nothing
@@ -78,9 +79,10 @@ data Query a
   | ClickCanvas Point a
   | ElShadow Point a
   | ClearPos a
+  | UpdateSettings Settings.State a
  
-type ChildQuery = Coproduct4 ElEdit.Query Toolbar.Query TControls.Query Modal.Query
-type ChildSlot = Either4 Unit Unit Unit Unit
+type ChildQuery = Coproduct5 ElEdit.Query Toolbar.Query TControls.Query Modal.Query Settings.Query
+type ChildSlot = Either5 Unit Unit Unit Unit Unit
 
 type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE, dom :: DOM, ajax :: AX.AJAX | eff)
     
@@ -110,6 +112,7 @@ diaComp = lifecycleParentComponent
         , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
         ]
       , HH.slot' cp4 unit Modal.component unit absurd
+      , HH.slot' cp5 unit Settings.component unit (HE.input UpdateSettings)
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
@@ -150,6 +153,13 @@ diaComp = lifecycleParentComponent
       pure unit
     _ <- query' cp2 unit (request (Toolbar.SetState false))
     pure next
+    
+  eval (HandleTB (Toolbar.Settings) next) = do
+    bod <- gets _.body
+    let vals = Just {length: getLength bod, color: getColor bod}
+    _ <- query' cp5 unit (request (Settings.SetValues vals))
+    pure next
+    
     
   eval (Load id next) = do
     response <- liftAff $ (AX.get ("/api/diagrams/" <> id) :: AX.Affjax _ Json)
@@ -207,6 +217,13 @@ diaComp = lifecycleParentComponent
   eval (ClearPos next) = do
     modify $ _ {mousePos = Nothing}
     pure next
+    
+  eval (UpdateSettings set next) = do
+    case set of
+      Nothing       -> pure unit
+      Just settings -> modify $ (\st 
+        -> st {body = setLength settings.length $ setColor settings.color st.body})
+    pure next  
     
   refreshTarget = do
     target <- gets (\st -> (getElements st.body) !! st.targetIndex)

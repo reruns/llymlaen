@@ -4,6 +4,7 @@ import Prelude
 
 import App.Types.Element
 import App.Types.Point
+import App.Types.RGB
 import App.Element.Presets (circBase, dnutBase, rectBase)
 
 import Data.Maybe(Maybe(..))
@@ -13,13 +14,17 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 type State = Boolean
-data Message = Insert (Int -> Point -> Element) | Save
+data Message 
+  = Insert (Int -> Point -> Element)
+  | Settings
+  | Save
 
 data Query a = InsertCirc a
              | InsertRect a
              | InsertDnut a
              | ReqSave    a
              | SetState Boolean (Unit -> a)
+             | OpenSettings a
 
            
 toolbar :: forall m. H.Component HH.HTML Query Unit Message m
@@ -44,6 +49,8 @@ toolbar = H.component
             , HH.a [HE.onClick $ HE.input_ InsertDnut] [HH.text "Donut"]
             ]            
           ]
+        , HH.a [HE.onClick $ HE.input_ OpenSettings ]
+          [ HH.text "Settings"]
         , HH.a [ HE.onClick $ HE.input_ ReqSave ] 
           [ HH.text (if st then "Saving..." else "Share") ]   
         ] 
@@ -69,4 +76,8 @@ toolbar = H.component
   eval (SetState b reply) = do
     H.put b
     pure (reply unit)
+    
+  eval (OpenSettings next) = do
+    H.raise $ Settings
+    pure next
     
