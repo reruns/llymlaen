@@ -20,7 +20,8 @@
     "purescript-routing": "^5.1.0",
     "purescript-argonaut-codecs": "^3.0.1",
     "purescript-argonaut": "^3.0.0",
-    "purescript-affjax": "^4.0.0"
+    "purescript-affjax": "^4.0.0",
+    "purescript-dom-classy": "^2.1.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^3.0.0",
