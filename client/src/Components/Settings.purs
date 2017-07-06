@@ -15,6 +15,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 import Data.Maybe
+import Data.Int (toNumber, round)
 
 type State = Maybe { length :: Int
                    , color :: RGB
@@ -49,8 +50,9 @@ component = H.component
         
         [ HH.h2_ [HH.text "Diagram Settings"]
         , HH.label [] 
-          [ HH.div_ [HH.text "Length" ]
-          , number [ HP.title "Length" ] l SetLen
+          [ HH.div_ [HH.text "Length"]
+          , number [ HP.title "Length", HP.id_ "length"] (round $ (toNumber l) / 62.5) SetLen
+          , HH.text "seconds"
           ]
         , HH.label [] 
           [ HH.div_ [HH.text "Color"]
@@ -80,7 +82,7 @@ component = H.component
     pure next
     
   eval (SetLen l next) = do
-    H.modify $ map (_ {length = l})
+    H.modify $ map (_ {length = round ((toNumber l) * 62.5)})
     pure next
     
   eval (SetRgb c next) = do
