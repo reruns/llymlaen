@@ -5,7 +5,7 @@ import Prelude
 import App.Components.ElementEditor as ElEdit
 import App.Components.Toolbar as Toolbar
 import App.Components.TimeControls as TControls
-import App.Components.Modal as Modal
+import App.Components.SaveResult as SaveResult
 import App.Components.Settings as Settings
 
 import App.Types.Element
@@ -81,7 +81,7 @@ data Query a
   | ClearPos a
   | UpdateSettings Settings.State a
  
-type ChildQuery = Coproduct5 ElEdit.Query Toolbar.Query TControls.Query Modal.Query Settings.Query
+type ChildQuery = Coproduct5 ElEdit.Query Toolbar.Query TControls.Query SaveResult.Query Settings.Query
 type ChildSlot = Either5 Unit Unit Unit Unit Unit
 
 type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE, dom :: DOM, ajax :: AX.AJAX | eff)
@@ -111,7 +111,7 @@ diaComp = lifecycleParentComponent
         , HH.slot' cp1 unit ElEdit.component unit (HE.input ModTarget)
         , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
         ]
-      , HH.slot' cp4 unit Modal.component unit absurd
+      , HH.slot' cp4 unit SaveResult.component unit absurd
       , HH.slot' cp5 unit Settings.component unit (HE.input UpdateSettings)
       ]
       
@@ -150,8 +150,7 @@ diaComp = lifecycleParentComponent
     let pl = "body" := (show st) ~> jsonEmptyObject
     response <- liftAff $ (AX.post "/api/diagrams/" pl :: AX.Affjax _ Json)
     when (response.status == StatusCode 200) $ do
-      let idStr = "Saved! The ID for this diagram is " <> show response.response
-      _ <- query' cp4 unit (request (Modal.SetString idStr))
+      _ <- query' cp4 unit (request (SaveResult.Succeed (show response.response)))
       pure unit
     _ <- query' cp2 unit (request (Toolbar.SetState false))
     pure next
