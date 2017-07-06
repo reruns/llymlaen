@@ -165,7 +165,9 @@ diaComp = lifecycleParentComponent
   eval (Load id next) = do
     response <- liftAff $ (AX.get ("/api/diagrams/" <> id) :: AX.Affjax _ Json)
     case decodeResponse response.response of
-      Right b -> modify (_ {body=b, time=0})
+      Right b -> do
+        _ <- query' cp3 unit (request (TControls.SetMax $ getLength b))
+        modify (_ {body=b, time=0})
       Left  s -> liftEff $ log s
     pure next
     
@@ -224,8 +226,11 @@ diaComp = lifecycleParentComponent
   eval (UpdateSettings set next) = do
     case set of
       Nothing       -> pure unit
-      Just settings -> modify $ (\st 
-        -> st {body = setLength settings.length $ setColor settings.color st.body})
+      Just settings -> do
+        _ <- query' cp3 unit (request (TControls.SetMax settings.length))
+        modify $ (\st 
+          -> st { body = setLength settings.length 
+                       $ setColor settings.color st.body})
     pure next  
     
   refreshTarget = do

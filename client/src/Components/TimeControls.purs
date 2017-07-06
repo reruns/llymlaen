@@ -16,7 +16,7 @@ type State = { paused :: Boolean, time :: Int, max :: Int}
 initState = {paused: true, time: 0, max: 1000}
 
 data Query a = SetTime Int a
-             | SetMax Int a
+             | SetMax Int (Unit -> a)
              | TogglePlay a
              | HandleInput Int a
              | Paused (Boolean -> a)
@@ -63,12 +63,12 @@ controls = H.component
       else H.modify (_ {paused = true, time = max})
     pure next
     
-  eval (SetMax max next) = do
+  eval (SetMax max reply) = do
     t <- H.gets _.time
     if t <= max
       then H.modify $ _ {max=max}
       else H.modify $ _ {max=max, time=max}
-    pure next
+    pure (reply unit)
     
   eval (TogglePlay next) = do
     H.modify (\st -> st {paused = not st.paused})
