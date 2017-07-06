@@ -42,9 +42,9 @@ component = H.component
   render :: State -> H.ComponentHTML Query
   render Off = HH.div [HP.class_ $ HH.ClassName "off"] []
   render Fail = HH.div [HP.class_ $ HH.ClassName "off"] []
-  render Success link =
+  render (Success link) =
     HH.div 
-    [ HP.classes $ HH.ClassName <$> ["modal","off"]
+    [ HP.class_ $ HH.ClassName "modal"
     , HE.onClick $ HE.input_ Close
     ] 
     [ HH.div 
@@ -53,11 +53,10 @@ component = H.component
       ] 
       [ HH.h3_ [ HH.text "Saved!" ]
       , HH.div_ 
-        [ HH.text "The link to share your work is here:"
-        , HH.a [HP.href link] [HH.text link]
-        ]
+        [ HH.text "The link to share your work is here:"]
+      , HH.a [HP.href link] [HH.text link]
       , HH.a [HP.class_ $ HH.ClassName "a-button", HE.onClick $ HE.input_ Close ] 
-        [ HH.text "OK" ]
+        [ HH.text "Ok" ]
       ]
     ]
   
