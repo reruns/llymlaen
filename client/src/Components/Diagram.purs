@@ -121,7 +121,9 @@ diaComp = lifecycleParentComponent
     editorFrame' <- query' cp1 unit (request ElEdit.GetFrame)
     let editorFrame = fromMaybe Nothing editorFrame'
     if pause == Just false
-      then modify (\st -> st {time=st.time+1})
+      then do
+        modify (\st -> st {time=st.time+1})
+        refreshTarget
       else pure unit
     st <- get
     let frames = mapWithIndex (\i e -> if i == st.targetIndex then editorFrame else getFrame e st.time ) $ getElements st.body
@@ -186,13 +188,15 @@ diaComp = lifecycleParentComponent
   eval (ClickCanvas p next) = do
     t <- gets _.time
     e <- getHTMLElementRef (RefLabel "cvs")
+    tar <- gets _.targetIndex
     pos <- liftEff $ getOffset p e
     locked <- query' cp1 unit (request ElEdit.IsLocked)
     stagedEl <- gets _.stagedEl
     case stagedEl of
       Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t})
       Just el -> modify (\st -> st {body = addElement st.body (el t pos), stagedEl = Nothing, targetIndex = st.targetIndex+1})
-    refreshTarget
+    tar' <- gets _.targetIndex
+    when (tar /= tar') refreshTarget
     pure next
     where resolveTarget (Diag d) pos t = fromMaybe (-1) $ 
             findIndex (\mf -> fromMaybe false $ flip overlap pos <$> mf) $ 
