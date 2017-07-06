@@ -39,7 +39,7 @@ toolbar = H.component
   render :: State -> H.ComponentHTML Query
   render st =
     HH.span [HP.id_ "toolbar"] $ 
-      [ HH.a [HP.id_ "home-link"] []
+      [ HH.a [HP.id_ "home-link", HP.href "/"] []
       , HH.div [HP.id_ "tools"] 
         [ HH.div [HP.class_ $ HH.ClassName "dropdown"] 
           [ HH.a [HP.class_ $ HH.ClassName "dropbtn"] [ HH.text "Add an Element" ]

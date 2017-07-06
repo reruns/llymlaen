@@ -1,8 +1,8 @@
 #toolbar {
   display: block;
-  background-color: black;
+  background-color: $toolbar-color;
   font-family: sans-serif;
-  color: white;
+  color: $contrast-text;
   #home-link { 
     background: {
       image: url("../assets/llym_logo.gif");
@@ -32,21 +32,21 @@
     padding: 7px 10px;
   
     &:hover {
-      background-color: #ccc
+      background-color: $highlight;
     }
   }
   
   .dropdown-content {
     text-align: center;
     min-width: 134px;
-    background-color: black;
+    background-color: $toolbar-color;
     
     a {
       display: block;
       padding: 10px 0;
       
       &:hover {
-        background-color: #ccc;
+        background-color: $highlight;
       }
     }
   }

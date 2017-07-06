@@ -3,7 +3,7 @@
 }
 
 a.a-button {
-  background-color: $primary;
+  background-color: $button-color;
   padding: 5px;
   width: 60px;
   user-select: none;
@@ -18,11 +18,6 @@ a.a-button {
 }
 
 a.a-button:hover {
-  background-color: lighten($primary, 15%);
+  background-color: $highlight;
   cursor: pointer;
-}
-
-a.a-button.active {
-  background-color: $accent;
-  color: $accent-text;
 }

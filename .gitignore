@@ -10,5 +10,6 @@
 *.txt
 /src/examples/
 assets/bundle.js
+assets/app.css
 .stack-work/
 .env
