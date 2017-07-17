@@ -16,7 +16,7 @@ module App.Prelude
   ) where
 
 import Prelude
-import Graphics.Canvas
+import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDimensions, Context2D)
 import Graphics.Canvas.Free
 
 import Data.Argonaut
