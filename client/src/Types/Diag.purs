@@ -1,14 +1,8 @@
 module App.Types.Diag where
 
-import Prelude
-
+import App.Prelude
 import App.Types.RGB
 import App.Types.Element
-
-import Data.Array (insertBy)
-import Data.Argonaut
-
-import Test.QuickCheck(class Arbitrary, arbitrary)
 
 newtype Diag = Diag { color :: RGB
                     , length :: Int

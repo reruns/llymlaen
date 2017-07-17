@@ -1,23 +1,10 @@
 module App.Types.Element where
 
-import Prelude
+import App.Prelude
 
 import App.Validators
 import App.Types.Keyframe
 import App.Types.Point
-
-import Data.Argonaut
-
-import Data.Maybe (Maybe(Just, Nothing), fromMaybe, isJust)
-import Data.Array (insertBy, (!!), updateAt, findIndex, findLastIndex, zipWith, length, sort)
-import Data.Foldable (and)
-import Data.Int (toNumber)
-import Data.Ord (comparing)
-
-import Graphics.Canvas.Free
-
-import Test.QuickCheck(class Arbitrary, arbitrary)
-import Test.QuickCheck.Gen
 
 newtype Element = Element { layer :: Int, keys :: Array Keyframe }
 

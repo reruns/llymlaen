@@ -1,25 +1,12 @@
 module App.Types.Property where
 
-import Prelude
-
+import App.Prelude
 import App.Types.RGB
 import App.Types.Point
 
-import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
-import Data.Int (toNumber)
-import Data.Array ((!!))
 import Data.NonEmpty (NonEmpty(..))
 import Data.Either (Either(..))
-
-import Data.Argonaut
 import Data.StrMap as SM
-
-import Math (pi, sqrt, pow, sin, cos)
-
-import Graphics.Canvas.Free
-
-import Test.QuickCheck (class Arbitrary, arbitrary)
-import Test.QuickCheck.Gen
 
 data Property = Enabled  Boolean
               | Bordered Boolean

@@ -1,21 +1,9 @@
 module App.Types.Keyframe where
 
-import Prelude
+import App.Prelude
 
 import App.Types.Property
 import App.Types.Point
-
-import Data.Int (toNumber, round)
-import Data.Maybe (fromMaybe, Maybe(..))
-import Data.Array (zipWith)
-import Data.Foldable (foldl)
-import Data.Traversable (sequence, sequence_)
-import Data.Argonaut
-import Math (pi, sqrt, pow, sin, cos)
-
-import Test.QuickCheck(class Arbitrary, arbitrary)
-
-import Graphics.Canvas.Free
 
 newtype Keyframe = Keyframe { time :: Int, props :: Array Property }
 

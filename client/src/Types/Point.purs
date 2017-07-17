@@ -1,9 +1,6 @@
 module App.Types.Point where
 
-import Prelude
-
-import Data.Argonaut
-import Test.QuickCheck (class Arbitrary, arbitrary)
+import App.Prelude
 
 newtype Point = Point { x :: Int, y :: Int }
 getX (Point {x}) = x

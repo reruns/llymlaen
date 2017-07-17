@@ -1,16 +1,6 @@
 module App.Types.RGB where
 
-import Prelude
-
-import Data.Int (toStringAs,fromStringAs,hexadecimal)
-import Data.String (joinWith, length, toCharArray, fromCharArray)
-import Data.Maybe (Maybe(..))
-import Data.Array (take, drop)
-import Data.Traversable (sequence)
-
-import Test.QuickCheck.Gen (chooseInt)
-import Test.QuickCheck(class Arbitrary)
-import Data.Argonaut
+import App.Prelude
 
 newtype RGB = RGB { r :: Int, g :: Int, b :: Int }
 --getters
