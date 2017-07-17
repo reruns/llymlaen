@@ -5,6 +5,7 @@ module App.Prelude
   , module Data.Argonaut
   , module Data.Maybe
   , module Data.Array
+  , module Data.Either
   , module Data.Int
   , module Data.Ord
   , module Data.Traversable
@@ -38,7 +39,7 @@ import Test.QuickCheck.Gen
 
 import Math (pi, sqrt, pow, sin, cos)
 
-import Halogen (Component, ComponentHTML, ComponentDSL, ParentHTML, raise, put, get, gets, component, lifecycleParentComponent, modify, action, liftEff, query')
-import Halogen.HTML (ClassName(..), HTML, a, span, div, div_, text, h2_, h3_, span, label, slot')
+import Halogen (Component, ComponentHTML, ComponentDSL, ParentHTML, ParentDSL, RefLabel(..), raise, put, get, gets, component, lifecycleParentComponent, modify, action, liftEff, liftAff, query', request, getHTMLElementRef)
+import Halogen.HTML (ClassName(..), HTML, a, canvas, span, div, div_, text, h2_, h3_, span, label, slot')
 import Halogen.HTML.Events (input, input_, onClick, onMouseMove, onMouseLeave)
 import Halogen.HTML.Properties (id_, class_, classes, title, href, ref)

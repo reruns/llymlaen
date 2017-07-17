@@ -1,7 +1,6 @@
 module App.Components.Diagram where
 
-import Prelude
-
+import App.Prelude
 import App.Components.ElementEditor as ElEdit
 import App.Components.Toolbar as Toolbar
 import App.Components.TimeControls as TControls
@@ -16,25 +15,13 @@ import App.Types.RGB
 
 import App.Helpers (pageX, pageY)
 
-import Data.Argonaut
-
-import Data.Foldable (traverse_)
-import Data.Array ((!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex)
-import Data.Maybe (Maybe(Just,Nothing), fromMaybe)
-import Data.Either (Either(..))
-import Data.Int (round)
-
 import Data.Either.Nested (Either5)
 import Data.Functor.Coproduct.Nested (Coproduct5)
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (log, CONSOLE)
 
-import Halogen
 import Halogen.Component.ChildPath (cp1, cp2, cp3, cp4, cp5)
-import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Network.HTTP.Affjax as AX
 import Network.HTTP.StatusCode
 
@@ -42,9 +29,6 @@ import DOM (DOM)
 import DOM.HTML (window)
 import DOM.HTML.Window (scrollX, scrollY)
 import DOM.HTML.HTMLElement (getBoundingClientRect)
-
-import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDimensions, Context2D)
-import Graphics.Canvas.Free (fillRect, setFillStyle, runGraphics)
 
 type State = { time :: Int
              , ctx :: Maybe Context2D
@@ -86,7 +70,7 @@ type ChildSlot = Either5 Unit Unit Unit Unit Unit
 
 type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE, dom :: DOM, ajax :: AX.AJAX | eff)
     
-diaComp :: forall eff. Component HH.HTML Query Unit Void (UIEff eff)
+diaComp :: forall eff. Component HTML Query Unit Void (UIEff eff)
 diaComp = lifecycleParentComponent
   { render
   , eval
@@ -99,20 +83,20 @@ diaComp = lifecycleParentComponent
   
   render :: State -> ParentHTML Query ChildQuery ChildSlot (UIEff eff)
   render st =
-    HH.div_
-      [ HH.slot' cp2 unit Toolbar.toolbar unit (HE.input HandleTB)
-      , HH.span [ HP.id_ "center-col" ]
-        [ HH.canvas [ HP.id_ "canvas"
-                    , HP.ref (RefLabel "cvs")
-                    , HE.onClick $ HE.input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
-                    , HE.onMouseMove $ HE.input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
-                    , HE.onMouseLeave $ HE.input_ ClearPos
+    div_
+      [ slot' cp2 unit Toolbar.toolbar unit (input HandleTB)
+      , span [ id_ "center-col" ]
+        [ canvas [ id_ "canvas"
+                    , ref (RefLabel "cvs")
+                    , onClick $ input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
+                    , onMouseMove $ input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
+                    , onMouseLeave $ input_ ClearPos
                     ]
-        , HH.slot' cp1 unit ElEdit.editorComponent unit (HE.input ModTarget)
-        , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
+        , slot' cp1 unit ElEdit.editorComponent unit (input ModTarget)
+        , slot' cp3 unit TControls.controls st.time (input SetTime)
         ]
-      , HH.slot' cp4 unit SaveResult.saveComponent unit absurd
-      , HH.slot' cp5 unit Settings.settingsComponent unit (HE.input UpdateSettings)
+      , slot' cp4 unit SaveResult.saveComponent unit absurd
+      , slot' cp5 unit Settings.settingsComponent unit (input UpdateSettings)
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
