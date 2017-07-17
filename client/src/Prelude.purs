@@ -26,7 +26,7 @@ import Graphics.Canvas.Free
 import Data.Argonaut
 import Data.Array (insertBy, (!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex, zipWith, length, sort)
 import Data.Foldable (and, foldl, traverse_)
-import Data.Int (toNumber, round, toStringAs, fromStringAs, hexadecimal)
+import Data.Int (toNumber, floor, round, toStringAs, fromStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe, isJust)
 import Data.Either (Either(..))
 import Data.Ord (comparing)
