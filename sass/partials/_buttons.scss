@@ -15,9 +15,13 @@ a.a-button {
     weight: bold;
     family: sans-serif;
   }
-}
-
-a.a-button:hover {
-  background-color: $highlight;
-  cursor: pointer;
+  
+  &:hover {
+    background-color: $highlight;
+    cursor: pointer;
+  }
+  
+  &.active {
+    background-color: $highlight;
+  }
 }

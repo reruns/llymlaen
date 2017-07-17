@@ -29,13 +29,13 @@ editorComponent =
   
   render :: State -> ComponentHTML Query
   render {frame: Nothing} = div [ id_ "el-editor", class_ $ ClassName "off" ] []
-  render {frame: Just fr} 
+  render {frame: Just fr, locked} 
     = div [id_ "el-editor"] $
       [ h2_ [text "Edit Element"] ]
       <> ( concat $ mapWithIndex renderProp (props fr)) 
       <> [ div_ 
         [ a
-          [ onClick $ input_ LockFrame, class_ $ ClassName "a-button" ]
+          [ onClick $ input_ LockFrame, classes $ map ClassName $ if locked then ["a-button","active"] else ["a-button"] ]
           [ text "Lock" ]
         , a
           [ onClick $ input_ AddFrame, class_ $ ClassName "a-button" ] 
@@ -63,7 +63,11 @@ editorComponent =
   eval (LockFrame next) = do
     locked <- gets _.locked
     if locked
-      then modify (\st -> st {locked=false,frame=st.heldFrame})
+      then modify (\st -> st { locked=false
+                             , frame = if isJust st.heldFrame
+                                       then st.heldFrame
+                                       else st.frame
+                             })
       else modify (_ {locked=true})
     pure next
     
