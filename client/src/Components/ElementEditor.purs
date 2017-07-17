@@ -1,10 +1,7 @@
 module App.Components.ElementEditor where
 
 import App.Prelude
-import App.Types.Keyframe
-import App.Types.Property
-import App.Types.RGB
-import App.Types.Point
+import App.Types
 import App.Helpers.Forms
 
 

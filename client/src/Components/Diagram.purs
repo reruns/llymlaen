@@ -7,12 +7,7 @@ import App.Components.TimeControls as TControls
 import App.Components.SaveResult as SaveResult
 import App.Components.Settings as Settings
 
-import App.Types.Element
-import App.Types.Keyframe
-import App.Types.Diag
-import App.Types.Point
-import App.Types.RGB
-
+import App.Types
 import App.Helpers.Mouse
 
 import Data.Either.Nested (Either5)

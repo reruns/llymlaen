@@ -2,11 +2,7 @@ module App.Element.Presets where
 
 import Prelude
 
-import App.Types.Element
-import App.Types.Keyframe
-import App.Types.Property
-import App.Types.Point
-import App.Types.RGB
+import App.Types
 
 circBase :: Int -> Point -> Element
 circBase t p = Element { layer: 0

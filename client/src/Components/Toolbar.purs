@@ -2,9 +2,7 @@ module App.Components.Toolbar where
 
 import App.Prelude
 
-import App.Types.Element
-import App.Types.Point
-import App.Types.RGB
+import App.Types
 import App.Element.Presets (circBase, dnutBase, rectBase)
 
 type State = Boolean
