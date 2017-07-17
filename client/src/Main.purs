@@ -1,30 +1,18 @@
 module Main where
 
-import Prelude (bind, pure, unit, ($), Unit)
-import Control.Monad.Aff (forkAff)
-import Control.Monad.Eff.Class (liftEff)
+import App.Prelude hiding (liftEff)
 
+import Control.Monad.Aff (forkAff)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Timer (setInterval, TIMER)
 
-import Data.Tuple (Tuple(..))
-
-import Halogen (action)
 import Halogen.VDom.Driver (runUI)
 import Halogen.Aff as HA
 
 import App.Components.Diagram (Query(..), diaComp)
 import App.Routes (Locations(..), routing)
 import Routing (matchesAff)
-
---imports used only for the type signature
-import Control.Monad.Aff.AVar (AVAR)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Ref (REF)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Control.Monad.Eff.Console (CONSOLE)
-import Network.HTTP.Affjax (AJAX)
-import DOM(DOM)
-import Graphics.Canvas (CANVAS)
 
 main :: forall e. Eff ( "avar" :: AVAR
                       , "ref" :: REF
