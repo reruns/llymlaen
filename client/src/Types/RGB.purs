@@ -1,6 +1,7 @@
 module App.Types.RGB where
 
 import App.Prelude
+import Data.String (length) as S
 
 newtype RGB = RGB { r :: Int, g :: Int, b :: Int }
 --getters
@@ -15,11 +16,11 @@ setB (RGB c) v = RGB $ c {b=v}
 
 fromHexString :: String -> Maybe RGB
 fromHexString s 
-  | length s /= 7 = Nothing
+  | S.length s /= 7 = Nothing
   | otherwise = (\r g b -> RGB {r,g,b})
-    <$> (fromStringAs hexadecimal $ fromCharArray $ take 2 $ drop 1 $ toCharArray s)
-    <*> (fromStringAs hexadecimal $ fromCharArray $ take 2 $ drop 3 $ toCharArray s)
-    <*> (fromStringAs hexadecimal $ fromCharArray $ take 2 $ drop 5 $ toCharArray s)
+    <$> (fromStringAs hexadecimal $ take 2 $ drop 1 s)
+    <*> (fromStringAs hexadecimal $ take 2 $ drop 3 s)
+    <*> (fromStringAs hexadecimal $ take 2 $ drop 5 s)
 
 instance showRgb :: Show RGB where
   show (RGB {r,g,b}) = 

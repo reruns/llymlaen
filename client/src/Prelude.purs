@@ -20,12 +20,12 @@ import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDim
 import Graphics.Canvas.Free
 
 import Data.Argonaut
-import Data.String
-import Data.Maybe
-import Data.Array
-import Data.Int
-import Data.Ord
-import Data.Foldable
+import Data.Array (insertBy, (!!), updateAt, findIndex, findLastIndex, zipWith, length, sort)
+import Data.Foldable (and, foldl)
+import Data.Int (toNumber, round, toStringAs, fromStringAs, hexadecimal)
+import Data.Maybe (Maybe(Just, Nothing), fromMaybe, isJust)
+import Data.Ord (comparing)
+import Data.String (take, drop, joinWith)
 import Data.Traversable (sequence, sequence_)
 
 import Test.QuickCheck(class Arbitrary, arbitrary)
