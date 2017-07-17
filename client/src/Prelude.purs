@@ -24,13 +24,13 @@ import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDim
 import Graphics.Canvas.Free
 
 import Data.Argonaut
-import Data.Array (insertBy, (!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex, zipWith, length, sort)
+import Data.Array (insertBy, (!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex, zipWith, length, sort, head)
 import Data.Foldable (and, foldl, traverse_)
 import Data.Int (toNumber, floor, round, toStringAs, fromStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe, isJust)
 import Data.Either (Either(..))
 import Data.Ord (comparing)
-import Data.String (take, drop, joinWith)
+import Data.String (Pattern(..), take, drop, joinWith, split)
 import Data.Traversable (sequence, sequence_)
 
 import Test.QuickCheck(class Arbitrary, arbitrary)
@@ -41,4 +41,4 @@ import Math (pi, sqrt, pow, sin, cos)
 import Halogen (Component, ComponentHTML, ComponentDSL, ParentHTML, raise, put, get, gets, component, lifecycleParentComponent, modify, action, liftEff, query')
 import Halogen.HTML (ClassName(..), HTML, a, span, div, div_, text, h2_, h3_, span, label, slot')
 import Halogen.HTML.Events (input, input_, onClick, onMouseMove, onMouseLeave)
-import Halogen.HTML.Properties (id_, class_, title, href, ref)
+import Halogen.HTML.Properties (id_, class_, classes, title, href, ref)

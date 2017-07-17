@@ -111,8 +111,8 @@ diaComp = lifecycleParentComponent
         , HH.slot' cp1 unit ElEdit.component unit (HE.input ModTarget)
         , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
         ]
-      , HH.slot' cp4 unit SaveResult.component unit absurd
-      , HH.slot' cp5 unit Settings.component unit (HE.input UpdateSettings)
+      , HH.slot' cp4 unit SaveResult.saveComponent unit absurd
+      , HH.slot' cp5 unit Settings.settingsComponent unit (HE.input UpdateSettings)
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
