@@ -24,7 +24,7 @@ import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D, setCanvasDim
 import Graphics.Canvas.Free
 
 import Data.Argonaut
-import Data.Array (insertBy, (!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex, zipWith, length, sort, head)
+import Data.Array (insertBy, (!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex, zipWith, length, sort, head, concat)
 import Data.Foldable (and, foldl, traverse_)
 import Data.Int (toNumber, floor, round, toStringAs, fromStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe, isJust)

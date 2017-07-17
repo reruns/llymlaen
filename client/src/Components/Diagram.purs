@@ -108,7 +108,7 @@ diaComp = lifecycleParentComponent
                     , HE.onMouseMove $ HE.input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
                     , HE.onMouseLeave $ HE.input_ ClearPos
                     ]
-        , HH.slot' cp1 unit ElEdit.component unit (HE.input ModTarget)
+        , HH.slot' cp1 unit ElEdit.editorComponent unit (HE.input ModTarget)
         , HH.slot' cp3 unit TControls.controls st.time (HE.input SetTime)
         ]
       , HH.slot' cp4 unit SaveResult.saveComponent unit absurd
