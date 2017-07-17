@@ -2,7 +2,6 @@ module App.Types.Element where
 
 import App.Prelude
 
-import App.Validators
 import App.Types.Keyframe
 import App.Types.Point
 

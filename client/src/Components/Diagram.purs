@@ -18,7 +18,7 @@ import Control.Monad.Eff.Console (log, CONSOLE)
 
 import Halogen.Component.ChildPath (cp1, cp2, cp3, cp4, cp5)
 import Network.HTTP.Affjax as AX
-import Network.HTTP.StatusCode
+import Network.HTTP.StatusCode(StatusCode(..))
 
 
 
@@ -29,7 +29,8 @@ type State = { time :: Int
              , stagedEl :: Maybe (Int -> Point -> Element)
              , mousePos :: Maybe Point
              }
-             
+          
+defaultState :: State          
 defaultState = { time: 0
                , ctx: Nothing
                , body: Diag {color: RGB {r:255,g:255,b:255}, length: 1000, elements: []}
@@ -185,7 +186,7 @@ diaComp = lifecycleParentComponent
   eval (ModTarget (Just f) next) = do
     st <- get
     case modifyAt st.targetIndex (flip insertKey f) (getElements st.body) of
-      Just es -> modify $ (\st -> st {body=setElements st.body es})
+      Just es -> modify $ (\state -> state {body=setElements state.body es})
       Nothing -> pure unit
     pure next
 

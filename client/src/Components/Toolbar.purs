@@ -48,7 +48,7 @@ toolbar = component
         ] 
       ] 
   
-  eval :: forall m. Query ~> ComponentDSL State Query Message m
+  eval :: forall m'. Query ~> ComponentDSL State Query Message m'
   eval (InsertCirc next) = do
     raise $ Insert circBase
     pure next

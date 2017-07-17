@@ -2,8 +2,7 @@ module App.Helpers.Forms where
 
 import Prelude
 
-import App.Validators
-import App.Types.RGB (fromHexString)
+import App.Helpers.Validators
 
 import Halogen
 import Halogen.HTML as HH
@@ -34,5 +33,5 @@ number props v h =
 color props v h =
   HH.input ([ HP.type_ HP.InputColor
             , HP.value (show v)
-            , HE.onValueChange (\s -> (action <<< h) <$> (fromHexString s))
+            , HE.onValueChange (\s -> (action <<< h) <$> (validateRGB s))
             ] <> props)

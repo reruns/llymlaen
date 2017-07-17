@@ -29,10 +29,10 @@ module App.Prelude
 
 import Prelude hiding (div)
 
-import Data.Argonaut hiding (toNumber)
+import Data.Argonaut hiding (toNumber, fromString)
 import Data.Array (insertBy, (!!), updateAt, modifyAt, findIndex, findLastIndex, mapWithIndex, zipWith, length, sort, head, concat)
 import Data.Foldable (and, foldl, traverse_)
-import Data.Int (toNumber, floor, round, toStringAs, fromStringAs, hexadecimal)
+import Data.Int (toNumber, floor, round, toStringAs, fromString, fromStringAs, hexadecimal)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe, isJust)
 import Data.Either (Either(..))
 import Data.Ord (comparing)

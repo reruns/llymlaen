@@ -14,14 +14,6 @@ setR (RGB c) v = RGB $ c {r=v}
 setG (RGB c) v = RGB $ c {g=v}
 setB (RGB c) v = RGB $ c {b=v}
 
-fromHexString :: String -> Maybe RGB
-fromHexString s 
-  | S.length s /= 7 = Nothing
-  | otherwise = (\r g b -> RGB {r,g,b})
-    <$> (fromStringAs hexadecimal $ take 2 $ drop 1 s)
-    <*> (fromStringAs hexadecimal $ take 2 $ drop 3 s)
-    <*> (fromStringAs hexadecimal $ take 2 $ drop 5 s)
-
 instance showRgb :: Show RGB where
   show (RGB {r,g,b}) = 
     "#" <> 

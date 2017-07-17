@@ -1,8 +1,8 @@
-module App.Validators where
+module App.Helpers.Validators where
 
-import Prelude
-import Data.Maybe (Maybe(Just,Nothing))
-import Data.Int (fromString)
+import App.Prelude
+import App.Types.RGB
+import Data.String (length) as S
 
 validateRange :: String -> Int -> Int -> Maybe Int
 validateRange s min max = validateNumber (between min max) s
@@ -19,3 +19,11 @@ validateNumber p v =
   case p <$> n of
     Just true -> n
     _         -> Nothing
+    
+validateRGB :: String -> Maybe RGB
+validateRGB s 
+  | S.length s /= 7 = Nothing
+  | otherwise = (\r g b -> RGB {r,g,b})
+    <$> (fromStringAs hexadecimal $ take 2 $ drop 1 s)
+    <*> (fromStringAs hexadecimal $ take 2 $ drop 3 s)
+    <*> (fromStringAs hexadecimal $ take 2 $ drop 5 s)
