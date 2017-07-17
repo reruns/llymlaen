@@ -13,6 +13,10 @@ module App.Prelude
   , module Test.QuickCheck
   , module Test.QuickCheck.Gen
   , module Data.String
+  , module Halogen
+  , module Halogen.HTML
+  , module Halogen.HTML.Events
+  , module Halogen.HTML.Properties
   ) where
 
 import Prelude
@@ -35,6 +39,6 @@ import Test.QuickCheck.Gen
 import Math (pi, sqrt, pow, sin, cos)
 
 import Halogen (Component, ComponentHTML, ComponentDSL, ParentHTML, raise, put, get, gets, component, lifecycleParentComponent, modify, action, liftEff, query')
-import Halogen.HTML (ClassName, HTML, a, span, div, div_, text, h2_, h3_, span, label, slot')
+import Halogen.HTML (ClassName(..), HTML, a, span, div, div_, text, h2_, h3_, span, label, slot')
 import Halogen.HTML.Events (input, input_, onClick, onMouseMove, onMouseLeave)
 import Halogen.HTML.Properties (id_, class_, title, href, ref)
