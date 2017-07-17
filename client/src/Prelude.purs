@@ -25,6 +25,7 @@ module App.Prelude
   , module DOM
   , module Control.Monad.Eff.Exception
   , module Control.Monad.Eff.Ref
+  , framerate
   ) where
 
 import Prelude hiding (div)
@@ -59,3 +60,7 @@ import Control.Monad.Eff.Console (CONSOLE)
 import DOM(DOM)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Ref (REF)
+
+--I guess this is a misnomer? The value is ms/frame
+framerate :: Int
+framerate = 20

@@ -17,7 +17,7 @@ data Query a = SetTime Int a
              
 formatTime :: Int -> String
 formatTime f = (show m) <> ":" <> (if s < 10.0 then "0" else "") <> sStr
-  where time = (toNumber f) / 62.5        
+  where time = (toNumber f) * (toNumber framerate) / 1000.0       
         m = (floor time) / 60
         s = (time - toNumber (60*m)) --it's legal to call mod on a Number, but it doesn't work.
         sStr = toStringWith (fixed 2) s

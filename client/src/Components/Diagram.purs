@@ -20,8 +20,6 @@ import Halogen.Component.ChildPath (cp1, cp2, cp3, cp4, cp5)
 import Network.HTTP.Affjax as AX
 import Network.HTTP.StatusCode(StatusCode(..))
 
-
-
 type State = { time :: Int
              , ctx :: Maybe Context2D
              , body :: Diag

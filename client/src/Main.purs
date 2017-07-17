@@ -31,5 +31,5 @@ main = HA.runHalogenAff do
     case new of
       (Look id) -> driver.query $ action (Load id)
       _         -> pure unit
-  liftEff $ setInterval 16 $ do
+  liftEff $ setInterval framerate $ do
     HA.runHalogenAff (driver.query $ action Tick) --what.
