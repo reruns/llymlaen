@@ -13,7 +13,7 @@ import App.Types.Diag
 import App.Types.Point
 import App.Types.RGB
 
-import App.Helpers (pageX, pageY)
+import App.Helpers.Mouse
 
 import Data.Either.Nested (Either5)
 import Data.Functor.Coproduct.Nested (Coproduct5)
@@ -25,10 +25,7 @@ import Halogen.Component.ChildPath (cp1, cp2, cp3, cp4, cp5)
 import Network.HTTP.Affjax as AX
 import Network.HTTP.StatusCode
 
-import DOM (DOM)
-import DOM.HTML (window)
-import DOM.HTML.Window (scrollX, scrollY)
-import DOM.HTML.HTMLElement (getBoundingClientRect)
+
 
 type State = { time :: Int
              , ctx :: Maybe Context2D
@@ -227,13 +224,3 @@ diaComp = lifecycleParentComponent
       Just el -> do
         _ <- query' cp1 unit (request (ElEdit.SetFrame (getFrame el t)))
         pure unit
-    
-  getOffset p Nothing = do
-    pure p
-    
-  getOffset (Point {x, y}) (Just el) = do
-    w    <- window
-    rect <- getBoundingClientRect el
-    scX  <- scrollX w
-    scY  <- scrollY w
-    pure $ Point {x: x - (round rect.left) - scX , y: y - (round rect.top) - scY }
