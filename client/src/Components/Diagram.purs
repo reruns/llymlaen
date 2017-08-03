@@ -77,14 +77,14 @@ diaComp = lifecycleParentComponent
   
   render :: State -> ParentHTML Query ChildQuery ChildSlot (UIEff eff)
   render st =
-    div_
+    div 
+      [ onMouseUp   $ input_ MouseUnhold ]
       [ slot' cp2 unit Toolbar.toolbar unit (input HandleTB)
       , span [ id_ "center-col" ]
         [ canvas [ id_ "canvas"
                     , ref (RefLabel "cvs")
                     , onMouseDown $ input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
                     , onMouseMove $ input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
-                    , onMouseUp   $ input_ MouseUnhold
                     , onMouseLeave $ input_ ClearPos
                     ]
         , slot' cp1 unit ElEdit.editorComponent unit (input ModTarget)
@@ -201,7 +201,7 @@ diaComp = lifecycleParentComponent
     pure next
     
   eval (MouseUnhold next) = do
-    modify $ _ {mouseHeld = false}
+    modify $ _ {mouseHeld = false, mousePos = Nothing}
     pure next
 
   eval (ElShadow p next) = do
@@ -217,7 +217,7 @@ diaComp = lifecycleParentComponent
     pure next
     
   eval (ClearPos next) = do
-    modify $ _ {mousePos = Nothing}
+    modify $ (\st -> if not st.mouseHeld then st {mousePos = Nothing} else st)
     pure next
     
   eval (UpdateSettings set next) = do
