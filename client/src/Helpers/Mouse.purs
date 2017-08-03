@@ -14,9 +14,6 @@ import DOM.HTML.HTMLElement (getBoundingClientRect)
 foreign import pageX :: MouseEvent -> Int
 foreign import pageY :: MouseEvent -> Int
 
-foreign import dragX :: DragEvent  -> Int
-foreign import dragY :: DragEvent  -> Int
-
 getOffset p Nothing = do
   pure p
     

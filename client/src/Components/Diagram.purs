@@ -26,6 +26,7 @@ type State = { time :: Int
              , targetIndex :: Int
              , stagedEl :: Maybe (Int -> Point -> Element)
              , mousePos :: Maybe Point
+             , mouseHeld :: Boolean
              }
           
 defaultState :: State          
@@ -35,6 +36,7 @@ defaultState = { time: 0
                , targetIndex: -1
                , stagedEl: Nothing
                , mousePos: Nothing
+               , mouseHeld: false
                }
    
 decodeResponse :: Json -> Either String Diag
@@ -55,7 +57,7 @@ data Query a
   | ElShadow Point a
   | ClearPos a
   | UpdateSettings Settings.State a
-  | DragTarget Point a
+  | MouseUnhold a
  
 type ChildQuery = Coproduct5 ElEdit.Query Toolbar.Query TControls.Query SaveResult.Query Settings.Query
 type ChildSlot = Either5 Unit Unit Unit Unit Unit
@@ -81,8 +83,8 @@ diaComp = lifecycleParentComponent
         [ canvas [ id_ "canvas"
                     , ref (RefLabel "cvs")
                     , onMouseDown $ input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
-                    , onDrag      $ input (\e -> DragTarget $ Point {x: dragX e, y: dragY e})
                     , onMouseMove $ input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
+                    , onMouseUp   $ input_ MouseUnhold
                     , onMouseLeave $ input_ ClearPos
                     ]
         , slot' cp1 unit ElEdit.editorComponent unit (input ModTarget)
@@ -171,7 +173,7 @@ diaComp = lifecycleParentComponent
     locked <- query' cp1 unit (request ElEdit.IsLocked)
     stagedEl <- gets _.stagedEl
     case stagedEl of
-      Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t})
+      Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t, mouseHeld = true})
       Just el -> modify (\st -> st {body = addElement st.body (el t pos), stagedEl = Nothing, targetIndex = st.targetIndex+1})
     tar' <- gets _.targetIndex
     when (tar /= tar') refreshTarget
@@ -190,17 +192,19 @@ diaComp = lifecycleParentComponent
       Nothing -> pure unit
     pure next
     
-  eval (DragTarget p next) = do
-    prevPos <- gets _.mousePos
-    e <- getHTMLElementRef (RefLabel "cvs")
-    pos <- liftEff $ getOffset p e
-    let diff = vectorSub pos <$> prevPos
-    _ <- query' cp1 unit (request (ElEdit.ShiftFrame diff))
+  eval (MouseUnhold next) = do
+    modify $ _ {mouseHeld = false}
     pure next
 
   eval (ElShadow p next) = do
     e <- getHTMLElementRef (RefLabel "cvs")
     pos <- liftEff $ getOffset p e
+    held <- gets _.mouseHeld
+    when held do
+      prevPos <- gets _.mousePos
+      let diff = vectorSub pos <$> prevPos
+      _ <- query' cp1 unit (request (ElEdit.ShiftFrame diff))
+      pure unit
     modify $ _ {mousePos = Just pos}
     pure next
     

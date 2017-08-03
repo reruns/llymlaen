@@ -7,11 +7,3 @@ exports.pageX = function (e) {
 exports.pageY = function(e) {
   return e.pageY;
 };
-
-exports.dragX = function (e) {
-  return e.pageX;
-};
-
-exports.dragY = function(e) {
-  return e.pageY;
-};

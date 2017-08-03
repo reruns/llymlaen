@@ -46,7 +46,7 @@ import Graphics.Canvas.Free
 
 import Halogen (Component, ComponentHTML, ComponentDSL, ParentHTML, ParentDSL, RefLabel(..), raise, put, get, gets, component, lifecycleParentComponent, modify, action, liftEff, liftAff, query', request, getHTMLElementRef)
 import Halogen.HTML (ClassName(..), HTML, a, canvas, span, div, div_, text, h2_, h3_, span, label, slot')
-import Halogen.HTML.Events (input, input_, onClick, onDrag, onMouseDown, onMouseMove, onMouseLeave)
+import Halogen.HTML.Events (input, input_, onClick, onMouseDown, onMouseMove, onMouseLeave, onMouseUp)
 import Halogen.HTML.Properties (id_, class_, classes, title, href, ref)
 
 import Math (pi, sqrt, pow, sin, cos)
