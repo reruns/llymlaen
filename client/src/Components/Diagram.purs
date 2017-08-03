@@ -105,7 +105,7 @@ diaComp = lifecycleParentComponent
         refreshTarget
       else pure unit
     st <- get
-    let frames = mapWithIndex (\i e -> if i == st.targetIndex then editorFrame else getFrame e st.time ) $ getElements st.body
+    let frames = reverse $ mapWithIndex (\i e -> if i == st.targetIndex then editorFrame else getFrame e st.time ) $ getElements st.body
         shadow = case st.stagedEl of
           Nothing -> []
           Just el -> case st.mousePos of
@@ -195,10 +195,15 @@ diaComp = lifecycleParentComponent
     
   eval (ModTarget (Just {layer,kframe}) next) = do
     st <- get
-    case modifyAt st.targetIndex (setLayer layer <<< flip insertKey kframe) (getElements st.body) of
-      Just es -> modify $ (\state -> state {body=setElements state.body $
-                 sortBy (comparing getLayer) es})
+    case (getElements st.body) !! st.targetIndex of
       Nothing -> pure unit
+      Just target -> do
+        let target' = setLayer layer $ insertKey target kframe
+            es   = fromMaybe [] $ deleteAt st.targetIndex $ getElements st.body
+            idx  = fromMaybe (length es) $ findIndex (\el -> getLayer el >= layer) es
+        modify $ _ { body = fromMaybe st.body $ setElements st.body 
+                            <$> insertAt idx target' es
+                   , targetIndex = idx}
     pure next
     
   eval (MouseUnhold next) = do
