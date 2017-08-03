@@ -4,25 +4,37 @@ import App.Prelude
 import App.Types
 import App.Helpers.Forms
 
+type LFrame = { layer :: Int
+              , kframe :: Keyframe
+              }
+              
+setLFTime :: Int -> LFrame -> LFrame
+setLFTime t lf = lf {kframe = setTime t lf.kframe}
 
-type State = { frame  :: Maybe Keyframe
+type State = { frame  :: Maybe LFrame
              , locked :: Boolean
-             , heldFrame :: Maybe Keyframe
+             , heldFrame :: Maybe LFrame
              }
              
+initState = { frame: Nothing 
+            , locked: false 
+            , heldFrame: Nothing
+            }
+            
 data Query a 
   = FormChange Int Property a 
-  | SetFrame (Maybe Keyframe) (Unit -> a)
+  | UpdateLayer Int a
+  | SetFrame (Maybe LFrame) (Unit -> a)
   | AddFrame a
   | LockFrame a
   | GetFrame (Maybe Keyframe -> a)
   | IsLocked (Boolean -> a)
   | ShiftFrame (Maybe Point) (Unit -> a)
   
-editorComponent :: forall m. Component HTML Query Unit (Maybe Keyframe) m
+editorComponent :: forall m. Component HTML Query Unit (Maybe LFrame) m
 editorComponent =
   component
-    { initialState: const {locked: false, frame: Nothing, heldFrame: Nothing}
+    { initialState: const initState
     , render
     , eval
     , receiver: const Nothing
@@ -30,9 +42,14 @@ editorComponent =
   
   render :: State -> ComponentHTML Query
   render {frame: Nothing} = div [ id_ "el-editor", class_ $ ClassName "off" ] []
-  render {frame: Just fr, locked} 
+  render {frame: Just {layer,kframe:fr}, locked} 
     = div [id_ "el-editor"] $
       [ h2_ [text "Edit Element"] ]
+      <> [ label [fieldClass] 
+           [ div_ [text "Layer"]
+           , number [ title "Layer" ] layer UpdateLayer
+           ]
+         ]
       <> ( concat $ mapWithIndex renderProp (props fr)) 
       <> [ div_ 
         [ a
@@ -44,13 +61,22 @@ editorComponent =
         ]
       ]
     
-  eval :: forall m. Query ~> ComponentDSL State Query (Maybe Keyframe) m
+  eval :: forall m. Query ~> ComponentDSL State Query (Maybe LFrame) m
   eval (FormChange i prop next) = do
-    fr <- gets _.frame
-    let ps = fromMaybe [] $ props <$> fr
-    if isJust $ (recProp const prop) <$> (ps !! i) 
-      then do modify $ (\st -> st {frame = map (\(Keyframe f) -> Keyframe $ f {props = fromMaybe ps $ updateAt i prop ps}) st.frame})
-      else pure unit
+    lframe <- gets _.frame
+    case lframe of
+      Nothing -> pure unit
+      Just {layer,kframe} -> do
+        let ps = props kframe
+        modify $ _ { frame = Just
+          { layer
+          , kframe: setProps (fromMaybe ps $ updateAt i prop ps) kframe
+          }
+        }
+    pure next
+  
+  eval (UpdateLayer l next) = do
+    modify (\st -> st {frame = (_ {layer=l}) <$> st.frame })
     pure next
   
   eval (AddFrame next) = do
@@ -59,7 +85,7 @@ editorComponent =
   
   eval (GetFrame reply) = do
     frame <- gets _.frame
-    pure (reply frame)
+    pure (reply (_.kframe <$> frame))
     
   eval (LockFrame next) = do
     locked <- gets _.locked
@@ -79,12 +105,18 @@ editorComponent =
   eval (SetFrame mbFrame reply) = do
     locked <- gets _.locked
     if locked
-      then modify (\st -> st {heldFrame = mbFrame, frame = setTime <$> (time <$> mbFrame) <*> st.frame})
+      then modify (\st -> st 
+        { heldFrame = mbFrame
+        , frame = setLFTime <$> (time <$> _.kframe <$> st.frame) <*> mbFrame
+        })
       else modify (_ {frame = mbFrame})
     pure (reply unit)
     
   eval (ShiftFrame mp reply) = do
-    modify (\st -> st {frame = shiftPosition <$> mp <*> st.frame})
+    modify (\st -> st {frame = (\{layer,kframe} -> 
+      { layer
+      , kframe: shiftPosition (fromMaybe (Point {x:0,y:0}) mp) kframe 
+      }) <$> st.frame})
     pure (reply unit)
   
 

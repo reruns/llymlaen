@@ -10,6 +10,9 @@ newtype Element = Element { layer :: Int, keys :: Array Keyframe }
 getLayer :: Element -> Int
 getLayer (Element e) = e.layer
 
+setLayer :: Int -> Element -> Element
+setLayer l (Element e) = Element $ e {layer=l}
+
 getKeys :: Element -> Array Keyframe
 getKeys (Element e) = e.keys
 

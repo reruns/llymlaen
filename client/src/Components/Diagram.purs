@@ -51,7 +51,7 @@ data Query a
   | Load String a
   | Tick a
   | SetTime Int a
-  | ModTarget (Maybe Keyframe) a
+  | ModTarget (Maybe ElEdit.LFrame) a
   | HandleTB Toolbar.Message a
   | ClickCanvas Point a
   | ElShadow Point a
@@ -193,10 +193,11 @@ diaComp = lifecycleParentComponent
   eval (ModTarget Nothing next) = do
     pure next
     
-  eval (ModTarget (Just f) next) = do
+  eval (ModTarget (Just {layer,kframe}) next) = do
     st <- get
-    case modifyAt st.targetIndex (flip insertKey f) (getElements st.body) of
-      Just es -> modify $ (\state -> state {body=setElements state.body es})
+    case modifyAt st.targetIndex (setLayer layer <<< flip insertKey kframe) (getElements st.body) of
+      Just es -> modify $ (\state -> state {body=setElements state.body $
+                 sortBy (comparing getLayer) es})
       Nothing -> pure unit
     pure next
     
@@ -238,5 +239,6 @@ diaComp = lifecycleParentComponent
         _ <- query' cp1 unit (request (ElEdit.SetFrame Nothing))
         pure unit
       Just el -> do
-        _ <- query' cp1 unit (request (ElEdit.SetFrame (getFrame el t)))
+        _ <- query' cp1 unit (request (ElEdit.SetFrame 
+          $ (\kframe -> {layer:getLayer el, kframe}) <$> (getFrame el t)))
         pure unit

@@ -16,6 +16,9 @@ setTime t (Keyframe k) = Keyframe $ k {time=t}
 props :: Keyframe -> Array Property
 props (Keyframe k) = k.props
 
+setProps :: Array Property -> Keyframe -> Keyframe
+setProps ps (Keyframe k) = Keyframe $ k {props=ps}
+
 instance encodeFrame :: EncodeJson Keyframe where
   encodeJson (Keyframe f)
     =  "time"  := f.time
