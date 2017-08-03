@@ -169,18 +169,26 @@ diaComp = lifecycleParentComponent
     t <- gets _.time
     e <- getHTMLElementRef (RefLabel "cvs")
     tar <- gets _.targetIndex
+    tframe <- query' cp1 unit (request ElEdit.GetFrame)
     pos <- liftEff $ getOffset p e
     locked <- query' cp1 unit (request ElEdit.IsLocked)
     stagedEl <- gets _.stagedEl
     case stagedEl of
-      Nothing -> unless (fromMaybe false locked) $ modify (\st -> st {targetIndex = resolveTarget st.body pos t, mouseHeld = true})
-      Just el -> modify (\st -> st {body = addElement st.body (el t pos), stagedEl = Nothing, targetIndex = st.targetIndex+1})
+      Nothing -> unless (fromMaybe false locked) 
+        $ modify (\st -> st { targetIndex = resolveTarget st.body tframe tar pos t
+                            , mouseHeld = true})
+      Just el -> modify (\st -> st { body = addElement st.body (el t pos)
+                                   , stagedEl = Nothing
+                                   , targetIndex = st.targetIndex+1})
     tar' <- gets _.targetIndex
     when (tar /= tar') refreshTarget
     pure next
-    where resolveTarget (Diag d) pos t = fromMaybe (-1) $ 
-            findIndex (\mf -> fromMaybe false $ flip overlap pos <$> mf) $ 
-            map (flip getFrame t) d.elements
+    where resolveTarget (Diag d) tframe cur pos t = fromMaybe (-1) $ 
+            findIndex (\{i,mf} -> fromMaybe false $ flip overlap pos <$> 
+              if i == cur
+              then fromMaybe Nothing $ tframe
+              else mf) $ 
+            mapWithIndex (\i el ->{i,mf: flip getFrame t $ el}) d.elements
      
   eval (ModTarget Nothing next) = do
     pure next
