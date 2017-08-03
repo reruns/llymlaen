@@ -68,3 +68,8 @@ renderFrame (Keyframe {props}) =
     
 blankFrame :: Keyframe
 blankFrame = Keyframe { time: -1, props: [] }
+
+shiftPosition :: Point -> Keyframe -> Keyframe
+shiftPosition (Point {x,y}) (Keyframe k) = Keyframe $ k {props = map (shift x y) k.props}
+  where shift x y (Position (Point p)) = Position $ Point {x:p.x+x,y:p.y+y}
+        shift x y prop = prop

@@ -5,14 +5,17 @@ import App.Types.Point
 
 import Data.Foreign (F, toForeign)
 import DOM.Event.Types (MouseEvent)
+import DOM.HTML.Event.Types (DragEvent)
 
 import DOM.HTML (window)
 import DOM.HTML.Window (scrollX, scrollY)
 import DOM.HTML.HTMLElement (getBoundingClientRect)
 
 foreign import pageX :: MouseEvent -> Int
-
 foreign import pageY :: MouseEvent -> Int
+
+foreign import dragX :: DragEvent  -> Int
+foreign import dragY :: DragEvent  -> Int
 
 getOffset p Nothing = do
   pure p

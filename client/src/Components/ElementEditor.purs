@@ -17,6 +17,7 @@ data Query a
   | LockFrame a
   | GetFrame (Maybe Keyframe -> a)
   | IsLocked (Boolean -> a)
+  | ShiftFrame (Maybe Point) (Unit -> a)
   
 editorComponent :: forall m. Component HTML Query Unit (Maybe Keyframe) m
 editorComponent =
@@ -80,6 +81,10 @@ editorComponent =
     if locked
       then modify (\st -> st {heldFrame = mbFrame, frame = setTime <$> (time <$> mbFrame) <*> st.frame})
       else modify (_ {frame = mbFrame})
+    pure (reply unit)
+    
+  eval (ShiftFrame mp reply) = do
+    modify (\st -> st {frame = shiftPosition <$> mp <*> st.frame})
     pure (reply unit)
   
 

@@ -9,6 +9,9 @@ getY (Point {y}) = y
 setX (Point p) v = Point $ p {x=v}
 setY (Point p) v = Point $ p {y=v}
 
+vectorSub :: Point -> Point -> Point
+vectorSub (Point {x:x1,y:y1}) (Point {x:x2,y:y2}) = Point {x:x1-x2, y:y1-y2}
+
 instance showPoint :: Show Point where
   show (Point {x,y}) = "(" <> (show x) <> "," <> (show y) <> ")"
 

@@ -55,6 +55,7 @@ data Query a
   | ElShadow Point a
   | ClearPos a
   | UpdateSettings Settings.State a
+  | DragTarget Point a
  
 type ChildQuery = Coproduct5 ElEdit.Query Toolbar.Query TControls.Query SaveResult.Query Settings.Query
 type ChildSlot = Either5 Unit Unit Unit Unit Unit
@@ -79,7 +80,8 @@ diaComp = lifecycleParentComponent
       , span [ id_ "center-col" ]
         [ canvas [ id_ "canvas"
                     , ref (RefLabel "cvs")
-                    , onClick $ input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
+                    , onMouseDown $ input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
+                    , onDrag      $ input (\e -> DragTarget $ Point {x: dragX e, y: dragY e})
                     , onMouseMove $ input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
                     , onMouseLeave $ input_ ClearPos
                     ]
@@ -186,6 +188,14 @@ diaComp = lifecycleParentComponent
     case modifyAt st.targetIndex (flip insertKey f) (getElements st.body) of
       Just es -> modify $ (\state -> state {body=setElements state.body es})
       Nothing -> pure unit
+    pure next
+    
+  eval (DragTarget p next) = do
+    prevPos <- gets _.mousePos
+    e <- getHTMLElementRef (RefLabel "cvs")
+    pos <- liftEff $ getOffset p e
+    let diff = vectorSub pos <$> prevPos
+    _ <- query' cp1 unit (request (ElEdit.ShiftFrame diff))
     pure next
 
   eval (ElShadow p next) = do
