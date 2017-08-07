@@ -10,6 +10,7 @@ import DOM.HTML.Event.Types (DragEvent)
 import DOM.HTML (window)
 import DOM.HTML.Window (scrollX, scrollY)
 import DOM.HTML.HTMLElement (getBoundingClientRect)
+import DOM.HTML.HTMLCanvasElement (width, height)
 
 foreign import pageX :: MouseEvent -> Int
 foreign import pageY :: MouseEvent -> Int
@@ -22,4 +23,7 @@ getOffset (Point {x, y}) (Just el) = do
   rect <- getBoundingClientRect el
   scX  <- scrollX w
   scY  <- scrollY w
-  pure $ Point {x: x - (round rect.left) - scX , y: y - (round rect.top) - scY }
+  pure $ Point 
+    { x: floor $ 600.0 * (toNumber $ x - (floor rect.left) - scX) / (rect.right-rect.left)
+    , y: floor $ 600.0 * (toNumber $ y - (floor rect.top) - scY) / (rect.bottom-rect.top)
+    }

@@ -81,12 +81,15 @@ diaComp = lifecycleParentComponent
       [ onMouseUp   $ input_ MouseUnhold ]
       [ slot' cp2 unit Toolbar.toolbar unit (input HandleTB)
       , span [ id_ "center-col" ]
-        [ canvas [ id_ "canvas"
-                    , ref (RefLabel "cvs")
-                    , onMouseDown $ input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
-                    , onMouseMove $ input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
-                    , onMouseLeave $ input_ ClearPos
-                    ]
+        [ div [id_ "cvs-container"]
+          [ canvas  
+            [ id_ "canvas"
+              , ref (RefLabel "cvs")
+              , onMouseDown $ input (\e -> ClickCanvas $ Point {x: pageX e, y: pageY e}) 
+              , onMouseMove $ input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
+              , onMouseLeave $ input_ ClearPos
+            ]
+          ]
         , slot' cp1 unit ElEdit.editorComponent unit (input HandleElEdit)
         , slot' cp3 unit TControls.controls st.time (input SetTime)
         ]
@@ -235,6 +238,6 @@ diaComp = lifecycleParentComponent
   refreshTarget = do
     target <- gets (\st -> (getElements st.body) !! st.targetIndex)
     t <- gets _.time
-    _ <- query' cp1 unit (request (ElEdit.SetTarget Nothing))
+    _ <- query' cp1 unit (request (ElEdit.SetTarget target))
     _ <- query' cp1 unit (request (ElEdit.SetTime t))
     pure unit
