@@ -43,7 +43,7 @@ settingsComponent = component
         [ h2_ [text "Diagram Settings"]
         , label [] 
           [ div_ [text "Length"]
-          , number [ title "Length", id_ "length"] (round $ (toNumber l) / 62.5) SetLen
+          , number [ title "Length", id_ "length"] (round $ (toNumber l) * (toNumber framerate) / 1000.0) SetLen
           , text "seconds"
           ]
         , label [] 
@@ -74,7 +74,7 @@ settingsComponent = component
     pure next
     
   eval (SetLen l next) = do
-    modify $ map (_ {length = round ((toNumber l) * 62.5)})
+    modify $ map (_ {length = round ((toNumber l) * 1000.0 / (toNumber framerate))})
     pure next
     
   eval (SetRgb c next) = do
