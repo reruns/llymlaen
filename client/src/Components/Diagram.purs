@@ -51,7 +51,7 @@ data Query a
   | Load String a
   | Tick a
   | SetTime Int a
-  | ModTarget (Maybe ElEdit.LFrame) a
+  | HandleElEdit ElEdit.Message a
   | HandleTB Toolbar.Message a
   | ClickCanvas Point a
   | ElShadow Point a
@@ -87,7 +87,7 @@ diaComp = lifecycleParentComponent
                     , onMouseMove $ input (\e -> ElShadow $ Point {x: pageX e, y: pageY e})
                     , onMouseLeave $ input_ ClearPos
                     ]
-        , slot' cp1 unit ElEdit.editorComponent unit (input ModTarget)
+        , slot' cp1 unit ElEdit.editorComponent unit (input HandleElEdit)
         , slot' cp3 unit TControls.controls st.time (input SetTime)
         ]
       , slot' cp4 unit SaveResult.saveComponent unit absurd
@@ -189,20 +189,16 @@ diaComp = lifecycleParentComponent
               then fromMaybe Nothing $ tframe
               else mf) $ 
             mapWithIndex (\i el ->{i,mf: flip getFrame t $ el}) d.elements
-     
-  eval (ModTarget Nothing next) = do
-    pure next
     
-  eval (ModTarget (Just {layer,kframe}) next) = do
+  eval (HandleElEdit (ElEdit.UpdateEl elem) next) = do
     st <- get
     case (getElements st.body) !! st.targetIndex of
       Nothing -> pure unit
       Just target -> do
-        let target' = setLayer layer $ insertKey target kframe
-            es   = fromMaybe [] $ deleteAt st.targetIndex $ getElements st.body
-            idx  = fromMaybe (length es) $ findIndex (\el -> getLayer el >= layer) es
+        let es   = fromMaybe [] $ deleteAt st.targetIndex $ getElements st.body
+            idx  = fromMaybe (length es) $ findIndex (\el -> getLayer el >= (getLayer elem)) es
         modify $ _ { body = fromMaybe st.body $ setElements st.body 
-                            <$> insertAt idx target' es
+                            <$> insertAt idx elem es
                    , targetIndex = idx}
     pure next
     
@@ -239,11 +235,6 @@ diaComp = lifecycleParentComponent
   refreshTarget = do
     target <- gets (\st -> (getElements st.body) !! st.targetIndex)
     t <- gets _.time
-    case target of --this can be consolidated somehow
-      Nothing -> do
-        _ <- query' cp1 unit (request (ElEdit.SetFrame Nothing))
-        pure unit
-      Just el -> do
-        _ <- query' cp1 unit (request (ElEdit.SetFrame 
-          $ (\kframe -> {layer:getLayer el, kframe}) <$> (getFrame el t)))
-        pure unit
+    _ <- query' cp1 unit (request (ElEdit.SetTarget Nothing))
+    _ <- query' cp1 unit (request (ElEdit.SetTime t))
+    pure unit

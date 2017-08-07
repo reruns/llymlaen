@@ -1,37 +1,41 @@
 module App.Components.ElementEditor where
 
+--the obvious thing to do is to just make this thing hold on to the element object
 import App.Prelude
-import App.Types
+import App.Types hiding (renderProp)
 import App.Helpers.Forms
 
-type LFrame = { layer :: Int
-              , kframe :: Keyframe
-              }
-              
-setLFTime :: Int -> LFrame -> LFrame
-setLFTime t lf = lf {kframe = setTime t lf.kframe}
-
-type State = { frame  :: Maybe LFrame
+type State = { target :: Maybe Element
+             , curFrame :: Maybe Keyframe
              , locked :: Boolean
-             , heldFrame :: Maybe LFrame
+             , layer  :: Int
+             , heldTime :: Int
              }
              
-initState = { frame: Nothing 
-            , locked: false 
-            , heldFrame: Nothing
+initState = { target: Nothing 
+            , curFrame: Nothing
+            , locked: false
+            , layer: -1
+            , heldTime: 0
             }
             
 data Query a 
   = FormChange Int Property a 
   | UpdateLayer Int a
-  | SetFrame (Maybe LFrame) (Unit -> a)
-  | AddFrame a
+  | SetTime Int (Unit -> a)
+  | SetTarget (Maybe Element) (Unit -> a)
+  | Apply a
   | LockFrame a
   | GetFrame (Maybe Keyframe -> a)
   | IsLocked (Boolean -> a)
   | ShiftFrame (Maybe Point) (Unit -> a)
   
-editorComponent :: forall m. Component HTML Query Unit (Maybe LFrame) m
+data Message 
+  = UpdateEl Element
+  -- | SetTime
+  
+  
+editorComponent :: forall m. Component HTML Query Unit Message m
 editorComponent =
   component
     { initialState: const initState
@@ -41,9 +45,10 @@ editorComponent =
     } where
   
   render :: State -> ComponentHTML Query
-  render {frame: Nothing} = div [ id_ "el-editor", class_ $ ClassName "off" ] []
-  render {frame: Just {layer,kframe:fr}, locked} 
-    = div [id_ "el-editor"] $
+  render {target: Nothing} = div [ id_ "el-editor", class_ $ ClassName "off" ] []
+  render {target, curFrame, locked, layer} =
+    let fr = fromMaybe blankFrame curFrame  in
+    div [id_ "el-editor"] $
       [ h2_ [text "Edit Element"] ]
       <> [ label [fieldClass] 
            [ div_ [text "Layer"]
@@ -56,67 +61,86 @@ editorComponent =
           [ onClick $ input_ LockFrame, classes $ map ClassName $ if locked then ["a-button","active"] else ["a-button"] ]
           [ text "Lock" ]
         , a
-          [ onClick $ input_ AddFrame, class_ $ ClassName "a-button" ] 
+          [ onClick $ input_ Apply, class_ $ ClassName "a-button" ] 
           [ text "Apply"]
         ]
       ]
     
-  eval :: forall m. Query ~> ComponentDSL State Query (Maybe LFrame) m
+  eval :: forall m. Query ~> ComponentDSL State Query Message m
   eval (FormChange i prop next) = do
-    lframe <- gets _.frame
-    case lframe of
+    mbframe <- gets _.curFrame
+    case mbframe of
       Nothing -> pure unit
-      Just {layer,kframe} -> do
+      Just kframe -> do
         let ps = props kframe
-        modify $ _ { frame = Just
-          { layer
-          , kframe: setProps (fromMaybe ps $ updateAt i prop ps) kframe
+        modify $ _ 
+          { curFrame = Just $ setProps (fromMaybe ps $ updateAt i prop ps) kframe
           }
-        }
     pure next
   
   eval (UpdateLayer l next) = do
-    modify (\st -> st {frame = (_ {layer=l}) <$> st.frame })
+    modify _ {layer = l}
     pure next
   
-  eval (AddFrame next) = do
-    raise =<< gets _.frame
+  eval (Apply next) = do
+    st <- get
+    case setLayer st.layer <$> (insertKey <$> st.target <*> st.curFrame) of
+      Nothing -> pure unit
+      Just el -> raise (UpdateEl el)
     pure next
   
   eval (GetFrame reply) = do
-    frame <- gets _.frame
-    pure (reply (_.kframe <$> frame))
+    frame <- gets _.curFrame
+    pure (reply frame)
     
   eval (LockFrame next) = do
     locked <- gets _.locked
     if locked
-      then modify (\st -> st { locked=false
-                             , frame = if isJust st.heldFrame
-                                       then st.heldFrame
-                                       else st.frame
-                             })
-      else modify (_ {locked=true})
+      then modify (\st -> st 
+        { locked=false
+        , curFrame = if st.heldTime /= -1
+                     then fromMaybe Nothing $ (flip getFrame) st.heldTime <$> st.target
+                     else st.curFrame
+        }
+      )
+      else modify (_ 
+        { locked = true
+        , heldTime = -1
+        }
+      )
     pure next
     
   eval (IsLocked reply) = do
     locked <- gets _.locked
     pure (reply locked)
     
-  eval (SetFrame mbFrame reply) = do
+  eval (SetTime t reply) = do
     locked <- gets _.locked
     if locked
       then modify (\st -> st 
-        { heldFrame = mbFrame
-        , frame = setLFTime <$> (time <$> _.kframe <$> st.frame) <*> mbFrame
+        { heldTime = t
+        , curFrame = setTime t <$> st.curFrame
         })
-      else modify (_ {frame = mbFrame})
+      else modify (\st -> st {curFrame = fromMaybe Nothing $ getFrame <$> st.target <*> (Just t)})
+    pure (reply unit)
+    
+  eval (SetTarget mel reply) = do
+    locked <- gets _.locked
+    if locked
+      then pure unit
+      else modify (\st -> st 
+        { target = mel
+        , curFrame = fromMaybe Nothing $ getFrame <$> mel <*> (time <$> st.curFrame)
+        , layer = fromMaybe (-1) $ getLayer <$> mel
+        }
+      )
     pure (reply unit)
     
   eval (ShiftFrame mp reply) = do
-    modify (\st -> st {frame = (\{layer,kframe} -> 
-      { layer
-      , kframe: shiftPosition (fromMaybe (Point {x:0,y:0}) mp) kframe 
-      }) <$> st.frame})
+    modify (\st -> st 
+      { curFrame = shiftPosition (fromMaybe (Point {x:0,y:0}) mp) <$> st.curFrame 
+      }
+    )
     pure (reply unit)
   
 
