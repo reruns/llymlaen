@@ -47,7 +47,8 @@ reconcile (Keyframe {time:tl, props: left}) (Keyframe {time: tr, props: right}) 
 
 --note: this will compile but not work correctly if Position comes after the Shape property
 overlap :: Keyframe -> Point -> Boolean
-overlap (Keyframe {props}) (Point p) = _.b $ foldl f {d:p, a: 0.0 , b:false} props where
+overlap (Keyframe {props}) (Point p) = (\{e,b} -> e && b) $ foldl f {d:p, a: 0.0 , e: true, b:false} props where
+  f s@{e}     (Enabled false)  = s {e = false}
   f s@{d}     (Position (Point {x,y})) = 
     s { d= {x: p.x - x , y: p.y - y} }
   f res       (Angle a')       = res { a = -2.0 * pi * (toNumber a') / 360.0 }
