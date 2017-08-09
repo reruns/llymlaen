@@ -1,11 +1,10 @@
 module Main where
 
-import App.Prelude hiding (liftEff)
+import App.Prelude
 
 import Control.Monad.Aff (forkAff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Timer (setInterval, TIMER)
+import Control.Monad.Eff.Timer (TIMER)
 
 import Halogen.VDom.Driver (runUI)
 import Halogen.Aff as HA
@@ -31,5 +30,4 @@ main = HA.runHalogenAff do
     case new of
       (Look id) -> driver.query $ action (Load id)
       _         -> pure unit
-  liftEff $ setInterval framerate $ do
-    HA.runHalogenAff (driver.query $ action Tick) --what.
+  pure unit
