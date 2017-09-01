@@ -190,6 +190,10 @@ diaComp = lifecycleParentComponent
                    , targetIndex = idx}
     pure next
     
+  eval (HandleElEdit ElEdit.RefreshEl next) = do
+    drawCanvas
+    pure next
+    
   eval (MouseUnhold next) = do
     modify $ _ {mouseHeld = false, mousePos = Nothing}
     pure next

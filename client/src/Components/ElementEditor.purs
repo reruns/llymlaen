@@ -32,6 +32,7 @@ data Query a
   
 data Message 
   = UpdateEl Element
+  | RefreshEl
   -- | SetTime
   
   
@@ -76,6 +77,7 @@ editorComponent =
         modify $ _ 
           { curFrame = Just $ setProps (fromMaybe ps $ updateAt i prop ps) kframe
           }
+    raise RefreshEl
     pure next
   
   eval (UpdateLayer l next) = do
