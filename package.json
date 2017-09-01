@@ -10,9 +10,6 @@
     "node": "6.9.4"
   },
   "scripts": {
-    "test": "purs test --src-path scripts/src -o scripts/output --test-path scripts/test",
-    "bundle": "purs bundle scripts/src -o scripts/output/bundle.js",
-    "compile": "purs compile scripts/src/*.purs -o scripts/output/bundle.js",
     "postinstall": "bower install && gulp"
   },
   "author": "",
