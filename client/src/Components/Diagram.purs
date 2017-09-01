@@ -49,7 +49,6 @@ decodeResponse response = do
 data Query a 
   = Initialize a
   | Load String a
-  | Tick a
   | SetTime Int a
   | HandleElEdit ElEdit.Message a
   | HandleTB Toolbar.Message a
@@ -107,30 +106,6 @@ diaComp = lifecycleParentComponent
       ]
       
   eval :: Query ~> ParentDSL State Query ChildQuery ChildSlot Void (UIEff eff)
-  eval (Tick next) = do
-    pause <- query' cp3 unit (request TControls.Paused)
-    editorFrame' <- query' cp1 unit (request ElEdit.GetFrame)
-    let editorFrame = fromMaybe Nothing editorFrame'
-    if pause == Just false
-      then do
-        modify (\st -> st {time=st.time+1})
-        refreshTarget
-      else pure unit
-    st <- get
-    let frames = reverse $ mapWithIndex (\i e -> if i == st.targetIndex then editorFrame else getFrame e st.time ) $ getElements st.body
-        shadow = case st.stagedEl of
-          Nothing -> []
-          Just el -> case st.mousePos of
-            Nothing -> []
-            Just p  -> [getFrame (el st.time p) st.time]
-    case st.ctx of
-      Just ctx -> liftEff $ runGraphics ctx $ do
-                    setFillStyle $ show $ getColor st.body
-                    fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
-                    traverse_ (renderFrame <<< fromMaybe blankFrame) (frames <> shadow)
-      Nothing  -> pure unit
-    pure next
-  
   eval (HandleTB (Toolbar.Insert el) next) = do
     modify $ _ {stagedEl = Just el}
     pure next
@@ -165,6 +140,7 @@ diaComp = lifecycleParentComponent
   eval (SetTime t next) = do
     modify (\st -> st {time=t})
     refreshTarget
+    drawCanvas
     pure next
     
   eval (Initialize next) = do
@@ -175,6 +151,7 @@ diaComp = lifecycleParentComponent
           _ <- liftEff $ setCanvasDimensions {width: 600.0, height: 600.0} canvas
           context <- liftEff $ getContext2D canvas
           modify (\state -> state { ctx = Just context })
+          drawCanvas
           pure next
 
   eval (ClickCanvas p next) = do
@@ -228,6 +205,7 @@ diaComp = lifecycleParentComponent
       _ <- query' cp1 unit (request (ElEdit.ShiftFrame diff))
       pure unit
     modify $ _ {mousePos = Just pos}
+    drawCanvas
     pure next
     
   eval (ClearPos next) = do
@@ -243,6 +221,28 @@ diaComp = lifecycleParentComponent
           -> st { body = setLength settings.length 
                        $ setColor settings.color st.body})
     pure next  
+  
+  drawCanvas = do
+    editorFrame' <- query' cp1 unit (request ElEdit.GetFrame)
+    let editorFrame = fromMaybe Nothing editorFrame'
+    st <- get
+    let frames = reverse $ mapWithIndex 
+          (\i e -> 
+            if i == st.targetIndex 
+            then editorFrame 
+            else getFrame e st.time 
+          ) $ getElements st.body
+        shadow = case st.stagedEl of
+          Nothing -> []
+          Just el -> case st.mousePos of
+            Nothing -> []
+            Just p  -> [getFrame (el st.time p) st.time]
+    case st.ctx of
+      Just ctx -> liftEff $ runGraphics ctx $ do
+                    setFillStyle $ show $ getColor st.body
+                    fillRect {x: 0.0, y:0.0, w: 800.0, h: 800.0}
+                    traverse_ (renderFrame <<< fromMaybe blankFrame) (frames <> shadow)
+      Nothing  -> pure unit
     
   refreshTarget = do
     target <- gets (\st -> (getElements st.body) !! st.targetIndex)
