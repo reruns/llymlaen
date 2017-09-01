@@ -140,7 +140,6 @@ diaComp = lifecycleParentComponent
   eval (SetTime t next) = do
     modify (\st -> st {time=t})
     refreshTarget
-    drawCanvas
     pure next
     
   eval (Initialize next) = do
@@ -249,4 +248,5 @@ diaComp = lifecycleParentComponent
     t <- gets _.time
     _ <- query' cp1 unit (request (ElEdit.SetTarget target))
     _ <- query' cp1 unit (request (ElEdit.SetTime t))
+    drawCanvas
     pure unit
