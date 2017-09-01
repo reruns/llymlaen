@@ -62,7 +62,16 @@ data Query a
 type ChildQuery = Coproduct5 ElEdit.Query Toolbar.Query TControls.Query SaveResult.Query Settings.Query
 type ChildSlot = Either5 Unit Unit Unit Unit Unit
 
-type UIEff eff = Aff (canvas :: CANVAS, console :: CONSOLE, dom :: DOM, ajax :: AX.AJAX | eff)
+type UIEff eff = Aff 
+  ( canvas  :: CANVAS
+  , console :: CONSOLE
+  , dom     :: DOM
+  , ajax    :: AX.AJAX 
+  , avar    :: AVAR
+  , timer   :: TIMER
+  , ref     :: REF
+  | eff
+  )
     
 diaComp :: forall eff. Component HTML Query Unit Void (UIEff eff)
 diaComp = lifecycleParentComponent

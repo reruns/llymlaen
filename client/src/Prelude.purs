@@ -27,6 +27,7 @@ module App.Prelude
   , module Control.Monad.Aff
   , module Control.Monad.Eff.Exception
   , module Control.Monad.Eff.Ref
+  , module Control.Monad.Eff.Timer
   , framerate
   ) where
 
@@ -64,6 +65,7 @@ import DOM(DOM)
 import Control.Monad.Aff (Aff())
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Ref (REF)
+import Control.Monad.Eff.Timer (setInterval, clearInterval, TIMER)
 
 --I guess this is a misnomer? The value is ms/frame
 framerate :: Int
