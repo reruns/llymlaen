@@ -53,7 +53,7 @@ import Halogen.HTML.Events (input, input_, onClick, onMouseDown, onMouseMove, on
 import Halogen.HTML.Properties (id_, class_, classes, title, href, ref)
 import Halogen.Aff.Effects (HalogenEffects)
 
-import Math (pi, sqrt, pow, sin, cos)
+import Math (pi, sqrt, pow, sin, cos, atan2)
 
 import Test.QuickCheck(class Arbitrary, arbitrary)
 import Test.QuickCheck.Gen

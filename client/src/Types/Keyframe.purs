@@ -58,6 +58,9 @@ overlap (Keyframe {props}) (Point p) = (\{e,b} -> e && b) $ foldl f {d:p, a: 0.0
                                  in s { b = b || (rot.x >= 0.0 && rot.x <= (toNumber w) && rot.y >= 0.0 && rot.y <= (toNumber h)) }
   f s@{d,b}   (Donut r1 r2)    = let dist = sqrt $ (pow (toNumber d.x) 2.0) + (pow (toNumber d.y) 2.0)
                                  in s { b = b || (dist >= (toNumber r1) && dist <= (toNumber r2))}
+  f s@{d,a,b} (Arc r th)       = let dist = sqrt $ (pow (toNumber d.x) 2.0) + (pow (toNumber d.y) 2.0)
+                                     angle = ((atan2 (toNumber d.y) (toNumber d.x)) - a) * 180.0 / pi
+                                 in s {b = b || (dist <= (toNumber r)) && (angle >= 0.0) && (angle <= (toNumber th))}
   f res _                      = res
   
 renderFrame :: Keyframe -> Graphics Unit
