@@ -198,3 +198,12 @@ renderProp i (Donut r1 r2) = [ label [fieldClass]
                                , number [ title "outer radius" ] r2 (FormChange i <<< Donut r1)
                                ]
                              ]
+renderProp i (Arc r th)    = [ label [fieldClass]
+                               [ div_ [text "Radius"]
+                               , number [ title "Radius" ] r (FormChange i <<< (flip Arc) th)
+                               ]
+                             , label [fieldClass] 
+                               [ div_ [text "Width"]
+                               , slider [ title "Width"] 0 360 th (FormChange i <<< Arc r)
+                               ]
+                             ]
