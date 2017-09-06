@@ -142,9 +142,14 @@ renderProp (Donut r1 r2)    = Just $ do
   arc {x: 0.0, y:0.0, r: (toNumber r1) + (width / 2.0), start: 0.0, end: 2.0*pi}
   closePath
   stroke
-renderProp (Arc r th)       = Just $ do
-  beginPath
-  arc {x: 0.0, y:0.0, r: toNumber r, start: 0.0, end: (toNumber th) / 180.0 * pi}
-  closePath
-  stroke
-  fill
+renderProp (Arc r th)       = Just $ 
+  if th == 0
+   then pure unit
+   else do
+      beginPath
+      lineTo 0.0 0.0
+      lineTo (toNumber r) 0.0
+      arc {x: 0.0, y:0.0, r: toNumber r, start: 0.0, end: (toNumber th) / 180.0 * pi}
+      closePath
+      stroke
+      fill

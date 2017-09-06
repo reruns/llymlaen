@@ -41,4 +41,17 @@ dnutBase t p = Element { layer: 0
                                    , Donut 40 60
                                    ]
                         }]
-               }        
+               } 
+
+arcBase :: Int -> Point -> Element
+arcBase t p = Element { layer: 0
+              , keys: [ Keyframe { time: t
+                        , props: [ Enabled true
+                                 , Color $ RGB { r:128, g:128, b: 128 }
+                                 , Position p
+                                 , Opacity 100
+                                 , Angle 0
+                                 , Arc 50 90
+                                 ]       
+                      }]
+              }                       

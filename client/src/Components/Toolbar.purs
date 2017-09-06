@@ -3,7 +3,7 @@ module App.Components.Toolbar where
 import App.Prelude
 
 import App.Types
-import App.Element.Presets (circBase, dnutBase, rectBase)
+import App.Element.Presets (circBase, dnutBase, rectBase, arcBase)
 
 type State = Boolean
 data Message 
@@ -14,6 +14,7 @@ data Message
 data Query a = InsertCirc a
              | InsertRect a
              | InsertDnut a
+             | InsertArc  a
              | ReqSave    a
              | SetState Boolean (Unit -> a)
              | OpenSettings a
@@ -39,6 +40,7 @@ toolbar = component
             [ a [onClick $ input_ InsertCirc] [text "Circle"]
             , a [onClick $ input_ InsertRect] [text "Rectangle"]
             , a [onClick $ input_ InsertDnut] [text "Donut"]
+            , a [onClick $ input_ InsertArc ] [text "Arc"]
             ]            
           ]
         , a [onClick $ input_ OpenSettings ]
@@ -59,6 +61,10 @@ toolbar = component
     
   eval (InsertDnut next) = do
     raise $ Insert dnutBase
+    pure next
+  
+  eval (InsertArc next) = do
+    raise $ Insert arcBase
     pure next
     
   eval (ReqSave next) = do
