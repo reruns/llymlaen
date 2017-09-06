@@ -17,6 +17,7 @@ data Property = Enabled  Boolean
               | Circle   Int
               | Rect     Int Int
               | Donut    Int Int
+              | Arc      Int Int
 
 derive instance eqProp :: Eq Property
 
@@ -30,6 +31,7 @@ instance encodeProp :: EncodeJson Property where
   encodeJson  (Circle r)       = "Circle" := r ~> jsonEmptyObject
   encodeJson  (Rect w h)       = "Rect" := ("w" := w ~> "h" := h ~> jsonEmptyObject) ~> jsonEmptyObject
   encodeJson  (Donut r1 r2)    = "Donut" := ("r1" := r1 ~> "r2" := r2 ~> jsonEmptyObject) ~> jsonEmptyObject
+  encodeJson  (Arc   r th)     = "Arc" := ("r":= r ~> "th" := th ~> jsonEmptyObject) ~> jsonEmptyObject
   
 instance decodeProp :: DecodeJson Property where
     decodeJson json = do
@@ -63,6 +65,11 @@ instance decodeProp :: DecodeJson Property where
                         r1 <- rr .? "r1"
                         r2 <- rr .? "r2"
                         pure $ Donut r1 r2
+          "Arc"     -> do
+                        arc <- obj .? "Arc"
+                        r   <- arc .? "r"
+                        th  <- arc .? "th"
+                        pure $ Arc r th
           _         -> Left "Unrecognized key"
       
       
@@ -75,6 +82,7 @@ propGens = [ Enabled <$> arbitrary
            , Circle <$> arbitrary
            , Rect <$> arbitrary <*> arbitrary
            , Donut <$> arbitrary <*> arbitrary
+           , Arc <$> arbitrary <*> arbitrary
            ]
 
 instance arbProp :: Arbitrary Property where
@@ -90,13 +98,14 @@ instance showProp :: Show Property where
   show  (Circle r)       = "Circle: " <> (show r)
   show  (Rect w h)       = "Rectangle: " <> (show w) <> "x" <> (show h)
   show  (Donut r1 r2)    = "Donut: " <> (show r1) <> "-" <> (show r2)
+  show  (Arc r th)       = "Arc: r - " <> (show r) <> " width - " <> (show th) 
 
 --does this property wrap a boolean value?
 boolProp :: Property -> Boolean
 boolProp (Enabled _)  = true
 boolProp (Bordered _) = true
 boolProp _            = false
-           
+
 recProp f (Enabled b1)  (Enabled b2)    = Just $ Enabled b1
 recProp f (Bordered b1) (Bordered b2)   = Just $ Bordered b1
 recProp f (Color (RGB c1)) (Color (RGB c2)) = Just $ Color $ RGB {r: f c1.r c2.r, g: f c1.g c2.g, b: f c1.b c2.b}
@@ -106,6 +115,7 @@ recProp f (Opacity o1)  (Opacity o2)    = Just $ Opacity (f o1 o2)
 recProp f (Circle r1)   (Circle r2)     = Just $ Circle (f r1 r2)
 recProp f (Rect w1 h1)  (Rect w2 h2)    = Just $ Rect (f w1 w2) (f h1 h2)
 recProp f (Donut r1 r2) (Donut r1' r2') = Just $ Donut (f r1 r1') (f r2 r2')
+recProp f (Arc r1 th1)  (Arc r2 th2)    = Just $ Arc (f r1 r2) (f th1 th2)
 recProp f _             _               = Nothing --Mismatch!
 
 
@@ -132,3 +142,9 @@ renderProp (Donut r1 r2)    = Just $ do
   arc {x: 0.0, y:0.0, r: (toNumber r1) + (width / 2.0), start: 0.0, end: 2.0*pi}
   closePath
   stroke
+renderProp (Arc r th)       = Just $ do
+  beginPath
+  arc {x: 0.0, y:0.0, r: toNumber r, start: 0.0, end: (toNumber th) / 180.0 * pi}
+  closePath
+  stroke
+  fill
