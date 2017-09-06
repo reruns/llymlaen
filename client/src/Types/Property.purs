@@ -121,7 +121,11 @@ recProp f _             _               = Nothing --Mismatch!
 
 renderProp :: Property -> Maybe (Graphics Unit)
 renderProp (Enabled b)      = if b then Just (pure unit) else Nothing
-renderProp (Bordered b)     = if b then Just (setStrokeStyle "#000000") else Just (pure unit)
+renderProp (Bordered b)     = if b 
+                                then Just $ do 
+                                  setStrokeStyle "#000000"
+                                  setLineWidth 2.0
+                                else Just (pure unit)
 renderProp (Color c)        = Just $ (setFillStyle (show c)) *> (setStrokeStyle (show c))
 renderProp (Position p)     = (\(Point {x,y}) -> Just $ translate (toNumber x) (toNumber y)) p
 renderProp (Angle a)        = Just $ rotate ((toNumber a) * pi / 180.0)
@@ -142,6 +146,7 @@ renderProp (Donut r1 r2)    = Just $ do
   arc {x: 0.0, y:0.0, r: (toNumber r1) + (width / 2.0), start: 0.0, end: 2.0*pi}
   closePath
   stroke
+  setLineWidth 2.0
 renderProp (Arc r th)       = Just $ 
   if th == 0
    then pure unit
